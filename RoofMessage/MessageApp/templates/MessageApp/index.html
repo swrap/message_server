@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}" />
+        <!-- Is anyone getting tired of repeatedly entering the header over and over?? -->
+        <title>HealthNet Homepage</title>
+    </head>
+
+    <body id="index_bod">
+    <div id="layer">
+    <!--<h1><span style="color: red; font-family: Arial";>H</span><span style="color: red; font-family: Arial";">N</span></h1>-->
+    </div>
+    <div id="master_index">
+        <h1>Welcome to HealthNet</h1>
+            {% csrf_token %}
+            <form id="user_login" method="post" action="{% url 'healthnet:login' %}">
+            {% csrf_token %}
+            <p>{{ login }}<br /></p>
+            {% if active_user %}
+                <li><a href="/healthnet/logout/">Logout</a></li><br />
+            {% endif %}
+            <div id="login_box">
+            Username: <input type="text" name="username" value="" size="50" />
+            <br />
+            Password: <input type="password" name="password" value="" size="50" />
+            <br />
+                </div>
+                <div id="index_button">
+                <input type="submit" value="submit" />
+                </div>
+            <div id="reg_link">
+            <li><a href="{% url 'patient:register' %}">New Patients Click Here To Register</a></li><br />
+            </div>
+        </form>
+        </div>
+    </body>
+</html>
