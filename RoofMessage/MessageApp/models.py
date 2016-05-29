@@ -1,3 +1,21 @@
 from django.db import models
+from django.contrib.auth.models import User
 
 # Create your models here.
+
+class UserProfile(models.Model):
+    name = models.CharField(max_length=100)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, default='')
+    def __str__(self):
+        return self.name
+
+class Conversation(models.Model):
+    title = models.CharField(max_length=50)
+    users = models.ManyToManyField(UserProfile)
+
+
+class Message(models.Model):
+    date = models.DateField()
+    time = models.TimeField()
+    text = models.CharField(max_length=1000)
+    conversation = models.ForeignKey(Conversation)
