@@ -3,15 +3,15 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 
-class UserProfile(models.Model):
-    name = models.CharField(max_length=100)
-    user = models.OneToOneField(User, on_delete=models.CASCADE, default='')
-    def __str__(self):
-        return self.name
+# class UserProfile(models.Model):
+#     name = models.CharField(max_length=100)
+#     user = models.OneToOneField(User, on_delete=models.CASCADE, default='')
+#     def __str__(self):
+#         return self.user.username
 
 class Conversation(models.Model):
     title = models.CharField(max_length=50)
-    users = models.ManyToManyField(UserProfile)
+    users = models.ManyToManyField(User)
 
 
 class Message(models.Model):

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/html">
+    <head>
+        <title>Register</title>
+    </head>
+
+    <body>
+        <div id="user_reg">
+            <form id="create_user" method="post" action="{% url 'MessageApp:register' %}">
+                {% csrf_token %}
+                <h1>New User</h1>
+                {{ user_form.as_p }}
+                <input type="submit" name="submit" value="Register" />
+                <a href="{% url 'MessageApp:index' %}"><input type="button" value="Cancel"/></a>
+            </form>
+        </div>
+    </body>
+
+    <script>
+        var password = document.getElementById("id_password")
+        var confirm_password = document.getElementById("id_rep_pass");
+
+        function PasswordMatch(){
+          if(password.value != confirm_password.value)
+          {
+            confirm_password.setCustomValidity("Passwords Don't Match");
+          }
+          else
+          {
+            confirm_password.setCustomValidity('');
+          }
+        }
+
+        password.onchange = PasswordMatch;
+        confirm_password.onkeyup = PasswordMatch;
+    </script>
+</html>
