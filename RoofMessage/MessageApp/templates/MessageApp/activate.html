@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Activate</title>
+</head>
+    <body>
+        {% if new_link_option %}
+            <p>I'm sorry the authentication you have used has expired, click the link below for
+                a new one. If you would like to delete your account issue a new link and then delete
+                once inside your settings.
+            </p>
+            <a href="{% url 'MessageApp:new_link' user_profile.activate_key %}"><input type="button" value="Get New Authentication"/></a>
+        {% else %}
+            <div id="restricted_body">
+                <div id="box">
+                    <h1>Account Created</h1>
+                    <p>Your account has been created! Congradulations!
+                    </p>
+                    <form id="restricted_page" method="post" action="{% url 'MessageApp:index' %}">
+                        {% csrf_token %}
+                        <div><span id="time"></span></div>
+                    </form>
+                </div>
+            </div>
+
+            <script>
+            function startTimer(duration, display)
+            {
+                var timer = duration, minutes, seconds;
+                setInterval(function () {
+                    seconds = parseInt(timer % 60, 10);
+
+                    display.textContent = "Redirecting in: " + seconds;
+
+                    if(--timer < 0)
+                    {
+                        document.forms['restricted_page'].submit();
+                    }
+                }, 1000);
+            }
+
+            window.onload = function () {
+                var time = 5,
+                    display = document.querySelector('#time');
+                startTimer(time, display);
+            };
+            </script>
+        {% endif %}
+    </body>
+</html>
