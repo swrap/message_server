@@ -1,17 +1,19 @@
+from datetime import timedelta
+from django.utils.datetime_safe import date
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.http import BadHeaderError
 from django.shortcuts import render, redirect
-from django.utils import timezone
 
 from .models import UserProfile
 from .forms import UserForm, PasswordForm, NewPasswordForm
 
 # CONSTANT FOR KEY
-KEY_NOT_USABLE = "N0neU5eAb1eS0rrY"
-
+RESET_KEY_NOT_USABLE = "N0neU5eAb1eS0rrY"
+ACTIVATE_KEY_NOT_USABLE = "W00BabYib0YoooBroo"
+LINK_EXPIRATION = 2 #days for new pass link to expire
 
 def index(request):
     # redirects user back to message page
@@ -23,7 +25,7 @@ def index(request):
 @login_required()
 def user_logout(request):
     # Since user is logged in, we can just log them out.
-    if request != None and request.user.is_active:
+    if request is not None and request.user.is_active:
         logout(request)
         # Takes the user back to the index page.
         return redirect('MessageApp:index')
@@ -85,6 +87,22 @@ def delete_account(request):
 
 @login_required()
 def settings(request):
+    try:
+        user_profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        user_profile = None
+    if user_profile is not None and not user_profile.activated_account:
+        activate_account = False
+
+    if request.POST and user_profile is not None:
+        #send activate link has been pressed and user account is not active yet
+        if "activate" in request.POST and not user_profile.activated_account:
+            subject = "New Activate Account Link (AUTOMATED EMAIL, DO NOT RESPOND)"
+            from RoofMessage import settings
+            link = settings.DOMAIN_HOST + "/activate/" + user_profile.activate_key
+            message = "Welcome to Roof's Messaging App!\nPlease click on this link:" + link
+            send_email(subject, message, request.user.email)
+
     pass_form = PasswordForm()
     return render(request, 'MessageApp/settings.html', locals())
 
@@ -102,12 +120,12 @@ def register(request):
             user = user_form.save(commit=False)
 
             user.set_password(user.password)
-            # user must first use activate before becoming active
-            user.is_active = False
             user.save()
 
             user_profile = UserProfile.objects.create(user=user)
             user_profile.new_activate_key();
+            user_profile.reset_key = RESET_KEY_NOT_USABLE
+            user_profile.save()
 
             subject = "Activate Account (AUTOMATED EMAIL, DO NOT RESPOND)"
             from RoofMessage import settings
@@ -163,7 +181,6 @@ def new_password(request):
 
 
 def new_password_send(request):
-    blank = "a"
     change_screen = False
 
     if request.POST:
@@ -203,14 +220,16 @@ def new_password_link(request, key):
             except UserProfile.DoesNotExist:
                 user_profile = None
 
-            if user_profile is not None and user_profile.reset_key != KEY_NOT_USABLE:
-                user_profile.user.set_password(new_pass_form.cleaned_data['new_password'])
-                user_profile.user.save()
+            if user_profile is not None and user_profile.reset_key != RESET_KEY_NOT_USABLE:
+                days = date.today()-user_profile.new_pass_created
+                time_delta =  timedelta(days=LINK_EXPIRATION)
+                if days < time_delta:
+                    user_profile.user.set_password(new_pass_form.cleaned_data['new_password'])
+                    user_profile.reset_key = RESET_KEY_NOT_USABLE
+                    user_profile.save()
+                    return render(request, 'MessageApp/new_password_link.html', locals())
 
-                user_profile.reset_key = KEY_NOT_USABLE
-                user_profile.save()
-            else:
-                show_error = True
+            show_error = True
 
     if request.method == "GET":
         show_input = True
@@ -221,8 +240,10 @@ def new_password_link(request, key):
 
 
 def activate(request, key):
-    import datetime
-    dt = datetime.datetime
+
+    #some how it returns a the unusable key immediately forward back to index
+    if key == ACTIVATE_KEY_NOT_USABLE:
+        return redirect('MessageApp:index')
 
     new_link_option = False
     try:
@@ -230,17 +251,16 @@ def activate(request, key):
     except UserProfile.DoesNotExist:
         user_profile = None
 
-    if user_profile.user.is_active == False:
-        dt = user_profile.user.date_joined + datetime.timedelta(days=7)
-        if timezone.now() > dt:
-            # error
-            new_link_option = True
+    if user_profile is not None:
+        #checks if user account is not active should NEVER HAPPEN *********** add log
+        if not user_profile.activated_account:
+            user_profile.activate_key = ACTIVATE_KEY_NOT_USABLE
+            user_profile.activated_account = True
+            user_profile.save()
             return render(request, 'MessageApp/activate.html', locals())
-        else:
-            user_profile.user.is_active = True
-            user_profile.user.save()
-        return render(request, 'MessageApp/activate.html', locals())
-    return redirect('MessageApp:index')
+
+    expired_or_not_right = True
+    return render(request, 'MessageApp/activate.html', locals())
 
 def send_email(subject, message, email):
     try:
@@ -250,4 +270,4 @@ def send_email(subject, message, email):
     except BadHeaderError:
         ############need to add error page with optional message and optional countdown
         #### also add log for error
-        return
+        return redirect('MessageApp:index')

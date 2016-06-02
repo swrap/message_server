@@ -27,5 +27,14 @@
             <input class="text_input" type="password" name="password" placeholder="Password" size="50" required/>
             <input method="submit" type="submit" value="Delete Account"/>
         </form>
+
+        {% if not user_profile.activated_account %}
+            <!--This is active if account has not been activated yet-->
+            <form id="new_activate_account" method="post" action="{% url 'MessageApp:settings' %}">
+                {% csrf_token %}
+                <p>Your account is still not active!</p>
+                <input type="submit" name="activate" value="Send new Activate Account Link" />
+            </form>
+        {% endif %}
     </body>
 </html>

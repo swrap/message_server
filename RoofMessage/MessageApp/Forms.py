@@ -58,8 +58,8 @@ class PasswordForm(forms.Form):
             self.fields[key].required = True
 
 class NewPasswordForm(forms.Form):
-    reset_key = forms.CharField(max_length=64)
-    new_password = forms.CharField(widget=forms.PasswordInput, label=("New Password"))
+    reset_key = forms.CharField(max_length=64,required=True)
+    new_password = forms.CharField(widget=forms.PasswordInput, label=("New Password"),required=True)
 
     def __init__(self, *args, **kwargs):
         super(NewPasswordForm, self).__init__(*args, **kwargs)

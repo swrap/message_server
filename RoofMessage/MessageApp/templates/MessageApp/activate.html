@@ -5,17 +5,15 @@
     <title>Activate</title>
 </head>
     <body>
-        {% if new_link_option %}
-            <p>I'm sorry the authentication you have used has expired, click the link below for
-                a new one. If you would like to delete your account issue a new link and then delete
-                once inside your settings.
-            </p>
-            <a href="{% url 'MessageApp:new_link' user_profile.activate_key %}"><input type="button" value="Get New Authentication"/></a>
+        {% if expired_or_not_right %}
+            <p>I'm sorry the authentication link you sent was not recognized.<br>
+            Login, go to settings and request a new authentication link if this error persists.<br>
+            Your account may already be authenticated</p>
         {% else %}
             <div id="restricted_body">
                 <div id="box">
-                    <h1>Account Created</h1>
-                    <p>Your account has been created! Congradulations!
+                    <h1>Account Authenticated</h1>
+                    <p>Your account has been authenticated, you can now send messages! Congratulations!
                     </p>
                     <form id="restricted_page" method="post" action="{% url 'MessageApp:index' %}">
                         {% csrf_token %}
