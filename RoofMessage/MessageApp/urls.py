@@ -13,9 +13,8 @@ urlpatterns = [
 
     url(r'^register/$', 'MessageApp.views.register', name='register'),
     url(r'activate/(?P<key>.+)$', 'MessageApp.views.activate', name='activate'),
-    url(r'^new_link/(?P<key>.+)$', 'MessageApp.views.new_link', name='new_link'),
 
-    url(r'^delete_account/(?P<user_id>\d+)/$', 'MessageApp.views.delete_account', name='delete_account'),
+    url(r'^delete_account/$', 'MessageApp.views.delete_account', name='delete_account'),
 
     url(r'^new_password/$', 'MessageApp.views.new_password', name='new_password'), #settings new password
     url(r'^new_password_send/$', 'MessageApp.views.new_password_send', name='new_password_send'), #used to send link

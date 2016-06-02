@@ -3,31 +3,34 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.http import BadHeaderError
-from django.shortcuts import render, redirect, get_object_or_404
+from django.shortcuts import render, redirect
 from django.utils import timezone
 
 from .models import UserProfile
 from .forms import UserForm, PasswordForm, NewPasswordForm
 
-#CONSTANT FOR KEY
+# CONSTANT FOR KEY
 KEY_NOT_USABLE = "N0neU5eAb1eS0rrY"
 
+
 def index(request):
-    #redirects user back to message page
+    # redirects user back to message page
     if request.user.is_active:
         return redirect('MessageApp:message')
     return render(request, 'MessageApp/index.html', {})
+
 
 @login_required()
 def user_logout(request):
     # Since user is logged in, we can just log them out.
     if request != None and request.user.is_active:
         logout(request)
-    # Takes the user back to the index page.
+        # Takes the user back to the index page.
         return redirect('MessageApp:index')
 
+
 def user_login(request):
-    #redirects user back to homepage
+    # redirects user back to homepage
     if request.user.is_active:
         return redirect('MessageApp:message')
 
@@ -42,38 +45,49 @@ def user_login(request):
                 user = request.user
                 return redirect('MessageApp:index')
             else:
-                return render(request, 'MessageApp/index.html', {"login" : "Please Verify your account with the email we sent you"})
+                return render(request, 'MessageApp/index.html',
+                              {"login": "Please Verify your account with the email we sent you"})
         else:
-            return render(request, 'MessageApp/index.html', {"login" : "Incorrect Login Username or password"})
+            return render(request, 'MessageApp/index.html', {"login": "Incorrect Login Username or password"})
     else:
         return render(request, 'MessageApp/index.html', {})
+
 
 @login_required()
 def message(request):
     return render(request, 'MessageApp/message.html', {})
 
+
 @login_required()
-def delete_account(request,userprofile_id):
-    # Takes the user back to the index page.
+def delete_account(request):
     if request.POST:
         password = request.POST['password']
-        if request.user.check_passowrd(password):
-            user_profile = get_object_or_404(User, id=userprofile_id)
-            user_profile.delete()
-            return render(request, 'MessageApp/delete_account.html', locals())
+        if request.user.check_password(password):
+            try:
+                user = User.objects.get(id=request.user.id)
+            except User.DoesNotExist:
+                user = None
+            if user is not None:
+                user.delete()
+                return render(request, 'MessageApp/delete_account.html', locals())
         else:
-            error = "Password was not correct, unable to delete."
+            error = "Must enter password in order to delete account."
+
+    pass_form = PasswordForm()
+
     return render(request, 'MessageApp/settings.html', locals())
+
 
 @login_required()
 def settings(request):
-    user_profile = UserProfile.objects.get(user=request.user)
-    pass_form = PasswordForm
+    pass_form = PasswordForm()
     return render(request, 'MessageApp/settings.html', locals())
+
 
 @login_required()
 def message(request):
     return render(request, 'MessageApp/message.html', locals())
+
 
 def register(request):
     if request.POST:
@@ -83,14 +97,15 @@ def register(request):
             user = user_form.save(commit=False)
 
             user.set_password(user.password)
-            #user must first use activate before becoming active
-            user.is_active=False
+            # user must first use activate before becoming active
+            user.is_active = False
             user.save()
 
-            user_profile = UserProfile.objects.create(user = user)
+            user_profile = UserProfile.objects.create(user=user)
             user_profile.new_activate_key();
 
             subject = "Activate Account (AUTOMATED EMAIL, DO NOT RESPOND)"
+            from RoofMessage import settings
             link = settings.DOMAIN_HOST + "/activate/" + user_profile.activate_key
             message = "Welcome to Roof's Messaging App!\nPlease click on this link:" + link
             send_email(subject, message, user.email)
@@ -102,33 +117,36 @@ def register(request):
     else:
         user_form = UserForm()
 
-    context = {"user_form" : user_form}
+    context = {"user_form": user_form}
     return render(request, 'MessageApp/register.html', context)
 
-    #used for reseting from settings
+    # used for reseting from settings
+
+
 @login_required()
 def new_password(request):
-
     if request.POST:
         pass_form = PasswordForm(data=request.POST)
 
         if pass_form.is_valid():
             old_password = pass_form.cleaned_data['old_password']
-            user = User.objects.get(id=request.user.id)
-
-            if user.check_password(old_password):
+            try:
+                user = User.objects.get(id=request.user.id)
+            except User.DoesNotExist:
+                user = None
+            if user is not None and user.check_password(old_password):
                 user.set_password(pass_form.cleaned_data['new_password1']);
                 user.save()
 
-                update_session_auth_hash(request,user)
+                update_session_auth_hash(request, user)
 
-                #send mail about changed password
+                # send mail about changed password
                 subject = "Password Change (AUTOMATED EMAIL, DO NOT RESPOND)"
                 message = "Greetings from Roof Messages!\n Your password has been changed."
                 send_email(subject, message, user.email)
                 pass_change_success = True
             else:
-                pass_form.add_error("old_password","Password is incorrect")
+                pass_form.add_error("old_password", "Password is incorrect")
         else:
             print(pass_form.errors)
     else:
@@ -136,17 +154,24 @@ def new_password(request):
 
     return render(request, 'MessageApp/settings.html', locals())
 
-    #change password through link
-def new_password_send(request):
+    # change password through link
 
+
+def new_password_send(request):
     blank = "a"
     change_screen = False
 
     if request.POST:
         email = request.POST['email'].strip()
-        user = User.objects.get(email=email)
+        try:
+            user = User.objects.get(email=email)
+        except User.DoesNotExist:
+            user = None
         if user is not None:
-            user_profile = UserProfile.objects.get(user=user)
+            try:
+                user_profile = UserProfile.objects.get(user=user)
+            except UserProfile.DoesNotExist:
+                user_profile = None
             if user_profile is not None:
                 # send mail about changed password
                 subject = "New Password Link (AUTOMATED EMAIL, DO NOT RESPOND)"
@@ -155,21 +180,21 @@ def new_password_send(request):
                 link = settings.DOMAIN_HOST + "/new_password_link/" + user_profile.new_activate_key()
                 message = "Greetings from Roof Messages!\n " \
                           "Click the this link:" + link + "\n" \
-                          "And enter this key: " + key
+                                                          "And enter this key: " + key
                 send_email(subject, message, user.email)
                 change_screen = True
                 return render(request, 'MessageApp/new_password.html', locals())
 
     return render(request, 'MessageApp/new_password.html', locals())
 
-def new_password_link(request,key):
 
+def new_password_link(request, key):
     if request.POST:
         new_pass_form = NewPasswordForm(request.POST)
         if new_pass_form.is_valid():
             reset_key = new_pass_form.cleaned_data['reset_key']
             try:
-                user_profile = UserProfile.objects.get(reset_key=reset_key,activate_key=key)
+                user_profile = UserProfile.objects.get(reset_key=reset_key, activate_key=key)
             except UserProfile.DoesNotExist:
                 user_profile = None
 
@@ -189,35 +214,27 @@ def new_password_link(request,key):
 
     return render(request, 'MessageApp/new_password_link.html', locals())
 
-def activate(request, key):
 
+def activate(request, key):
     import datetime
     dt = datetime.datetime
 
     new_link_option = False
-    user_profile = get_object_or_404(UserProfile, activate_key=key)
+    try:
+        user_profile = UserProfile.objects.get(activate_key=key)
+    except UserProfile.DoesNotExist:
+        user_profile = None
+
     if user_profile.user.is_active == False:
         dt = user_profile.user.date_joined + datetime.timedelta(days=7)
         if timezone.now() > dt:
-            #error
+            # error
             new_link_option = True
             return render(request, 'MessageApp/activate.html', locals())
         else:
             user_profile.user.is_active = True
             user_profile.user.save()
         return render(request, 'MessageApp/activate.html', locals())
-    return redirect('MessageApp:index')
-
-def new_link(request, key):
-
-    user_profile = get_object_or_404(UserProfile, activate_key=key)
-    user_profile.new_activate_key();
-
-    subject = "Activate Account (AUTOMATED EMAIL, DO NOT RESPOND)"
-    link = settings.DOMAIN_HOST + "/activate/" + user_profile.activate_key
-    message = "Welcome to Roof's Messaging App!\nPlease click on this link:" + link
-    send_email(subject, message, user_profile.user)
-
     return redirect('MessageApp:index')
 
 def send_email(subject, message, email):
