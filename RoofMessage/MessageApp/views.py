@@ -68,6 +68,11 @@ def delete_account(request):
             except User.DoesNotExist:
                 user = None
             if user is not None:
+                # send mail about account delete
+                subject = "Password Change (AUTOMATED EMAIL, DO NOT RESPOND)"
+                message = "Greetings from Roof Messages!\n Sorry to see you leave!\n" \
+                          "Just verifying that your account has been deleted."
+                send_email(subject, message, user.email)
                 user.delete()
                 return render(request, 'MessageApp/delete_account.html', locals())
         else:
