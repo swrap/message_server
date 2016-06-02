@@ -6,6 +6,8 @@
 </head>
     <body>
         <h3>Welcome to Roofs Messaging App</h3>
-         <a href="{% url 'MessageApp:logout' %}"><input type="submit" value="Logout"/></a>
+        {% csrf_token %}
+        <a href="{% url 'MessageApp:logout' %}"><input type="submit" value="Logout"/></a>
+        <a href="{% url 'MessageApp:settings' %}"><input method="get" type="submit" value="Settings"/></a>
     </body>
 </html>

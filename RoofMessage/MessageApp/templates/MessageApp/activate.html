@@ -33,7 +33,7 @@
 
                     display.textContent = "Redirecting in: " + seconds;
 
-                    if(--timer < 0)
+                    if(--timer == 0)
                     {
                         document.forms['restricted_page'].submit();
                     }

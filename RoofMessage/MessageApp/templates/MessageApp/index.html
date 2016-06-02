@@ -19,14 +19,12 @@
                                 required/>
                 <br />
                 </div>
-                    <div id="index_button">
                     <input type="submit" value="submit" />
-                </div>
                 <br />
-                <div id="reg_link">
-                    <a href="{% url 'MessageApp:register' %}">New Users Click Here To Register</a>
-                </div>
             </form>
+            <a href="{% url 'MessageApp:new_password_send' %}">Forgot Password</a>
+            <br>
+            <a href="{% url 'MessageApp:register' %}">New Users Click Here To Register</a>
         </div>
 
     </body>

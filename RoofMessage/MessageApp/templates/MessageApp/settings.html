@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Settings</title>
+</head>
+    <body>
+        <h1>Settings</h1>
+        <div id="change_password">
+            {% if pass_change_success %}
+                <p>Congradulations your password has been changed!</p>
+            {% endif %}
+            <form id="change_password_form" method="post" action="{% url 'MessageApp:new_password' %}">
+                {% csrf_token %}
+                {{ pass_form.as_p }}
+                <input type="submit" name="submit" value="Save Changed Password" />
+            </form>
+        </div>
+        <a href="{% url 'MessageApp:index' %}"><input type="button" value="Back"/></a>
+    </body>
+</html>
