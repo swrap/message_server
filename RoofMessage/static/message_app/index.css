@@ -1,0 +1,55 @@
+
+body{
+    background-image: url("http://i.imgur.com/ZdmC6OA.jpg");
+    font-family: Calibri;
+}
+div{
+
+}
+input{
+    border-color: black;
+    border-radius: 0;
+    -webkit-appearance: none;
+}
+#master_container{
+    width: 400px;
+    height: auto;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 200px;
+    text-align: center;
+}
+#username{
+    margin-left: auto;
+    margin-right: auto;
+}
+#password{
+    margin-left: auto;
+    margin-right: auto;
+}
+#buttons{
+    margin-left: auto;
+    margin-right: auto;
+}
+.text_input{
+    width: 200px;
+}
+.login{
+    background-color: lightpink;
+    color: white;
+    width: 100%
+}
+.login:hover{
+    background-color: pink;
+}
+.signup{
+    background-color: hotpink;
+    color: white;
+    width: 100%;
+}
+.signup:hover{
+    background-color: deeppink;
+}
+.pure-button{
+    border-radius: 0px;
+}

@@ -1,94 +1,41 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <link rel="stylesheet" href="pure-min.css">
-        <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
-        <title>HealthNet Homepage</title>
-        <style type="text/css">
-            body{
-                background-image: url("http://i.imgur.com/ZdmC6OA.jpg");
-                font-family: Calibri;
-            }
-            div{
+{% extends 'message_app_base.html' %}
+{% load staticfiles %}
 
-            }
-            input{
-                border-color: black;
-                border-radius: 0;
-                -webkit-appearance: none;
-            }
-            #master_container{
-                width: 400px;
-                height: auto;
-                margin-left: auto;
-                margin-right: auto;
-                margin-top: 200px;
-                text-align: center;
-            }
-            #username{
-                margin-left: auto;
-                margin-right: auto;
-            }
-            #password{
-                margin-left: auto;
-                margin-right: auto;
-            }
-            #buttons{
-                margin-left: auto;
-                margin-right: auto;
-            }
-            .text_input{
-                width: 200px;
-            }
-            .login{
-                background-color: lightpink;
-                color: white;
-                width: 100%
-            }
-            .login:hover{
-                background-color: pink;
-            }
-            .signup{
-                background-color: hotpink;
-                color: white;
-                width: 100%;
-            }
-            .signup:hover{
-                background-color: deeppink;
-            }
-            .pure-button{
-                border-radius: 0px;
-            }
-        </style>
-    </head>
+{% block head_block %}
+    <link rel="stylesheet" href="pure-min.css">
+    <link rel="stylesheet" href="http://yui.yahooapis.com/pure/0.6.0/pure-min.css">
+    <link rel="stylesheet" href="{% static "message_app/index.css" %}">
+    <title>HealthNet Homepage</title>
+    <style type="text/css">
+    </style>
+{% endblock %}
 
-    <body>
-        <div id="master_container">
-            <div id="title" style="color:white; font-family: Calibri; font-size: 50px; width: 400px">
-                <span style="font-weight: bold">ROOF</span>
-                <span style="margin-left:-10px; color:pink">message</span>
-            </div>
-            <form id="user_login" class="pure-form" method="post" action="{% url 'MessageApp:login' %}">
-                <fieldset>
-                    {% csrf_token %}
-                    <div id="username" style="width: 200px">
-                        <input class="text_input" type="text" name="username" placeholder="Username" size="50" autofocus
-                                 autocomplete="on" required title="Please enter username"/>
-                    </div>
-                    <div id="password" style="width: 200px">
-                        <input class="text_input" type="password" name="password" placeholder="Password" size="50" required/>
-                    </div>
-                    <div id="buttons" style="display: flex; width: 200px">
-                        <div id="register" style="width: 100px">
-                            <a class="pure-button signup" href="{% url 'MessageApp:register' %}" style="">Register</a>
-                        </div>
-                        <div id="login" style="width: 100px">
-                            <input class="pure-button login" type="submit" value="Login" style="width: 100%;">
-                        </div>
-                    </div>
-                </fieldset>
-            </form>
-            <a href="{% url 'MessageApp:new_password_send' %}">Forgot Password</a>
+{% block body_block %}
+    <div id="master_container">
+        <div id="title" style="color:white; font-family: Calibri; font-size: 50px; width: 400px">
+            <span style="font-weight: bold">ROOF</span>
+            <span style="margin-left:-10px; color:pink">message</span>
         </div>
-    </body>
-</html>
+        <form id="user_login" class="pure-form" method="post" action="{% url 'MessageApp:login' %}">
+            <fieldset>
+                {% csrf_token %}
+                <div id="username" style="width: 200px">
+                    <input class="text_input" type="text" name="username" placeholder="Username" size="50" autofocus
+                             autocomplete="on" required title="Please enter username"/>
+                </div>
+                <div id="password" style="width: 200px">
+                    <input class="text_input" type="password" name="password" placeholder="Password" size="50" required/>
+                </div>
+                <div id="buttons" style="display: flex; width: 200px">
+                    <div id="register" style="width: 100px">
+                        <a class="pure-button signup" href="{% url 'MessageApp:register' %}" style="">Register</a>
+                    </div>
+                    <div id="login" style="width: 100px">
+                        <input class="pure-button login" type="submit" value="Login" style="width: 100%;">
+                    </div>
+                </div>
+            </fieldset>
+        </form>
+        <a href="{% url 'MessageApp:new_password_send' %}">Forgot Password</a>
+    </div>
+{% endblock %}
