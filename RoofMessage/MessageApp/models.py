@@ -5,13 +5,13 @@ from django.contrib.auth.models import User
 
 # Create your models here.
 from django.utils.crypto import random
-from django.utils.datetime_safe import date
+from django.utils import timezone
 
 
 class UserProfile(models.Model):
     activate_key = models.CharField(max_length=64, null=True, default='')
     reset_key = models.CharField(max_length=64, null=True, default='')
-    new_pass_created = models.DateField(default=date.today())
+    new_pass_created = models.DateField(default=timezone.now())
     user = models.OneToOneField(User, on_delete=models.CASCADE, default='')
     activated_account = models.BooleanField(default=False)
     def __str__(self):
@@ -45,7 +45,7 @@ class UserProfile(models.Model):
         salt = hashlib.sha256(str(random.random()).encode('utf-8')).hexdigest()
         salt = salt.encode('utf-8')
         self.reset_key = hashlib.sha256(salt + usernamesalt).hexdigest()
-        self.new_pass_created = date.today()
+        self.new_pass_created = timezone.now()
         self.save()
         return self.reset_key
 

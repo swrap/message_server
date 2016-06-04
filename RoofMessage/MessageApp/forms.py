@@ -44,6 +44,11 @@ class PasswordForm(forms.Form):
                                widget=forms.PasswordInput(attrs={"onChange":'PasswordMatch()',
                                                                  "oninvalid":'PasswordMatch()'}),
                                )
+    def clean_old_password(self):
+        password =  self.cleaned_data['old_password']
+        if password is None:
+            raise forms.ValidationError("No pass")
+        return password
 
     def clean_new_password2(self):
         password = self.cleaned_data['new_password1']

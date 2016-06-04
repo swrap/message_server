@@ -9,7 +9,7 @@ urlpatterns = [
 
     url(r'^message/$', 'MessageApp.views.message', name='message'),
 
-    url(r'^settings/$', 'MessageApp.views.settings', name='settings'),
+    url(r'^settings/$', 'MessageApp.views.settings_page', name='settings'),
 
     url(r'^register/$', 'MessageApp.views.register', name='register'),
     url(r'activate/(?P<key>.+)$', 'MessageApp.views.activate', name='activate'),

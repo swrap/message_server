@@ -65,7 +65,8 @@ ROOT_URLCONF = 'RoofMessage.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ["static/email/",
+                 "RoofMessage/static/email/"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

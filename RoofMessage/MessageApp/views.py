@@ -1,11 +1,15 @@
 from datetime import timedelta
+
+from django.template import Context
+from django.template.loader import get_template
 from django.utils.datetime_safe import date
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.http import BadHeaderError
 from django.shortcuts import render, redirect
+from django.views.decorators.cache import cache_control
 
 from .models import UserProfile
 from .forms import UserForm, PasswordForm, NewPasswordForm
@@ -15,6 +19,26 @@ RESET_KEY_NOT_USABLE = "N0neU5eAb1eS0rrY"
 ACTIVATE_KEY_NOT_USABLE = "W00BabYib0YoooBroo"
 LINK_EXPIRATION = 2 #days for new pass link to expire
 
+#Email file Constants
+from django.conf import settings
+EMAIL_DELETE_ACCOUNT = "deleted_account.html"
+EMAIL_NEW_PASSWORD_LINK = "new_password_link.html"
+EMAIL_PASSWORD_CHANGE_NOTIFICATION = "pass_change_email.html"
+EMAIL_VERIFY_ACCOUNT= "verify_account_email.html"
+
+#used as decorator!
+#checks both if user exists and if exists
+#if their account is still active (bans turns off is_active)
+#also user must be authenticated
+def user_allowed(user):
+    try:
+        user = User.objects.get(id=user.id)
+    except User.DoesNotExist:
+        return False
+    if user.is_active and user.is_authenticated():
+        return True
+    return False
+
 def index(request):
     # redirects user back to message page
     if request.user.is_active:
@@ -22,6 +46,8 @@ def index(request):
     return render(request, 'MessageApp/index.html', {})
 
 
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@user_passes_test(user_allowed,login_url='/')
 @login_required()
 def user_logout(request):
     # Since user is logged in, we can just log them out.
@@ -54,12 +80,14 @@ def user_login(request):
     else:
         return render(request, 'MessageApp/index.html', {})
 
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@user_passes_test(user_allowed,login_url='/')
 @login_required()
 def message(request):
     return render(request, 'MessageApp/message.html', {})
 
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@user_passes_test(user_allowed,login_url='/')
 @login_required()
 def delete_account(request):
     if request.POST:
@@ -71,22 +99,28 @@ def delete_account(request):
                 user = None
             if user is not None:
                 # send mail about account delete
-                subject = "Password Change (AUTOMATED EMAIL, DO NOT RESPOND)"
-                message = "Greetings from Roof Messages!\n Sorry to see you leave!\n" \
-                          "Just verifying that your account has been deleted."
+                subject = "Deleted Account (AUTOMATED EMAIL, DO NOT RESPOND)"
+                from RoofMessage import settings
+                email_template = get_template(EMAIL_DELETE_ACCOUNT)
+                message = email_template.render()
                 send_email(subject, message, user.email)
                 user.delete()
                 return render(request, 'MessageApp/delete_account.html', locals())
         else:
-            error = "Must enter password in order to delete account."
+            error = "Must enter correct password in order to delete account."
 
+    try:
+        user_profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        user_profile = None
     pass_form = PasswordForm()
 
     return render(request, 'MessageApp/settings.html', locals())
 
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@user_passes_test(user_allowed,login_url='/')
 @login_required()
-def settings(request):
+def settings_page(request):
     try:
         user_profile = UserProfile.objects.get(user=request.user)
     except UserProfile.DoesNotExist:
@@ -100,13 +134,15 @@ def settings(request):
             subject = "New Activate Account Link (AUTOMATED EMAIL, DO NOT RESPOND)"
             from RoofMessage import settings
             link = settings.DOMAIN_HOST + "/activate/" + user_profile.activate_key
-            message = "Welcome to Roof's Messaging App!\nPlease click on this link:" + link
+            email_template = get_template(EMAIL_VERIFY_ACCOUNT)
+            message = email_template.render(Context({"activation_key" : link}))
             send_email(subject, message, request.user.email)
 
     pass_form = PasswordForm()
     return render(request, 'MessageApp/settings.html', locals())
 
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@user_passes_test(user_allowed,login_url='/')
 @login_required()
 def message(request):
     return render(request, 'MessageApp/message.html', locals())
@@ -130,7 +166,8 @@ def register(request):
             subject = "Activate Account (AUTOMATED EMAIL, DO NOT RESPOND)"
             from RoofMessage import settings
             link = settings.DOMAIN_HOST + "/activate/" + user_profile.activate_key
-            message = "Welcome to Roof's Messaging App!\nPlease click on this link:" + link
+            email_template = get_template(EMAIL_VERIFY_ACCOUNT)
+            message = email_template.render(Context({"activation_key" : link}))
             send_email(subject, message, user.email)
             # logger.info("User \"" + user.username + "\" has been registered")
 
@@ -144,10 +181,11 @@ def register(request):
     return render(request, 'MessageApp/register.html', context)
 
     # used for reseting from settings
-
-
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@user_passes_test(user_allowed,login_url='/')
 @login_required()
 def new_password(request):
+    print(request.method)
     if request.POST:
         pass_form = PasswordForm(data=request.POST)
 
@@ -165,7 +203,8 @@ def new_password(request):
 
                 # send mail about changed password
                 subject = "Password Change (AUTOMATED EMAIL, DO NOT RESPOND)"
-                message = "Greetings from Roof Messages!\n Your password has been changed."
+                email_template = get_template(EMAIL_PASSWORD_CHANGE_NOTIFICATION)
+                message = email_template.render()
                 send_email(subject, message, user.email)
                 pass_change_success = True
             else:
@@ -174,6 +213,12 @@ def new_password(request):
             print(pass_form.errors)
     else:
         pass_form = PasswordForm()
+
+    #used in rendering settings
+    try:
+        user_profile = UserProfile.objects.get(user=request.user)
+    except UserProfile.DoesNotExist:
+        user_profile = None
 
     return render(request, 'MessageApp/settings.html', locals())
 
@@ -200,9 +245,8 @@ def new_password_send(request):
                 key = user_profile.new_reset_key()
                 from RoofMessage import settings
                 link = settings.DOMAIN_HOST + "/new_password_link/" + user_profile.new_activate_key()
-                message = "Greetings from Roof Messages!\n " \
-                          "Click the this link:" + link + "\n" \
-                                                          "And enter this key: " + key
+                email_template = get_template(EMAIL_NEW_PASSWORD_LINK)
+                message = email_template.render(Context({"activation_key": link, "reset_key": key}))
                 send_email(subject, message, user.email)
                 change_screen = True
                 return render(request, 'MessageApp/new_password.html', locals())
@@ -220,12 +264,13 @@ def new_password_link(request, key):
             except UserProfile.DoesNotExist:
                 user_profile = None
 
-            if user_profile is not None and user_profile.reset_key != RESET_KEY_NOT_USABLE:
+            if user_profile is not None and user_profile.reset_key != RESET_KEY_NOT_USABLE and user_profile.activated_account != ACTIVATE_KEY_NOT_USABLE:
                 days = date.today()-user_profile.new_pass_created
                 time_delta =  timedelta(days=LINK_EXPIRATION)
                 if days < time_delta:
                     user_profile.user.set_password(new_pass_form.cleaned_data['new_password'])
                     user_profile.reset_key = RESET_KEY_NOT_USABLE
+                    user_profile.activate_key = ACTIVATE_KEY_NOT_USABLE
                     user_profile.save()
                     return render(request, 'MessageApp/new_password_link.html', locals())
 
@@ -265,7 +310,7 @@ def activate(request, key):
 def send_email(subject, message, email):
     try:
         from RoofMessage import settings
-        send_mail(subject=subject, message=message, from_email=settings.EMAIL_HOST_USER,
+        send_mail(subject=subject, message=message,html_message=message, from_email=settings.EMAIL_HOST_USER,
                   recipient_list=(email,), fail_silently=True)
     except BadHeaderError:
         ############need to add error page with optional message and optional countdown

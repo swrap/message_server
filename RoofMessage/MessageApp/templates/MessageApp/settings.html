@@ -18,7 +18,7 @@
         </div>
         <a href="{% url 'MessageApp:index' %}"><input type="button" value="Back"/></a>
         <br>
-        <form id="change_password_form" method="post" action="{% url 'MessageApp:delete_account' %}">
+        <form id="delete_account_form" method="post" action="{% url 'MessageApp:delete_account' %}">
             {% csrf_token %}
             {% ifnotequal error None %}
                 {{ error }}
