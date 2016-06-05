@@ -1,0 +1,19 @@
+
+body{
+    font-family: "Yu Gothic UI Light";
+    background-color: steelblue;
+}
+
+tr {
+    border: 1px dotted white;
+}
+
+.buttons {
+    border: none;
+    color: black;
+    padding: 15px 32px;
+    text-align: center;
+    font-size: 16px;
+    cursor: pointer;
+    width: 100%;
+}

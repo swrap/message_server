@@ -1,13 +1,36 @@
+{% load staticfiles %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="{% static "message_app/message.css" %}">
+    <title>HealthNet Homepage</title>
     <title>Message</title>
 </head>
     <body>
-        <h3>Welcome to Roofs Messaging App</h3>
         {% csrf_token %}
-        <a href="{% url 'MessageApp:logout' %}"><input type="submit" value="Logout"/></a>
-        <a href="{% url 'MessageApp:settings' %}"><input method="get" type="submit" value="Settings"/></a>
+        <table style="border-color:white;width:25%;">
+            <tr>
+                <td style="text-align: center;">
+                    <h3>Messages</h3>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a href="{% url 'MessageApp:logout' %}"><input class="buttons" type="submit" value="Logout"/></a>
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <a href="{% url 'MessageApp:settings' %}"><input class="buttons" method="get" type="submit" value="Settings"/></a>
+                </td>
+            </tr>
+            <tr>
+                <td style="text-align: center;">
+                    <h3>Contacts</h3>
+                </td>
+            </tr>
+        </table>
     </body>
 </html>
