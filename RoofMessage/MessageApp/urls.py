@@ -16,7 +16,6 @@ urlpatterns = [
 
     url(r'^delete_account/$', 'MessageApp.views.delete_account', name='delete_account'),
 
-    url(r'^new_password/$', 'MessageApp.views.new_password', name='new_password'), #settings new password
     url(r'^new_password_send/$', 'MessageApp.views.new_password_send', name='new_password_send'), #used to send link
     url(r'^new_password_link/(?P<key>.+)$', 'MessageApp.views.new_password_link', name='new_password_link'),
 ]

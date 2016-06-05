@@ -10,10 +10,10 @@
             {% if pass_change_success %}
                 <p>Congradulations your password has been changed!</p>
             {% endif %}
-            <form id="change_password_form" method="post" action="{% url 'MessageApp:new_password' %}">
+            <form id="change_password_form" method="post" action="{% url 'MessageApp:settings' %}">
                 {% csrf_token %}
                 {{ pass_form.as_p }}
-                <input type="submit" name="submit" value="Save Changed Password" />
+                <input type="submit" name="change_password" value="Save Changed Password" />
             </form>
         </div>
         <a href="{% url 'MessageApp:index' %}"><input type="button" value="Back"/></a>
@@ -29,6 +29,9 @@
         </form>
 
         {% if not user_profile.activated_account %}
+            {% if email_sent %}
+                <p>An email has just been sent with a new activation code</p>
+            {% endif %}
             <!--This is active if account has not been activated yet-->
             <form id="new_activate_account" method="post" action="{% url 'MessageApp:settings' %}">
                 {% csrf_token %}

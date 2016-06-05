@@ -129,14 +129,45 @@ def settings_page(request):
         activate_account = False
 
     if request.POST and user_profile is not None:
+
+        if "change_password" in request.POST:
+            pass_form = PasswordForm(data=request.POST)
+            if pass_form.is_valid():
+                old_password = pass_form.cleaned_data['old_password']
+                try:
+                    user = User.objects.get(id=request.user.id)
+                except User.DoesNotExist:
+                    user = None
+                if user is not None and user.check_password(old_password):
+                    user.set_password(pass_form.cleaned_data['new_password1']);
+                    user.save()
+
+                    #signs user back in after updating password
+                    update_session_auth_hash(request, user)
+
+                    # send mail about changed password
+                    subject = "Password Change (AUTOMATED EMAIL, DO NOT RESPOND)"
+                    email_template = get_template(EMAIL_PASSWORD_CHANGE_NOTIFICATION)
+                    message = email_template.render()
+                    send_email(subject, message, user.email)
+                    pass_change_success = True
+                else:
+                    pass_form.add_error("old_password", "Password is incorrect")
+            else:
+                print(pass_form.errors)
+            #renders page
+            return render(request, 'MessageApp/settings.html', locals())
+
         #send activate link has been pressed and user account is not active yet
-        if "activate" in request.POST and not user_profile.activated_account:
+        #other posted form
+        elif "activate" in request.POST and not user_profile.activated_account:
             subject = "New Activate Account Link (AUTOMATED EMAIL, DO NOT RESPOND)"
             from RoofMessage import settings
             link = settings.DOMAIN_HOST + "/activate/" + user_profile.activate_key
             email_template = get_template(EMAIL_VERIFY_ACCOUNT)
             message = email_template.render(Context({"activation_key" : link}))
             send_email(subject, message, request.user.email)
+            email_sent = True
 
     pass_form = PasswordForm()
     return render(request, 'MessageApp/settings.html', locals())
@@ -179,51 +210,6 @@ def register(request):
 
     context = {"user_form": user_form}
     return render(request, 'MessageApp/register.html', context)
-
-    # used for reseting from settings
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@user_passes_test(user_allowed,login_url='/')
-@login_required()
-def new_password(request):
-    print(request.method)
-    if request.POST:
-        pass_form = PasswordForm(data=request.POST)
-
-        if pass_form.is_valid():
-            old_password = pass_form.cleaned_data['old_password']
-            try:
-                user = User.objects.get(id=request.user.id)
-            except User.DoesNotExist:
-                user = None
-            if user is not None and user.check_password(old_password):
-                user.set_password(pass_form.cleaned_data['new_password1']);
-                user.save()
-
-                update_session_auth_hash(request, user)
-
-                # send mail about changed password
-                subject = "Password Change (AUTOMATED EMAIL, DO NOT RESPOND)"
-                email_template = get_template(EMAIL_PASSWORD_CHANGE_NOTIFICATION)
-                message = email_template.render()
-                send_email(subject, message, user.email)
-                pass_change_success = True
-            else:
-                pass_form.add_error("old_password", "Password is incorrect")
-        else:
-            print(pass_form.errors)
-    else:
-        pass_form = PasswordForm()
-
-    #used in rendering settings
-    try:
-        user_profile = UserProfile.objects.get(user=request.user)
-    except UserProfile.DoesNotExist:
-        user_profile = None
-
-    return render(request, 'MessageApp/settings.html', locals())
-
-    # change password through link
-
 
 def new_password_send(request):
     change_screen = False
