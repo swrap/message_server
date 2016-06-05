@@ -18,4 +18,9 @@ urlpatterns = [
 
     url(r'^new_password_send/$', 'MessageApp.views.new_password_send', name='new_password_send'), #used to send link
     url(r'^new_password_link/(?P<key>.+)$', 'MessageApp.views.new_password_link', name='new_password_link'),
+
+    url(r'^testing/$', 'MessageApp.views.jquery_test', name='testing'),
+
+    url(r'^get_all_contacts/$', 'MessageApp.views_ajax.get_all_contacts', name='all_contacts'),
+    url(r'^user_contacts/$', 'MessageApp.views_ajax.get_user_contacts', name='user_contacts'),
 ]

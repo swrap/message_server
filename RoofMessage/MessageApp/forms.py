@@ -15,11 +15,11 @@ class UserForm(forms.ModelForm):
         return username
 
     # checks to see if the email used already
-    def clean_email(self):
-        email = self.cleaned_data['email']
-        if User.objects.exclude(pk=self.instance.pk).filter(email=email).exists():
-            raise forms.ValidationError('The email, %s, already has an account associated with it' % email)
-        return email
+    # def clean_email(self):
+    #     email = self.cleaned_data['email']
+    #     if User.objects.exclude(pk=self.instance.pk).filter(email=email).exists():
+    #         raise forms.ValidationError('The email, %s, already has an account associated with it' % email)
+    #     return email
 
     def clean_rep_pass(self):
         password = self.cleaned_data['password']

@@ -5,6 +5,7 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="{% static "message_app/message.css" %}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <title>HealthNet Homepage</title>
     <title>Message</title>
 </head>
@@ -27,10 +28,89 @@
                 </td>
             </tr>
             <tr>
-                <td style="text-align: center;">
-                    <h3>Contacts</h3>
+                <td style="text-align: center; width: 100%;">
+                    <select class="tab_menus" id="list_selected" style="width: 100%;">
+                        <option selected>Contacts</option>
+                        <option>Conversations</option>
+                    </select>
+                    <select class="tab_menus" id="all_or_none" style="width: 100%;">
+                        <option selected>My Contacts</option>
+                        <option>All Users</option>
+                    </select>
+
+                    <select id="scroll_data" size="4" multiple style="width: 100%;">
+
+                    </select>
                 </td>
             </tr>
         </table>
+
+    <script>
+        //makes it so ready function is fired on back button
+        history.navigationMode = 'compatible';
+
+        $(document).ready(function() {
+            //in event that back button is hit reload data
+            //get the selection list
+            var selected_list = $('#scroll_data');
+            //clear the selection list
+            selected_list.empty()
+        });
+
+        $(".tab_menus").change(function() {
+
+            //get the selection list
+            var selected_list = $('#scroll_data');
+            //clear the selection list
+            selected_list.empty()
+
+            if($( "#list_selected option:selected" ).text() == "Contacts") {
+
+                $("#all_or_none").show()
+
+                if($( "#all_or_none option:selected" ).text() == "My Contacts")
+                {
+                    //make the query for the data
+                    jQuery.ajax({
+                        url: '{% url 'MessageApp:user_contacts' %}',
+                        type: 'get',
+                        dataType: 'json',
+                        success: function (data) {
+                            //success iterate throuh the data and put into the contacts
+                            $.each(data, function(i, item){
+                                console.log("HERE");
+                                selected_list.append($("<option></option>").val(this).html(item.username));
+                            });
+                            },
+                        failure: function (data) {
+                            selected_list.append($("<option></option>").val(this).html("Unable to load"));
+                        }
+                    });
+                }
+                else
+                {
+                    //make the query for the data
+                    jQuery.ajax({
+                        url: '{% url 'MessageApp:all_contacts' %}',
+                        type: 'get',
+                        dataType: 'json',
+                        success: function (data) {
+                            //success iterate throuh the data and put into the contacts
+                            $.each(data, function(i, item){
+                                console.log("no here");
+                                selected_list.append($("<option></option>").val(this).html(item.username));
+                            });
+                            },
+                        failure: function (data) {
+                            selected_list.append($("<option></option>").val(this).html("Unable to load"));
+                        }
+                    });
+                }
+            }
+            else{
+                $("#all_or_none").hide()
+            }
+          });
+    </script>
     </body>
 </html>

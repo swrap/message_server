@@ -11,7 +11,7 @@ from django.http import BadHeaderError
 from django.shortcuts import render, redirect
 from django.views.decorators.cache import cache_control
 
-from .models import UserProfile
+from .models import UserProfile, Conversation
 from .forms import UserForm, PasswordForm, NewPasswordForm
 
 # CONSTANT FOR KEY
@@ -79,12 +79,6 @@ def user_login(request):
             return render(request, 'MessageApp/index.html', {"login": "Incorrect Login Username or password"})
     else:
         return render(request, 'MessageApp/index.html', {})
-
-@cache_control(no_cache=True, must_revalidate=True, no_store=True)
-@user_passes_test(user_allowed,login_url='/')
-@login_required()
-def message(request):
-    return render(request, 'MessageApp/message.html', {})
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @user_passes_test(user_allowed,login_url='/')
@@ -302,3 +296,17 @@ def send_email(subject, message, email):
         ############need to add error page with optional message and optional countdown
         #### also add log for error
         return redirect('MessageApp:index')
+
+def jquery_test(request):
+#
+#     if "conversations" in request.POST:
+#         data = Conversation.objects.filter(user=request.user)
+#     elif "contacts" in request.POST:
+#         data = Contact.objects.filter(user_contact=)
+    return render(request, 'MessageApp/jquery_test.html', locals())
+
+@cache_control(no_cache=True, must_revalidate=True, no_store=True)
+@user_passes_test(user_allowed,login_url='/')
+@login_required()
+def message(request):
+    return render(request, 'MessageApp/message.html', {})

@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <title>Title</title>
+</head>
+<body>
+    <button onClick="alert('You clicked the button using Javascript.');">
+       Click Me - I run Javascript
+    </button>
+
+    <button id="about-btn"> Click Me - I'm Javascript on Speed</button>
+
+    <p>This is a example</p>
+
+    <p>This is another example</p>
+
+    <div id="msg">Hello</div>
+
+    <script>
+        $(document).ready(function() {
+
+            // JQuery code to be added in here.
+            $("#about-btn").click( function(event) {
+                alert("You clicked the button using JQuery!");
+            });
+
+            $("p").hover( function() {
+            $(this).css('color', 'red');
+            },
+            function() {
+                    $(this).css('color', 'blue');
+            });
+
+            $("#about-btn").click( function(event) {
+            msgstr = $("#msg").html()
+                    msgstr = msgstr + "o"
+                    $("#msg").html(msgstr)
+             });
+
+        });
+
+    </script>
+</body>
+</html>

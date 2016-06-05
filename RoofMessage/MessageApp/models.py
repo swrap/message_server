@@ -7,13 +7,13 @@ from django.contrib.auth.models import User
 from django.utils.crypto import random
 from django.utils import timezone
 
-
 class UserProfile(models.Model):
     activate_key = models.CharField(max_length=64, null=True, default='')
     reset_key = models.CharField(max_length=64, null=True, default='')
     new_pass_created = models.DateField(default=timezone.now())
     user = models.OneToOneField(User, on_delete=models.CASCADE, default='')
     activated_account = models.BooleanField(default=False)
+
     def __str__(self):
         return self.user.username
 
@@ -49,6 +49,10 @@ class UserProfile(models.Model):
         self.save()
         return self.reset_key
 
+class Contact(models.Model):
+    contact = models.OneToOneField(User, on_delete=models.CASCADE,default='')
+    is_blocked = models.BooleanField(default=False)
+    contacts = models.ForeignKey(UserProfile,on_delete=models.CASCADE,default='',null=True)
 
 class Conversation(models.Model):
     title = models.CharField(max_length=50)
