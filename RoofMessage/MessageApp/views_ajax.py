@@ -32,3 +32,37 @@ def get_user_contacts(request):
             contacts = user_profile.contact_set.all().filter(is_blocked=False)
             data = json.dumps([{'username': o.user.username} for o in contacts])
             return HttpResponse(data, content_type='application/json')
+
+# Returns information relevant to conversation:
+# JSON OBJECT
+# convo title
+# convo id (used for internal code only of webpage)
+# convo number of users
+# convo user names
+def get_conversations(request):
+    if request.method == "GET":
+        user = User.objects.filter(instance=request.user)
+        user = user[0]
+        if user is not None:
+            conversations= user.conversation_set.all()
+            convo_list = []
+            for c in conversations:
+                convo_list.append({'title':c.title,
+                                   'convo_id' : c.id,
+                                   'number_of_users' : c.users.count()
+                                   })
+            data = json.dumps(convo_list)
+            return HttpResponse(data, content_type='application/json')
+
+# Returns information relevant to conversation:
+# JSON OBJECT
+# message objects are sent relating to conversation
+def get_messages(request, convo_id):
+    if request.method == "GET":
+        user = User.objects.filter(instance=request.user)
+        user = user[0]
+        if user is not None:
+            conversation = user.conversation_set.get(id=convo_id)
+            if conversation is not None:
+                data = json.dumps(conversation.message_set.all())
+                return HttpResponse(data, content_type='application/json')

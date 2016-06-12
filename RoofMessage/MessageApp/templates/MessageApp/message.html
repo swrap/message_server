@@ -129,7 +129,7 @@
                             //success iterate throuh the data and put into the contacts
                             $.each(data, function(i, item){
                                 console.log("no here");
-                                selected_list.append($("<option></option>").val(this).html(item.username));
+                                selected_list.append($("<option></option>").className("users").html(item.username));
                             });
                             },
                         failure: function (data) {
@@ -142,6 +142,7 @@
                 $("#all_or_none").hide()
             }
           });
+
         var body = document.getElementsByTagName("body");
         var hnav_bar = document.getElementsByClassName("hnav-bar");
         var hnav_item = document.getElementsByClassName("hnav-item");
