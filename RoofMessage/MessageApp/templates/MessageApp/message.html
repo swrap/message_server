@@ -20,7 +20,7 @@
     </script>
 </head>
     <body>
-        <div class="hnav-bar">
+        <div class="hnav-bar" hidden>
             <div class="hnav-item title">
                 ROOFmessage
             </div>
@@ -42,39 +42,45 @@
             <input type="text" style="float:right; margin-right:3px; margin-top:-33px;">
         </div>
         {% csrf_token %}
-        <table style="border-color:white;width:25%;">
-            <tr>
-                <td style="text-align: center;">
-                    <h3>Messages</h3>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <a href="{% url 'MessageApp:logout' %}"><input class="buttons" type="submit" value="Logout"/></a>
-                </td>
-            </tr>
-            <tr>
-                <td>
-                    <a href="{% url 'MessageApp:settings' %}"><input class="buttons" method="get" type="submit" value="Settings"/></a>
-                </td>
-            </tr>
-            <tr>
-                <td style="text-align: center; width: 100%;">
-                    <select class="tab_menus" id="list_selected" style="width: 100%;">
-                        <option selected>Contacts</option>
-                        <option>Conversations</option>
-                    </select>
-                    <select class="tab_menus" id="all_or_none" style="width: 100%;">
-                        <option selected>My Contacts</option>
-                        <option>All Users</option>
-                    </select>
+        <div id="user_side">
+            <table>
+                <tr>
+                    <td style="text-align: center;">
+                        <h3>Messages</h3>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="{% url 'MessageApp:logout' %}"><input class="buttons" type="submit" value="Logout"/></a>
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <a href="{% url 'MessageApp:settings' %}"><input class="buttons" method="get" type="submit" value="Settings"/></a>
+                    </td>
+                </tr>
+                <tr>
+                    <td style="text-align: center;">
+                        <select class="tab_menus" id="list_selected">
+                            <option selected>Contacts</option>
+                            <option>Conversations</option>
+                        </select>
+                        <select class="tab_menus" id="all_or_none">
+                            <option selected>My Contacts</option>
+                            <option>All Users</option>
+                        </select>
 
-                    <select id="scroll_data" size="4" multiple style="width: 100%;">
+                        <select id="scroll_data" size="4" multiple">
 
-                    </select>
-                </td>
-            </tr>
-        </table>
+                        </select>
+                    </td>
+                </tr>
+            </table>
+        </div>
+        <div id="message_area">
+            <div id="message_box"></div>
+        </div>
+
 
     <script>
         //makes it so ready function is fired on back button
