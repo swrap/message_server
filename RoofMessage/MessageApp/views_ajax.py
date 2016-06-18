@@ -66,3 +66,35 @@ def get_messages(request, convo_id):
             if conversation is not None:
                 data = json.dumps(conversation.message_set.all())
                 return HttpResponse(data, content_type='application/json')
+
+def start_convo(request):
+    if request.POST and request.is_ajax():
+        user_ids = request.POST.getlist("user_ids")
+        if user_ids is not None:
+            # removes any duplicates
+            user_ids = list(set(user_ids))
+            # try to create chat and you are not part of
+            if any(str(request.user.pk) in s for s in user_ids):
+                users = User.objects.filter(pk__in=user_ids)
+                if users.count() > 0:
+                    # only give convo that relate to user
+                    convo = Conversation.objects.filter(users=request.user)
+                    for user in users:
+                        convo = convo.filter(users=user)
+                    if convo.count() is 0:
+                        #good there is not
+                        convo = Conversation.objects.create(title="Test")
+                        for user in users:
+                            convo.users.add(user)
+                        convo.save()
+                        if convo is not None:
+                            data = serializers.serialize('json', [convo, ])
+                            # data = json.dumps(dict)
+                            return HttpResponse(data, content_type='application/json')
+    #what to do with response if convo could not be created
+    context = {
+        'status': '401', 'reason': 'Unable to create new conversation.'
+    }
+    response = HttpResponse(json.dumps(context), content_type='application/json')
+    response.status_code = 401
+    return response;

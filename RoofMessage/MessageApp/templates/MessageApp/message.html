@@ -89,7 +89,7 @@
             <div class="div_row">
                 <div id="message_area" class="div_col">
                     <div id="message_box">
-                        <ul style="list-style-type:none">
+                        <ul id="message_ul" style="list-style-type:none">
                             <li style="border:1px solid #000; margin:0; padding:0;">hello</li>
                             <li style="border:1px solid #000; margin:0; padding:0;">hello</li>
                             <li style="border:1px solid #000; margin:0; padding:0;">ujkasfabjksdfbaskjdbfkjlabdvjkabdfjkvga aklsdjfasd klfasdklfjasl;kdn;jkan;dfvjklnadfjk;bvgasjk;dnf;asdn fkl;ashdflk asbhdfi; asdh;</li>
@@ -102,16 +102,14 @@
             </div>
             <div class="div_row">
                 <div class="div_col" style="width:50%;">
-                    <textarea style="vertical-align: top; resize: none; min-height: 100%; min-width: 100%;">
-
-                    </textarea>
+                    <textarea style="vertical-align: top; resize: none; min-height: 100%; min-width: 100%;"></textarea>
                 </div>
                 <div class="div_col">
                     <input style="float:right;" id="send_button" type="submit" value="Send"/>
                 </div>
             </div>
         </div>
-
+        {% csrf_token %}
     <script>
         //makes it so ready function is fired on back button
         history.navigationMode = 'compatible';
@@ -198,6 +196,41 @@
 
         var vnav_item = document.getElementsByClassName("vnav-item");
         vnav_item[0].style.backgroundColor = palette.primary;
+
+        add_to_message("message_ul", "right", "yo");
+        add_to_message("message_ul", "left", "no");
+
+
+        var user_ids = [];
+        user_ids.push(2);
+        user_ids.push(4);
+        function start_conversation(user_ids) {
+            var jsonObj = {'csrfmiddlewaretoken': $('input[name="csrfmiddlewaretoken"]').val()};
+            jsonObj.user_ids = user_ids
+            console.log(jsonObj);
+            $.ajax({
+                url: '{% url 'MessageApp:start_convo' %}',
+                type: 'POST',
+                dataType: 'json',
+                traditional: true,
+                data: jsonObj,
+                success: function (data) {
+                                console.log(data);
+                            },
+                error: function (data) {
+                                console.log(data);
+                            },
+            });
+        }
+
+        start_conversation(user_ids);
+        function add_to_message (message_ul_id, align_side, message_text) {
+            var mess_ul = document.getElementById(message_ul_id);
+            var new_li = document.createElement("li");
+            new_li.setAttribute("align",align_side)
+            new_li.appendChild(document.createTextNode(message_text));
+            mess_ul.appendChild(new_li);
+        }
     </script>
     </body>
 </html>

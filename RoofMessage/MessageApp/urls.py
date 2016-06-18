@@ -23,4 +23,6 @@ urlpatterns = [
 
     url(r'^get_all_contacts/$', 'MessageApp.views_ajax.get_all_contacts', name='all_contacts'),
     url(r'^user_contacts/$', 'MessageApp.views_ajax.get_user_contacts', name='user_contacts'),
+
+    url(r'^start_convo/$', 'MessageApp.views_ajax.start_convo', name='start_convo'),
 ]
