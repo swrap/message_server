@@ -4,6 +4,11 @@ body{
     background-color: steelblue;
 }
 
+.tab_menus {
+    padding: 3px;
+    width: 100%;
+}
+
 .buttons {
     border: none;
     color: black;
@@ -14,39 +19,54 @@ body{
     width: 100%;
 }
 
+.div_table {
+    display: table;
+    width: auto;
+}
+
+.div_row {
+    display: table-row;
+    width: auto;
+    height: auto;
+}
+
+.div_col {
+    float: left;
+    display: table-column;
+}
 
 #user_side {
-    width:30%;
-    height: 100%;
-    border: 1px solid black;
+    min-height: 100vh;
     background-color: red;
     float: left;
+    width: 30%;
 }
-
-#user_side select, input {
-    width: 100%;
-}
-
-#message_area {
-    width: 69%;
-    height: 100%;
+#message_side {
+    width:70%;
+    min-height: 100vh;
     border-color:red;
     background-color: blue;
     float: right;
 }
 
-#message_area select {
-    size: 100vh;
+#message_area {
+    width:100%;
+    background: #ff9326;
 }
 
 #message_box {
     text-align: left;
-    margin-bottom:25px;
-    padding:10px;
-    background: #fff;
-    height: 80vh;
-    width: 70vw;
+    background: #75ff60;
+    min-height: 90vh;
+    max-height: 90vh;
     overflow: auto;
+    padding: 0;
+}
+
+#chat_box {
+    width: 100%;
+    height: auto;
+    background-color: blueviolet;
 }
 
 /* css refresh */

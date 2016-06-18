@@ -6,7 +6,6 @@
     <meta charset="UTF-8">
     <link rel="stylesheet" href="{% static "message_app/message.css" %}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
-    <link rel="stylesheet" href="message.css">
     <title>Message</title>
     <script type="text/javascript">
             var colorPalettes = [
@@ -42,45 +41,76 @@
             <input type="text" style="float:right; margin-right:3px; margin-top:-33px;">
         </div>
         {% csrf_token %}
-        <div id="user_side">
-            <table>
-                <tr>
-                    <td style="text-align: center;">
-                        <h3>Messages</h3>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <a href="{% url 'MessageApp:logout' %}"><input class="buttons" type="submit" value="Logout"/></a>
-                    </td>
-                </tr>
-                <tr>
-                    <td>
-                        <a href="{% url 'MessageApp:settings' %}"><input class="buttons" method="get" type="submit" value="Settings"/></a>
-                    </td>
-                </tr>
-                <tr>
-                    <td style="text-align: center;">
-                        <select class="tab_menus" id="list_selected">
-                            <option selected>Contacts</option>
-                            <option>Conversations</option>
-                        </select>
-                        <select class="tab_menus" id="all_or_none">
-                            <option selected>My Contacts</option>
-                            <option>All Users</option>
-                        </select>
+        <div id="user_side" class="div_table">
+            <div class="div_row">
+                <div class="div_col" style="width:100%; text-align: center;">
+                    <h1 style="text-align: center;";>Messages</h1>
+                </div>
+            </div>
+            <div class="div_row">
+                <div class="div_col" style="width:100%;">
+                    <a href="{% url 'MessageApp:logout' %}"><input class="buttons" type="submit" value="Logout"/></a>
+                </div>
+            </div>
+            <div class="div_row">
+                <div class="div_col" style="width:100%;">
+                    <a href="{% url 'MessageApp:settings' %}"><input class="buttons" method="get" type="submit" value="Settings"/></a>
+                </div>
+            </div>
+            <div class="div_row">
+                <div class="div_col" style="width:100%;">
+                    <select class="tab_menus" id="list_selected">
+                        <option selected>Contacts</option>
+                        <option>Conversations</option>
+                    </select>
+                </div>
+            </div>
+            <div class="div_row">
+                <div class="div_col" style="width:100%;">
+                    <select class="tab_menus" id="all_or_none">
+                        <option selected>My Contacts</option>
+                        <option>All Users</option>
+                    </select>
+                </div>
+            </div>
+            <div class="div_row">
+                <div class="div_col" style="width:100%;">
+                    <select id="scroll_data" size="41" multiple style="width:100%;">
 
-                        <select id="scroll_data" size="4" multiple">
-
-                        </select>
-                    </td>
-                </tr>
-            </table>
+                    </select>
+                </div>
+            </div>
+            <div class="div_row">
+                <div class="div_col">
+                </div>
+            </div>
         </div>
-        <div id="message_area">
-            <div id="message_box"></div>
-        </div>
+        <div id="message_side" class="div_table">
+            <div class="div_row">
+                <div id="message_area" class="div_col">
+                    <div id="message_box">
+                        <ul style="list-style-type:none">
+                            <li style="border:1px solid #000; margin:0; padding:0;">hello</li>
+                            <li style="border:1px solid #000; margin:0; padding:0;">hello</li>
+                            <li style="border:1px solid #000; margin:0; padding:0;">ujkasfabjksdfbaskjdbfkjlabdvjkabdfjkvga aklsdjfasd klfasdklfjasl;kdn;jkan;dfvjklnadfjk;bvgasjk;dnf;asdn fkl;ashdflk asbhdfi; asdh;</li>
+                            <li style="border:1px solid #000; margin:0; padding:0;" align="right">whats</li>
+                            <li style="border:1px solid #000; margin:0; padding:0;">hello</li>
+                            <li style="border:1px solid #000; margin:0; padding:0;">hello</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="div_row">
+                <div class="div_col" style="width:50%;">
+                    <textarea style="vertical-align: top; resize: none; min-height: 100%; min-width: 100%;">
 
+                    </textarea>
+                </div>
+                <div class="div_col">
+                    <input style="float:right;" id="send_button" type="submit" value="Send"/>
+                </div>
+            </div>
+        </div>
 
     <script>
         //makes it so ready function is fired on back button
@@ -135,7 +165,7 @@
                             //success iterate throuh the data and put into the contacts
                             $.each(data, function(i, item){
                                 console.log("no here");
-                                selected_list.append($("<option></option>").className("users").html(item.username));
+                                selected_list.append($("<option></option>").val(this).html(item.username));
                             });
                             },
                         failure: function (data) {
