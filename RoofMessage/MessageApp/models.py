@@ -52,14 +52,15 @@ class UserProfile(models.Model):
 class Contact(models.Model):
     contact = models.OneToOneField(User, on_delete=models.CASCADE,default='')
     is_blocked = models.BooleanField(default=False)
-    contacts = models.ForeignKey(UserProfile,on_delete=models.CASCADE,default='',null=True)
+    contacts = models.ForeignKey(UserProfile,on_delete=models.CASCADE,default='',null=True,)
 
 class Conversation(models.Model):
     title = models.CharField(max_length=50)
     users = models.ManyToManyField(User)
 
 class Message(models.Model):
-    date = models.DateField()
-    time = models.TimeField()
+    user_poster = models.ForeignKey(User, on_delete=models.CASCADE,default='', null=True,)
+    date = models.DateField(default=timezone.now())
+    time = models.TimeField(default=timezone.now())
     text = models.CharField(max_length=1000)
     conversation = models.ForeignKey(Conversation)

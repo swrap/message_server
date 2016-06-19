@@ -11,7 +11,7 @@ from django.http import BadHeaderError
 from django.shortcuts import render, redirect
 from django.views.decorators.cache import cache_control
 
-from .models import UserProfile, Conversation
+from .models import UserProfile
 from .forms import UserForm, PasswordForm, NewPasswordForm
 
 # CONSTANT FOR KEY
@@ -41,7 +41,7 @@ def user_allowed(user):
 
 def index(request):
     # redirects user back to message page
-    if request.user.is_active:
+    if request.user.is_authenticated():
         return redirect('MessageApp:message')
     return render(request, 'MessageApp/index.html', {})
 
