@@ -90,19 +90,13 @@
                 <div id="message_area" class="div_col">
                     <div id="message_box">
                         <ul id="message_ul" style="list-style-type:none">
-                            <li style="border:1px solid #000; margin:0; padding:0;">hello</li>
-                            <li style="border:1px solid #000; margin:0; padding:0;">hello</li>
-                            <li style="border:1px solid #000; margin:0; padding:0;">ujkasfabjksdfbaskjdbfkjlabdvjkabdfjkvga aklsdjfasd klfasdklfjasl;kdn;jkan;dfvjklnadfjk;bvgasjk;dnf;asdn fkl;ashdflk asbhdfi; asdh;</li>
-                            <li style="border:1px solid #000; margin:0; padding:0;" align="right">whats</li>
-                            <li style="border:1px solid #000; margin:0; padding:0;">hello</li>
-                            <li style="border:1px solid #000; margin:0; padding:0;">hello</li>
                         </ul>
                     </div>
                 </div>
             </div>
             <div class="div_row">
                 <div class="div_col" style="width:50%;">
-                    <textarea style="vertical-align: top; resize: none; min-height: 100%; min-width: 100%;"></textarea>
+                    <textarea id="text_area" style="vertical-align: top; resize: none; min-height: 100%; min-width: 100%;"></textarea>
                 </div>
                 <div class="div_col">
                     <input style="float:right;" id="send_button" type="submit" value="Send"/>
@@ -111,6 +105,44 @@
         </div>
         {% csrf_token %}
     <script>
+        var socket = new WebSocket("ws://" + window.location.host + "/message_route/");
+
+        socket.onmessage = function(e) {
+            var text = e.data;
+            var name_array = text.split(":")
+            var ul = document.getElementById("message_ul");
+            var li = document.createElement("li");
+            li.appendChild(document.createTextNode(text));
+            li.style.margin = 0;
+            li.style.padding = 0;
+            li.style.border = "1px solid #000";
+            li.style.width = "100%";
+            if ( name_array[0] != "{{ request.user.username }}" ) {
+                li.style.textAlign = "right";
+            }
+            ul.appendChild(li);
+        };
+        socket.onopen = function() {
+            socket.send("Hello it is me! {{ request.user.username }}");
+        };
+        socket.onclose = function() {
+            socket.send("I just left :(");
+            socket = new WebSocket("ws://" + window.location.host + "/message_route/");
+        };
+
+        document.getElementById("send_button").addEventListener("click", function(){
+            var text_area = document.getElementById("text_area");
+            var value = text_area.value;
+            if (value.length > 0 ) {
+                socket.send(value);
+                text_area.value="";
+            }
+        });
+
+        window.onbeforeunload = function (){
+            socket.send("{{ user.username }} just left!");
+        };
+
         //makes it so ready function is fired on back button
         history.navigationMode = 'compatible';
 
@@ -199,8 +231,8 @@
 
         //can get rid of this. It was simply to test if I could add to the messages
         //its a nice helper function tho
-        add_to_message("message_ul", "right", "yo");
-        add_to_message("message_ul", "left", "no");
+{#        add_to_message("message_ul", "right", "yo");#}
+{#        add_to_message("message_ul", "left", "no");#}
         function add_to_message (message_ul_id, align_side, message_text) {
             var mess_ul = document.getElementById(message_ul_id);
             var new_li = document.createElement("li");

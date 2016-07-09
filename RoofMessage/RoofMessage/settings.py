@@ -40,6 +40,14 @@ DOMAIN_HOST = "http://127.0.0.1:8000" #"http://yourdomain.com/"
 #USED IN VIEWS_AJAX should be in properties file in the future
 MESSAGE_LOAD = 50
 
+#Channels
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "asgiref.inmemory.ChannelLayer",
+        "ROUTING": "MessageApp.routing.channel_routing",
+    },
+}
+
 # Application definition
 
 INSTALLED_APPS = [
@@ -50,6 +58,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'MessageApp',
+    'channels',
 ]
 
 MIDDLEWARE_CLASSES = [
