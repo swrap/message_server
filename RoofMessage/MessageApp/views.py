@@ -1,17 +1,20 @@
 from datetime import timedelta
 
+from django.forms import forms
 from django.template import Context
 from django.template.loader import get_template
 from django.utils.datetime_safe import date
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
 from django.contrib.auth.decorators import login_required, user_passes_test
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 from django.core.mail import send_mail
 from django.http import BadHeaderError
 from django.shortcuts import render, redirect
 from django.views.decorators.cache import cache_control
+from django.http import HttpResponse
 
-from .models import UserProfile
+from . import views_android
+from .models import UserProfile, AndroidModel, GROUP_ANDROID, GROUP_BROWSER
 from .forms import UserForm, PasswordForm, NewPasswordForm
 
 # CONSTANT FOR KEY
@@ -41,6 +44,13 @@ def user_allowed(user):
 
 def index(request):
     # redirects user back to message page
+
+    group = Group.objects.all()
+    if len(group.filter(name=GROUP_ANDROID)) == 0:
+        Group.objects.create(name=GROUP_ANDROID).save()
+    if len(group.filter(name=GROUP_BROWSER)) == 0:
+        Group.objects.create(name=GROUP_BROWSER).save()
+
     if request.user.is_authenticated():
         return redirect('MessageApp:message')
     return render(request, 'MessageApp/index.html', {})
@@ -59,7 +69,7 @@ def user_logout(request):
 
 def user_login(request):
     # redirects user back to homepage
-    if request.user.is_active:
+    if request.user.is_authenticated():
         return redirect('MessageApp:message')
 
     # If the request is a HTTP POST, try to pull out the relevant information.
@@ -70,13 +80,12 @@ def user_login(request):
         if user:
             if user.is_active:
                 login(request, user)
-                user = request.user
-                return redirect('MessageApp:index')
+                return redirect('MessageApp:message')
             else:
                 return render(request, 'MessageApp/index.html',
-                              {"login": "Please Verify your account with the email we sent you"})
+                              {"login": "Account is disabled contact us to find out why!"})
         else:
-            return render(request, 'MessageApp/index.html', {"login": "Incorrect Login Username or password"})
+            return render(request, 'MessageApp/index.html', {"login": "Incorrect Login Username or password"}, status=400)
     else:
         return render(request, 'MessageApp/index.html', {})
 
@@ -176,17 +185,30 @@ def message(request):
 def register(request):
     if request.POST:
         user_form = UserForm(data=request.POST)
+        post_copy = request.POST.copy()
+        post_copy['username'] = str(post_copy['username'] + views_android.ANDROID_CONSTANT)
+        android_form = UserForm(data=post_copy)
 
-        if user_form.is_valid():
+        if user_form.is_valid() and android_form.is_valid():
             user = user_form.save(commit=False)
-
             user.set_password(user.password)
             user.save()
+            group = Group.objects.get(name=GROUP_BROWSER)
+            group.user_set.add(user)
 
             user_profile = UserProfile.objects.create(user=user)
             user_profile.new_activate_key();
             user_profile.reset_key = RESET_KEY_NOT_USABLE
             user_profile.save()
+
+            android_user = android_form.save(commit=False)
+            android_user.set_password(android_user.password)
+            android_user.save()
+            group = Group.objects.get(name=GROUP_ANDROID)
+            group.user_set.add(android_user)
+
+            android = AndroidModel.objects.create(user=android_user)
+            android.save()
 
             subject = "Activate Account (AUTOMATED EMAIL, DO NOT RESPOND)"
             from RoofMessage import settings
@@ -201,7 +223,6 @@ def register(request):
             print(user_form.errors)
     else:
         user_form = UserForm()
-
     context = {"user_form": user_form}
     return render(request, 'MessageApp/register.html', context)
 
@@ -296,14 +317,6 @@ def send_email(subject, message, email):
         ############need to add error page with optional message and optional countdown
         #### also add log for error
         return redirect('MessageApp:index')
-
-def jquery_test(request):
-#
-#     if "conversations" in request.POST:
-#         data = Conversation.objects.filter(user=request.user)
-#     elif "contacts" in request.POST:
-#         data = Contact.objects.filter(user_contact=)
-    return render(request, 'MessageApp/jquery_test.html', locals())
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @user_passes_test(user_allowed,login_url='/')

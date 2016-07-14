@@ -1,11 +1,57 @@
 import hashlib
 
+from datetime import timedelta
+
 from django.db import models
-from django.contrib.auth.models import User
+from django.contrib.auth.models import User, Group
 
 # Create your models here.
 from django.utils.crypto import random
 from django.utils import timezone
+from django.utils.datetime_safe import date
+
+GROUP_ANDROID = "Android"
+GROUP_BROWSER = "Browser"
+
+MAX_ATTEMPTS = 10
+ANDROID_CONSTANT = str("_ANDROID")
+
+class AndroidModel(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, default='')
+    session_key = models.CharField(max_length=64, null=True, default='')
+    key_created = models.DateField(default=timezone.now())
+    attempts = models.IntegerField(default=0)
+
+    def __str__(self):
+        return self.user.username
+
+    def new_session_key(self):
+        usernamesalt = self.user.username.encode('utf-8')
+        salt = hashlib.sha256(str(random.random()).encode('utf-8')).hexdigest()
+        salt = salt.encode('utf-8')
+        self.session_key = hashlib.sha256(salt + usernamesalt).hexdigest()
+        self.key_created = timezone.now()
+        self.save()
+        return self.session_key
+
+    def check_expire(self):
+        if self.key_created is None:
+            return False
+        days = date.today() - self.key_created
+        time_delta = timedelta(days=2)
+        if days < time_delta:
+            return True
+        return False
+
+    def logout(self):
+        self.key_created = None
+        self.session_key = None
+        attempts = 0
+
+    def ready(self):
+        group = Group.objects.get(name=GROUP_ANDROID)
+        group.user_set.add(self.user)
+
 
 class UserProfile(models.Model):
     activate_key = models.CharField(max_length=64, null=True, default='')
@@ -25,7 +71,7 @@ class UserProfile(models.Model):
 
         :return: new key value as 64 sized string
         """
-        usernamesalt = self.user.username.encode('utf8')
+        usernamesalt = self.user.username.encode('utf-8')
         salt = hashlib.sha256(str(random.random()).encode('utf-8')).hexdigest()
         salt = salt.encode('utf-8')
         self.activate_key = hashlib.sha256(salt + usernamesalt).hexdigest()
@@ -41,7 +87,7 @@ class UserProfile(models.Model):
 
         :return: new key value as 64 sized string
         """
-        usernamesalt = self.user.username.encode('utf8')
+        usernamesalt = self.user.username.encode('utf-8')
         salt = hashlib.sha256(str(random.random()).encode('utf-8')).hexdigest()
         salt = salt.encode('utf-8')
         self.reset_key = hashlib.sha256(salt + usernamesalt).hexdigest()

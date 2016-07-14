@@ -1,6 +1,9 @@
 from django import forms
 from django.contrib.auth.models import User
 
+from . import views_android
+
+
 class UserForm(forms.ModelForm):
     password = forms.CharField(widget=forms.PasswordInput)
     rep_pass = forms.CharField(label=("Confirm Password"),
@@ -10,7 +13,8 @@ class UserForm(forms.ModelForm):
     # checks to see if the username is in existance already
     def clean_username(self):
         username = self.cleaned_data['username']
-        if User.objects.exclude(pk=self.instance.pk).filter(username=username).exists():
+        android_username = username + views_android.ANDROID_CONSTANT
+        if User.objects.exclude(pk=self.instance.pk).filter(username=username).filter(username=android_username).exists():
             raise forms.ValidationError('"%s" is already in use.' % username)
         return username
 
@@ -71,3 +75,8 @@ class NewPasswordForm(forms.Form):
 
         for key in self.fields:
             self.fields[key].required = True
+
+class UserLoginForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ('username', 'password', )
