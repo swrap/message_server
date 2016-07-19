@@ -20,16 +20,19 @@ def android_login(request):
         user_form = UserLoginForm()
         context = {"user_form": user_form}
         from django.shortcuts import render
-        return render(request, 'MessageApp/android_login.html', context)
+        return render(request, 'MessageApp/android_login.html', context, status=200)
 
     return HttpResponse(request, status=400)
 
 @login_required
 def android_logout(request):
-    # Since user is logged in, we can just log them out.
-    if request is not None and request.user.is_active:
-        logout(request)
-        # Takes the user back to the index page.
+    if request.POST:
+        # Since user is logged in, we can just log them out.
+        if request is not None and request.user.is_active:
+            logout(request)
+            # Takes the user back to the index page.
+            return HttpResponse(request, status=200)
+    elif request.method == "GET":
         return HttpResponse(request, status=200)
     return HttpResponse(request, status=400)
 

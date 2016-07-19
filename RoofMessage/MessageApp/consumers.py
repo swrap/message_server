@@ -50,5 +50,9 @@ def ws_disconnect(message):
         group = group[0].name
         username = message.user.username
         if group == GROUP_ANDROID:
+            Group("%s-%s" % (GROUP_BROWSER, username)).send({
+                "text": "disconnected",
+            })
             username = re.match( r'(.*?)%s'% ANDROID_CONSTANT, username).group(1)
+
         Group("%s-%s" % (group, username)).discard(message.reply_channel)
