@@ -2,109 +2,105 @@
 
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="{% static "message_app/message.css" %}">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
-    <title>Message</title>
-    <script type="text/javascript">
-            var colorPalettes = [
-                {"verylight":"#FDFDFD","light":"#D48D8D","primary":"#AA3939","dark":"#800000","verydark":"#570000"},
-                {"verylight":"#FDFDFD","light":"#D4AE8D","primary":"#AA6D39","dark":"#803B00","verydark":"#572800"},
-                {"verylight":"#D5D5D5","light":"#83B277","primary":"#448F30","dark":"#176C00","verydark":"#0F4900"},
-                {"verylight":"#A3A3A3","light":"#5E7688","primary":"#29506D","dark":"#053153","verydark":"#002038"},
-                {"verylight":"#B1B1B1","light":"#6A6A94","primary":"#343477","dark":"#0D0D5A","verydark":"#00003D"},
-                {"verylight":"#C7C7C7","light":"#A76F91","primary":"#862D63","dark":"#65003D","verydark":"#44002A"},
-            ]
-    </script>
-</head>
+    <head>
+        <meta charset="UTF-8">
+        <link rel="stylesheet" href="{% static "message_app/message.css" %}">
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+        <title>ROOFmessage</title>
+        <script type="text/javascript"></script>
+    </head>
     <body>
-        <div class="hnav-bar" hidden>
-            <div class="hnav-item title">
-                ROOFmessage
-            </div>
-            <div class="hnav-item">
-                <img src="https://scontent.xx.fbcdn.net/v/t1.0-9/12243031_10206824806650637_6944867127296031915_n.jpg?oh=7133519ac1ede89025bec94c43663d46&oe=580BD49A"><span class='hnav-name'>Aaron<br>Sorrin</span>
-            </div>
-            <div class="hnav-item">
-                <img src="https://scontent.xx.fbcdn.net/v/t1.0-9/11891080_10206558314452797_6325493572671371248_n.jpg?oh=4291fb52e643cb994cdc9a06b6e62ede&oe=580E9455"><span class='hnav-name'>Jesse<br>Saran</span>
-            </div>
-            <div class="hnav-item">
-                <img src="https://scontent.xx.fbcdn.net/v/t1.0-9/12631544_967528683315809_7395764061206692398_n.jpg?oh=6d19367a63afc2b8c6a767e07ef221a4&oe=57CB5689"><span class='hnav-name'>Chris<br>Klebanski</span>
-            </div>
-            <div class="hnav-item">
-                <img src="https://scontent.xx.fbcdn.net/v/t1.0-9/12794376_1094029560628652_8876178797868034808_n.jpg?oh=fae66f0a4060aa0df68f84b149a7f6be&oe=57DC83A0"><span class='hnav-name'>Matthew<br>Graham</span>
-            </div>
-        </div>
-        <div class="message-container">
-            <div class="vnav-item" onclick="window.location.replace('/settings/')">Settings</div>
-            <input type="text" style="float:right; margin-right:3px; margin-top:-33px;">
-        </div>
-        {% csrf_token %}
-        <div id="user_side" class="div_table">
-            <div class="div_row">
-                <div class="div_col" style="width:100%; text-align: center;">
-                    <h1 style="text-align: center;";>Messages</h1>
+        <div id="master_container">
+            {% csrf_token %}
+            <div id="user_side">
+                <div class="div_row" style="height:52px">
+                    <div class="div_col" style="width:100%; text-align: center;">
+                        <div class=title>
+                            <span style="font-weight: bold">ROOF</span>
+                            <span style="margin-left:-10px; color:pink">message</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="div_row" style="height:35px">
+                    <div class="div_col" style="width:100%; text-align: center">
+                        <input id=user_side_input type="text" placeholder="Search">
+                    </div>
+                </div>
+                <div class="div_row" style="height:52px">
+                    <div class="div_col" style="width:100%;">
+                        <div class="tab_menus" id="list_selected">
+                            <div id=contacts class=toggle_tab_main style="background-color:#f66;
+                                                                            border-top:solid #f66 2px;
+                                                                            border-right:solid 1px;
+                                                                            border-bottom:solid 2px;">Contacts</div>
+                            <div id=convos class=toggle_tab_main style="border-top:solid 2px;
+                                                                        border-bottom:solid red 2px;
+                                                                        border-left:solid 1px">Conversations</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="div_row" style="height:52px">
+                    <div class="div_col" style="width:100%;">
+                        <div class="tab_menus" id="all_or_none" style="display:none">
+                            <div class="toggle_tab_contacts" id="myContacts" style="border-right:solid 1px;">My Contacts</div>
+                            <div class="toggle_tab_contacts" id="allUsers" style="border-left:solid 1px;">All Users</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="div_row">
+                    <div class="div_col" style="width:100%;">
+                        <!--<select id="scroll_data" size="41" multiple style="width:100%;"></select>-->
+                    </div>
+                </div>
+                <div class="div_row" style="height:48px;">
+                    <div class="div_col" style="width:50%;">
+                        <a href="{% url 'MessageApp:settings' %}"><input class="buttons" method="get" type="submit" value="Settings"/></a>
+                    </div>
+                    <div class="div_col" style="width:50%;">
+                        <a href="{% url 'MessageApp:logout' %}"><input class="buttons" type="submit" value="Logout"/></a>
+                    </div>
                 </div>
             </div>
-            <div class="div_row">
-                <div class="div_col" style="width:100%;">
-                    <a href="{% url 'MessageApp:logout' %}"><input class="buttons" type="submit" value="Logout"/></a>
-                </div>
-            </div>
-            <div class="div_row">
-                <div class="div_col" style="width:100%;">
-                    <a href="{% url 'MessageApp:settings' %}"><input class="buttons" method="get" type="submit" value="Settings"/></a>
-                </div>
-            </div>
-            <div class="div_row">
-                <div class="div_col" style="width:100%;">
-                    <select class="tab_menus" id="list_selected">
-                        <option selected>Contacts</option>
-                        <option>Conversations</option>
-                    </select>
-                </div>
-            </div>
-            <div class="div_row">
-                <div class="div_col" style="width:100%;">
-                    <select class="tab_menus" id="all_or_none">
-                        <option selected>My Contacts</option>
-                        <option>All Users</option>
-                    </select>
-                </div>
-            </div>
-            <div class="div_row">
-                <div class="div_col" style="width:100%;">
-                    <select id="scroll_data" size="41" multiple style="width:100%;">
-
-                    </select>
-                </div>
-            </div>
-            <div class="div_row">
-                <div class="div_col">
-                </div>
-            </div>
-        </div>
-        <div id="message_side" class="div_table">
-            <div class="div_row">
-                <div id="message_area" class="div_col">
-                    <div id="message_box">
+            <div id="message_side">
+                <div class="div_row">
+                    <div id="message_area" class="div_col">
                         <ul id="message_ul" style="list-style-type:none">
                         </ul>
                     </div>
                 </div>
-            </div>
-            <div class="div_row">
-                <div class="div_col" style="width:50%;">
-                    <textarea id="text_area" style="vertical-align: top; resize: none; min-height: 100%; min-width: 100%;"></textarea>
-                </div>
-                <div class="div_col">
-                    <input style="float:right;" id="send_button" type="submit" value="Send"/>
+                <div class="div_row" style="width: 100%">
+                    <div class="div_col" style="width:auto">
+                        <textarea id="message_input"></textarea>
+                    </div>
+                    <div class="div_col" style="width:50px; float:right">
+                        <input id="send_button" type="submit" value="Send"/>
+                    </div>
                 </div>
             </div>
         </div>
-        {% csrf_token %}
     <script>
+        // Listeners
+        $('#contacts').on("click", function(){
+            $('#contacts').css({"background-color":"red",
+                                "border-top":"solid 2px",
+                                "border-bottom":"solid red 2px",});
+            $('#convos').css({"background-color":"#f66",
+                              "border-top":"solid #f66 2px",
+                              "border-bottom":"solid 2px",});
+            //$('#all_or_none').show();
+        });
+
+        $('#convos').on("click", function(){
+            $('#convos').css({"background-color":"red",
+                              "border-top":"solid 2px",
+                              "border-bottom":"solid red 2px",});
+            $('#contacts').css({"background-color":"#f66",
+                                "border-top":"solid #f66 2px",
+                                "border-bottom":"solid 2px",});
+            //$('#all_or_none').hide();
+        });
+        // ***************************************************
+
         var socket = new WebSocket("ws://" + window.location.host + "/message_route/");
 
         socket.onmessage = function(e) {
