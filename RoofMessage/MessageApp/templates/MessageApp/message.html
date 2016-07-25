@@ -10,111 +10,89 @@
         <script type="text/javascript"></script>
     </head>
     <body>
+        {% csrf_token %}
         <div id="master_container">
-            {% csrf_token %}
-            <div id="user_side">
-                <div class="div_row" style="height:52px">
-                    <div class="div_col" style="width:100%; text-align: center;">
-                        <div class=title>
-                            <span style="font-weight: bold">ROOF</span>
-                            <span style="margin-left:-10px; color:pink">message</span>
-                        </div>
-                    </div>
+            <div id="leftSideBar">
+                <div id=lsb_title>
+                    <span style="font-weight: bold">ROOF</span>
+                    <span style="margin-left:-10px; color:pink">message</span>
                 </div>
-                <div class="div_row" style="height:35px">
-                    <div class="div_col" style="width:100%; text-align: center">
-                        <input id=user_side_input type="text" placeholder="Search">
-                    </div>
+                <div id="lsb_searchBarDiv">
+                    <input id=lsb_searchBar type="text" placeholder="Search your contacts">
                 </div>
-                <div class="div_row" style="height:52px">
-                    <div class="div_col" style="width:100%;">
-                        <div class="tab_menus" id="list_selected">
-                            <div id=contacts class=toggle_tab_main style="background-color:#f66;
-                                                                            border-top:solid #f66 2px;
-                                                                            border-right:solid 1px;
-                                                                            border-bottom:solid 2px;">Contacts</div>
-                            <div id=convos class=toggle_tab_main style="border-top:solid 2px;
-                                                                        border-bottom:solid red 2px;
-                                                                        border-left:solid 1px">Conversations</div>
-                        </div>
-                    </div>
+                <div id="lsb_tabs">
+                    <div id=lsb_contactsTab class=lsb_toggleTab style="background-color:#f66;
+                                                                border-top:solid #f66 1px;
+                                                                border-right:solid black 1px;
+                                                                border-bottom:solid black 1px;">Contacts</div>
+                    <div id=lsb_messagesTab class=lsb_toggleTab style="border-top:solid black 1px;
+                                                                border-bottom:solid red 1px;">Messages</div>
                 </div>
-                <div class="div_row" style="height:52px">
-                    <div class="div_col" style="width:100%;">
-                        <div class="tab_menus" id="all_or_none" style="display:none">
-                            <div class="toggle_tab_contacts" id="myContacts" style="border-right:solid 1px;">My Contacts</div>
-                            <div class="toggle_tab_contacts" id="allUsers" style="border-left:solid 1px;">All Users</div>
-                        </div>
-                    </div>
+                <div id="lsb_tabItems">
+                    <!--<select id="scroll_data" size="41" multiple style="width:100%;"></select>-->
                 </div>
-                <div class="div_row">
-                    <div class="div_col" style="width:100%;">
-                        <!--<select id="scroll_data" size="41" multiple style="width:100%;"></select>-->
-                    </div>
-                </div>
-                <div class="div_row" style="height:48px;">
-                    <div class="div_col" style="width:50%;">
-                        <a href="{% url 'MessageApp:settings' %}"><input class="buttons" method="get" type="submit" value="Settings"/></a>
-                    </div>
-                    <div class="div_col" style="width:50%;">
-                        <a href="{% url 'MessageApp:logout' %}"><input class="buttons" type="submit" value="Logout"/></a>
-                    </div>
+                <div id="lsb_bottomBtns">
+                    <div id="lsb_settingsBtn" onclick="{% url 'MessageApp:settings' %}">Settings</div>
+                    <div id="lsb_logoutBtn" onclick="{% url 'MessageApp:logout' %}">Logout</div>
                 </div>
             </div>
-            <div id="message_side">
-                <div class="div_row">
-                    <div id="message_area" class="div_col">
-                        <ul id="message_ul" style="list-style-type:none">
-                        </ul>
+            <div id="rightMessage">
+                <div id="rm_topBar">Jesse Saran</div>
+                <div id="rm_messageArea"></div>
+                <div id="rm_inputsDiv">
+                    <div id="rm_messageInputDiv">
+                        <div id="rm_messageInput" contenteditable="true"></div>
                     </div>
-                </div>
-                <div class="div_row" style="width: 100%">
-                    <div class="div_col" style="width:auto">
-                        <textarea id="message_input"></textarea>
-                    </div>
-                    <div class="div_col" style="width:50px; float:right">
-                        <input id="send_button" type="submit" value="Send"/>
-                    </div>
+                    <div id="rm_sendBtn">Send</div>
                 </div>
             </div>
         </div>
     <script>
         // Listeners
-        $('#contacts').on("click", function(){
-            $('#contacts').css({"background-color":"red",
-                                "border-top":"solid 2px",
-                                "border-bottom":"solid red 2px",});
-            $('#convos').css({"background-color":"#f66",
-                              "border-top":"solid #f66 2px",
-                              "border-bottom":"solid 2px",});
-            //$('#all_or_none').show();
+        $('#lsb_contactsTab').on("click", function(){
+            $('#lsb_contactsTab').css({"background-color":"red",
+                                "border-top":"solid black 1px",
+                                "border-bottom":"solid red 1px",});
+            $('#lsb_messagesTab').css({"background-color":"#f66",
+                              "border-top":"solid #f66 1px",
+                              "border-bottom":"solid black 1px",});
         });
 
-        $('#convos').on("click", function(){
-            $('#convos').css({"background-color":"red",
-                              "border-top":"solid 2px",
-                              "border-bottom":"solid red 2px",});
-            $('#contacts').css({"background-color":"#f66",
-                                "border-top":"solid #f66 2px",
-                                "border-bottom":"solid 2px",});
-            //$('#all_or_none').hide();
+        $('#lsb_messagesTab').on("click", function(){
+            $('#lsb_messagesTab').css({"background-color":"red",
+                              "border-top":"solid black 1px",
+                              "border-bottom":"solid red 1px",});
+            $('#lsb_contactsTab').css({"background-color":"#f66",
+                                "border-top":"solid #f66 1px",
+                                "border-bottom":"solid black 1px",});
+        });
+        $('#rm_messageInput').keydown(function(e) {
+            if (e.keyCode == 16 && e.keyCode == 13){
+                console.log('shift+enter')
+                return true;
+            }
+            if(e.keyCode == 13) {
+                console.log('enter')
+                $('#rm_sendBtn').click();
+                return false;
+            }
         });
         // ***************************************************
 
+        // ***************************************************
         var socket = new WebSocket("ws://" + window.location.host + "/message_route/");
-
         socket.onmessage = function(e) {
-            var text = e.data;
-            var name_array = text.split(":")
-            var ul = document.getElementById("message_ul");
-            var li = document.createElement("li");
-            li.appendChild(document.createTextNode(text));
-            li.style.margin = 0;
-            li.style.padding = 0;
-            li.style.border = "1px solid #000";
-            li.style.width = "100%";
-            li.style.textAlign = "right";
-            ul.appendChild(li);
+            var messageRowDiv = $('<div>').css({
+                "padding":"8px 6px"
+            });
+            var messageText = e.data;
+            var messageTextSpan = $('<span>').html(messageText).css({
+                "padding":"6px 12px",
+                "background-color":"#ffcdcd",
+                "border-radius":"20px",
+            });
+            messageRowDiv.append(messageTextSpan);
+            $('#rm_messageArea').append(messageRowDiv);
         };
         socket.onopen = function() {
             socket.send("Hello it is me! {{ request.user.username }}");
@@ -124,21 +102,23 @@
             socket = new WebSocket("ws://" + window.location.host + "/message_route/");
         };
 
-        document.getElementById("send_button").addEventListener("click", function(){
-            var text_area = document.getElementById("text_area");
-            var value = text_area.value;
-            var ul = document.getElementById("message_ul");
-            var li = document.createElement("li");
-            li.appendChild(document.createTextNode(value));
-            li.style.margin = 0;
-            li.style.padding = 0;
-            li.style.border = "1px solid #000";
-            li.style.width = "100%";
-            li.style.textAlign = "left";
-            ul.appendChild(li);
-            if (value.length > 0 ) {
-                socket.send(value);
-                text_area.value="";
+        $('#rm_sendBtn').click(function(){
+            var messageRowDiv = $('<div>').css({
+                "height":"30px",
+                "margin":"4px 6px"
+            });
+            var messageText = $('#rm_messageInput').text();
+            var messageTextSpan = $('<span>').html(messageText).css({
+                "float":"right",
+                "padding":"6px 12px",
+                "background-color":"#CDF0FF",
+                "border-radius":"20px",
+            });
+            if(messageText.length > 0) {
+                socket.send(messageText);
+                messageRowDiv.append(messageTextSpan);
+                $('#rm_messageArea').append(messageRowDiv);
+                $('#rm_messageInput').html("");
             }
         });
 
