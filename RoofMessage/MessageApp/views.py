@@ -1,5 +1,7 @@
+import copy
 from datetime import timedelta
 
+from django.contrib.sessions.models import Session
 from django.forms import forms
 from django.template import Context
 from django.template.loader import get_template
@@ -100,7 +102,20 @@ def delete_account(request):
                 user = User.objects.get(id=request.user.id)
             except User.DoesNotExist:
                 user = None
-            if user is not None:
+            try:
+                android_user = User.objects.get(username=str(user.username + views_android.ANDROID_CONSTANT))
+            except User.DoesNotExist:
+                android_user = None
+            if user is not None and android_user is not None:
+                user.is_active = False
+                user.is_authenticated = False
+                user.save()
+                android_user.is_active = False
+                android_user.is_authenticated = False
+                android_user.save()
+
+                logout(request)
+
                 # send mail about account delete
                 subject = "Deleted Account (AUTOMATED EMAIL, DO NOT RESPOND)"
                 from RoofMessage import settings
@@ -141,9 +156,19 @@ def settings_page(request):
                     user = User.objects.get(id=request.user.id)
                 except User.DoesNotExist:
                     user = None
-                if user is not None and user.check_password(old_password):
+
+                try:
+                    android_username = str(request.user.username + views_android.ANDROID_CONSTANT)
+                    android_user = User.objects.get(username=android_username)
+                except User.DoesNotExist:
+                    android_user = None
+                if user is not None and user.check_password(old_password) and \
+                                android_user is not None and android_user.check_password(old_password):
                     user.set_password(pass_form.cleaned_data['new_password1']);
                     user.save()
+
+                    android_user.set_password(pass_form.cleaned_data['new_password1'])
+                    android_user.save()
 
                     #signs user back in after updating password
                     update_session_auth_hash(request, user)
@@ -185,11 +210,8 @@ def message(request):
 def register(request):
     if request.POST:
         user_form = UserForm(data=request.POST)
-        post_copy = request.POST.copy()
-        post_copy['username'] = str(post_copy['username'] + views_android.ANDROID_CONSTANT)
-        android_form = UserForm(data=post_copy)
 
-        if user_form.is_valid() and android_form.is_valid():
+        if user_form.is_valid():
             user = user_form.save(commit=False)
             user.set_password(user.password)
             user.save()
@@ -201,8 +223,10 @@ def register(request):
             user_profile.reset_key = RESET_KEY_NOT_USABLE
             user_profile.save()
 
-            android_user = android_form.save(commit=False)
-            android_user.set_password(android_user.password)
+            android_user = User.objects.create(username=str(user.username + views_android.ANDROID_CONSTANT))
+            android_user.first_name = user.first_name
+            android_user.last_name = user.last_name
+            android_user.set_password(user_form.cleaned_data['password'])
             android_user.save()
             group = Group.objects.get(name=GROUP_ANDROID)
             group.user_set.add(android_user)
@@ -264,15 +288,26 @@ def new_password_link(request, key):
                 user_profile = UserProfile.objects.get(reset_key=reset_key, activate_key=key)
             except UserProfile.DoesNotExist:
                 user_profile = None
+            try:
+                android_username = str(user_profile.user.username + views_android.ANDROID_CONSTANT)
+                android_user = User.objects.get(username=android_username)
+            except User.DoesNotExist:
+                android_user = None
 
-            if user_profile is not None and user_profile.reset_key != RESET_KEY_NOT_USABLE and user_profile.activated_account != ACTIVATE_KEY_NOT_USABLE:
+            if user_profile is not None and android_user is not None\
+                    and user_profile.reset_key != RESET_KEY_NOT_USABLE and user_profile.activated_account != ACTIVATE_KEY_NOT_USABLE:
                 days = date.today()-user_profile.new_pass_created
                 time_delta =  timedelta(days=LINK_EXPIRATION)
                 if days < time_delta:
                     user_profile.user.set_password(new_pass_form.cleaned_data['new_password'])
+                    user_profile.user.save()
                     user_profile.reset_key = RESET_KEY_NOT_USABLE
                     user_profile.activate_key = ACTIVATE_KEY_NOT_USABLE
                     user_profile.save()
+
+                    android_user.set_password(new_pass_form.cleaned_data['new_password'])
+                    android_user.save()
+
                     return render(request, 'MessageApp/new_password_link.html', locals())
 
             show_error = True

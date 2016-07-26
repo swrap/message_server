@@ -14,7 +14,8 @@ class UserForm(forms.ModelForm):
     def clean_username(self):
         username = self.cleaned_data['username']
         android_username = username + views_android.ANDROID_CONSTANT
-        if User.objects.exclude(pk=self.instance.pk).filter(username=username).filter(username=android_username).exists():
+        if User.objects.exclude(pk=self.instance.pk).filter(username=username).filter(username=android_username).exists() \
+                or views_android.ANDROID_CONSTANT in username:
             raise forms.ValidationError('"%s" is already in use.' % username)
         return username
 

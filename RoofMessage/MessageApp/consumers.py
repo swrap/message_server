@@ -37,7 +37,7 @@ def ws_message(message):
             group = GROUP_ANDROID
 
         Group("%s-%s" % (group, username)).send({
-        "text": message.user.username + ": " + message['text'],
+        "text": message['text'],
         })
 
 # Connected to websocket.disconnect

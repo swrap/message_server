@@ -5,6 +5,7 @@
     <head>
         <meta charset="UTF-8">
         <link rel="stylesheet" href="{% static "message_app/message.css" %}">
+        <script src="{% static "message_app/JSONFunctions.js" %}"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
         <title>ROOFmessage</title>
         <script type="text/javascript"></script>
@@ -32,7 +33,7 @@
                     <!--<select id="scroll_data" size="41" multiple style="width:100%;"></select>-->
                 </div>
                 <div id="lsb_bottomBtns">
-                    <div id="lsb_settingsBtn" onclick="{% url 'MessageApp:settings' %}">Settings</div>
+                    <div id="lsb_settingsBtn" onclick="{% url 'MessageApp:settings' %}" target="_blank">Settings</div>
                     <div id="lsb_logoutBtn" onclick="{% url 'MessageApp:logout' %}">Logout</div>
                 </div>
             </div>
@@ -81,18 +82,46 @@
 
         // ***************************************************
         var socket = new WebSocket("ws://" + window.location.host + "/message_route/");
+        const ACTION = "action",
+                POST_CONTACTS = "post_contacts",
+                POST_CONVERSATIONS = "post_conversations",
+                POST_MESSAGES = "post_messages",
+                SENT_MESSAGES = "sent_messages",
+                SENT_MESSAGES_FAILED = "sent_messages_failed";
+
+        var active_json;
         socket.onmessage = function(e) {
-            var messageRowDiv = $('<div>').css({
-                "padding":"8px 6px"
-            });
-            var messageText = e.data;
-            var messageTextSpan = $('<span>').html(messageText).css({
-                "padding":"6px 12px",
-                "background-color":"#ffcdcd",
-                "border-radius":"20px",
-            });
-            messageRowDiv.append(messageTextSpan);
-            $('#rm_messageArea').append(messageRowDiv);
+            active_json = JSON.parse(e.data);
+            console.log(active_json[ACTION])
+            switch (active_json[ACTION]) {
+                case POST_CONTACTS:
+                        //contacts received, populate contacts section
+                    break;
+                case POST_CONVERSATIONS:
+                        //conversations received, populate conversations section
+                    break;
+                case POST_MESSAGES:
+                        //messages received, populate conversations section
+                    break;
+                case SENT_MESSAGES:
+                        //message successfully sent, ??Change color of message bubble???
+                    break;
+                case SENT_MESSAGES_FAILED:
+                        //message failed to send, ??Change color of message bubble???
+                    break;
+            }
+
+{#            var messageRowDiv = $('<div>').css({#}
+{#                "padding":"8px 6px"#}
+{#            });#}
+{#            var messageText = e.data;#}
+{#            var messageTextSpan = $('<span>').html(messageText).css({#}
+{#                "padding":"6px 12px",#}
+{#                "background-color":"#ffcdcd",#}
+{#                "border-radius":"20px",#}
+{#            });#}
+{#            messageRowDiv.append(messageTextSpan);#}
+{#            $('#rm_messageArea').append(messageRowDiv);#}
         };
         socket.onopen = function() {
             socket.send("Hello it is me! {{ request.user.username }}");
