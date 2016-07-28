@@ -92,13 +92,15 @@
         var active_json;
         socket.onmessage = function(e) {
             active_json = JSON.parse(e.data);
-            console.log(active_json[ACTION])
+            console.log(active_json[ACTION]);
             switch (active_json[ACTION]) {
                 case POST_CONTACTS:
                         //contacts received, populate contacts section
+                        storeContacts(active_json);
                     break;
                 case POST_CONVERSATIONS:
                         //conversations received, populate conversations section
+                        storeConversations(active_json);
                     break;
                 case POST_MESSAGES:
                         //messages received, populate conversations section
@@ -124,7 +126,8 @@
 {#            $('#rm_messageArea').append(messageRowDiv);#}
         };
         socket.onopen = function() {
-            socket.send("Hello it is me! {{ request.user.username }}");
+            socket.send(getContacts());
+            socket.send(getConversations());
         };
         socket.onclose = function() {
             socket.send("I just left :(");
@@ -152,7 +155,6 @@
         });
 
         window.onbeforeunload = function (){
-            socket.send("{{ user.username }} just left!");
         };
 
     </script>
