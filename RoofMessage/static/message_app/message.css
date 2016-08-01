@@ -71,6 +71,7 @@ html,body{
 
 #lsb_bottomBtns{
     display:flex;
+    background-color: #ffc3c1;
 }
 
 #lsb_settingsBtn,
@@ -112,6 +113,7 @@ html,body{
 #rm_messageArea{
     padding:10px;
     flex:1;
+    overflow-y: auto;
 }
 
 #rm_inputsDiv{
@@ -131,6 +133,9 @@ html,body{
     width:100%;
     border:none;
     resize:none;
+    overflow-x: hidden;
+    overflow-y: auto;
+    word-wrap: break-word;
 }
 
 #rm_messageInput:focus{
@@ -164,4 +169,12 @@ html,body{
 
 .lsb_toggleTab:hover{
     cursor:pointer;
+}
+
+.scroll_data {
+    background-color: transparent;
+    width:100%;
+    border-color: transparent;
+    outline-color: transparent;
+    height: 100%;
 }

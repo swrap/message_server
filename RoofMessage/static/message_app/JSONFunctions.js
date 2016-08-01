@@ -23,10 +23,20 @@ function getConversations() {
 }
 
 /**
- * The thread_id = conversation_id to query the messages for
+ * The thread_id = conversation_id to query the messages for.
  * @param thread_id
+ * @param amount
+ * @param offset NOTE if offset < 0 will query amount in array to send
  */
-function getMessages(thread_id, amount, offset) {
+function getMessagesJSON(thread_id, amount, offset) {
+    if (thread_id == null) {
+        return false;
+    }
+
+    if (parseInt(offset) < 0) {
+        var keys = Object.keys(retrieveMessages(thread_id));
+        offset = keys.length;
+    }
     var json = {
         "action" : "get_messages",
         "thread_id" : thread_id,
@@ -60,14 +70,27 @@ function sendMessages(body, data, numbers, temp_message_id) {
     return JSON.stringify(json);
 }
 
-const CONTACTS = "contacts";
-const CONVERSATIONS = "conversations";
-const MESSAGES = "messages";
+var CONTACTS = "contacts";
+var CONVERSATIONS = "conversations";
+var MESSAGES = "messages";
+var RECIPIENTS = "recipients";
+var SCROLL_TOP = "scroll_top";
+var FULL_NAME = "full_name";
+var PHONE_NUMBER = "phone_number";
+var TEMP_MESSAGE_ID = "temp_message_id";
+var MESSAGE_ID = "message_id";
+var MESSAGE = "message";
+var DATE = "date";
+var CONVO_ID = "convo_id";
+var NUMBER = "number";
 
-const BUFFER = "_";
+var TRUE = "true";
 
+//TODO NEED TO REFRACTOR CONTACTS TO ACT LIKE CONVERSATIONS
 var contacts_key_array = [];
-var conversations_key_array = [];
+
+//Used for sending a message to send.
+var tempIdArr = [];
 
 /**
  * Used to store all contacts into session storage
@@ -79,9 +102,9 @@ function storeContacts(jsonObject) {
     for (var i in contacts) {
         var key = Object.keys(contacts[i])[0];
         var object = contacts[i][key];
+        contacts_key_array.push(key);
         key = CONTACTS + key;
         sessionStorage.setItem(key, JSON.stringify(object));
-        contacts_key_array.push(key);
     }
 }
 
@@ -93,7 +116,7 @@ function storeContacts(jsonObject) {
 function retrieveContacts() {
     var complete_contact_array = [];
     for (var i in contacts_key_array) {
-        complete_contact_array.push(JSON.parse(sessionStorage.getItem(contacts_key_array[i])));
+        complete_contact_array.push(JSON.parse(sessionStorage.getItem(CONTACTS + contacts_key_array[i])));
     }
     return complete_contact_array;
 }
@@ -104,14 +127,35 @@ function retrieveContacts() {
  * @param jsonObject    json conversations arraylist (contains conversation json objects)
  */
 function storeConversations(jsonObject) {
-    var contacts = jsonObject[CONVERSATIONS];
-    for (var i in contacts) {
-        var key = Object.keys(contacts[i])[0];
-        var object = contacts[i][key];
-        key = CONVERSATIONS + key;
-        sessionStorage.setItem(key, JSON.stringify(object));
-        conversations_key_array.push(key);
+    var conversations = jsonObject[CONVERSATIONS];
+    var jsonStorage = sessionStorage.getItem(CONVERSATIONS);
+    if (jsonStorage == null) {
+        jsonStorage = {};
+    } else {
+        var tempStorage = {};
+        jsonStorage = JSON.parse(jsonStorage);
+        $.each(jsonStorage, function (index, value) {
+            var tempKey = Object.keys(value)[0];
+            tempStorage[tempKey] = value[tempKey];
+        });
+        jsonStorage = tempStorage;
     }
+    for (var i in conversations) {
+        var key = Object.keys(conversations[i])[0];
+        jsonStorage[key] = conversations[i][key];
+    }
+    const ordered = [];
+    var keys = Object.keys(jsonStorage);
+    keys = keys.sort(function(a, b){
+        return parseInt(jsonStorage[b][DATE]) - parseInt(jsonStorage[a][DATE]);
+    });
+    for (var i in keys) {
+        var keyValue = {};
+        var tempKey = keys[i];
+        keyValue[tempKey] = jsonStorage[tempKey];
+        ordered.push(keyValue);
+    }
+    sessionStorage.setItem(CONVERSATIONS,JSON.stringify(ordered));
 }
 
 /**
@@ -119,12 +163,30 @@ function storeConversations(jsonObject) {
  *
  * @returns {Array}
  */
-function retrieveConversations() {
-    var complete_conversation_array = [];
-    for (var i in conversations_key_array) {
-        complete_conversation_array.push(JSON.parse(sessionStorage.getItem(conversations_key_array[i])));
+function retrieveConversations(){
+    var convos = sessionStorage.getItem(CONVERSATIONS);
+    if (convos == null) {
+        convos = {};
+    } else {
+        convos = JSON.parse(convos);
     }
-    return complete_conversation_array;
+    return convos;
+}
+
+/**
+ * Retrieves conversation from convo id
+ * @param convo_id int id of conversation
+ */
+function retrieveConversation(convo_id) {
+    var conversations = JSON.parse(sessionStorage.getItem(CONVERSATIONS));
+    var convo = null
+    $.each(conversations, function (index, value) {
+        var key = Object.keys(value)[0];
+        if (key == convo_id) {
+             convo = value[convo_id];
+        }
+    });
+    return convo;
 }
 
 /**
@@ -133,16 +195,25 @@ function retrieveConversations() {
  * @param jsonObject    json conversations arraylist (contains conversation json objects)
  */
 function storeMessages(jsonObject) {
-    var conversation = null;
-    var keys = Object.keys(jsonObject);
-    for (var i in keys) {
-        if (keys[i] != "action") {
-            conversation = keys[i];
-        }
-    }
+    var conversation = jsonObject[THREAD_ID];
     var key = MESSAGES + conversation;
-    sessionStorage.setItem(key, JSON.stringify(jsonObject[conversation]));
+    var jsonStorage = sessionStorage.getItem(key);
+    if (jsonStorage == null) {
+        jsonStorage = JSON.stringify({});
+    }
+    jsonStorage = JSON.parse(jsonStorage);
+    var jsonConvoMessages = jsonObject[conversation];
+    for (var i in jsonConvoMessages) {
+        var tempKey = Object.keys(jsonConvoMessages[i])[0];
+        jsonStorage[tempKey] = jsonConvoMessages[i][tempKey];
+    }
+    //TODO may need to get rid of sorting after depending?
+    // const ordered = {};
+    // Object.keys(jsonStorage).sort().forEach(function(key) {
+    //         ordered[key] = jsonStorage[key];
+    //     });
 
+    sessionStorage.setItem(key, JSON.stringify(jsonStorage));
     return true;
 }
 
@@ -153,4 +224,71 @@ function storeMessages(jsonObject) {
  */
 function retrieveMessages(convo_id) {
     return JSON.parse(sessionStorage.getItem(MESSAGES + convo_id));
+}
+
+/**
+ * Returns array of numbers for convo
+ * @param convo_id
+ * @returns {Array}
+ */
+function getNumbers(convo_id) {
+    var numbers = [];
+    var recipients = retrieveConversation(convo_id)[RECIPIENTS];
+    for (var i in recipients) {
+        var number =
+            {
+                "number" : recipients[i][PHONE_NUMBER]
+            };
+        numbers.push(number);
+    }
+    return numbers;
+}
+
+/**
+ * Used for storing temp message id's
+ * @param temp_message_id
+ */
+function storeTempId(temp_message_id, convo_id, body) {
+    var tempMessageIdsArr = tempIdArr;
+    if (tempMessageIdsArr == null) {
+        tempMessageIdsArr = [];
+    }
+    tempMessageIdsArr.push(JSON.stringify({
+        "temp_message_id":temp_message_id,
+        "convo_id":convo_id,
+        "body":body,
+    }));
+}
+
+/**
+ * Used for storing temp message id's
+ * @param temp_message_id
+ */
+function storeTempIdArr(tempIdArr) {
+    sessionStorage.setItem(TEMP_MESSAGE_ID, JSON.stringify(tempIdArr));
+}
+
+/**
+ * Used for retreiving temp message ids
+ * @param temp_message_id
+ * @returns {boolean}
+ */
+function retrieveTempIdArr() {
+    return tempIdArr;
+}
+
+/**
+ * Store the scroll top for convo_id
+ * @param convo_id
+ */
+function storeScrollTop(convo_id, scrollTop) {
+    sessionStorage.setItem(SCROLL_TOP + convo_id, scrollTop);
+}
+
+/**
+ * Retreive scroll top
+ * @param convo_id
+ */
+function retrieveScrollTop(convo_id) {
+    return sessionStorage.getItem(SCROLL_TOP + convo_id);
 }

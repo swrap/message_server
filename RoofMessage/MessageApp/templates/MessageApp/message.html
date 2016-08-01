@@ -6,8 +6,9 @@
         <meta charset="UTF-8">
         <link rel="stylesheet" href="{% static "message_app/message.css" %}">
         <script src="{% static "message_app/JSONFunctions.js" %}"></script>
+        <script src="{% static "message_app/ui_functions.js" %}"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
-        <title>ROOFmessage</title>
+        <title>ROOFtext</title>
         <script type="text/javascript"></script>
     </head>
     <body>
@@ -16,7 +17,7 @@
             <div id="leftSideBar">
                 <div id=lsb_title>
                     <span style="font-weight: bold">ROOF</span>
-                    <span style="margin-left:-10px; color:pink">message</span>
+                    <span style="margin-left:-10px; color:pink">text</span>
                 </div>
                 <div id="lsb_searchBarDiv">
                     <input id=lsb_searchBar type="text" placeholder="Search your contacts">
@@ -27,14 +28,18 @@
                                                                 border-right:solid black 1px;
                                                                 border-bottom:solid black 1px;">Contacts</div>
                     <div id=lsb_messagesTab class=lsb_toggleTab style="border-top:solid black 1px;
-                                                                border-bottom:solid red 1px;">Messages</div>
+                                                                border-bottom:solid red 1px;">Conversations</div>
                 </div>
                 <div id="lsb_tabItems">
-                    <!--<select id="scroll_data" size="41" multiple style="width:100%;"></select>-->
+                    <select class="scroll_data" id="slt_contact" size="41" multiple style="">
+                    </select>
+                    <select class="scroll_data" id="slt_conversation" size="41" multiple style="">
+                    </select>
+                    <input type="hidden" id="convo_id">
                 </div>
                 <div id="lsb_bottomBtns">
-                    <div id="lsb_settingsBtn" onclick="{% url 'MessageApp:settings' %}" target="_blank">Settings</div>
-                    <div id="lsb_logoutBtn" onclick="{% url 'MessageApp:logout' %}">Logout</div>
+                    <div id="lsb_settingsBtn" onclick="window.open('{% url 'MessageApp:settings' %}')">Settings</div>
+                    <div id="lsb_logoutBtn" onclick="location.href='{% url 'MessageApp:logout' %}'">Logout</div>
                 </div>
             </div>
             <div id="rightMessage">
@@ -57,6 +62,9 @@
             $('#lsb_messagesTab').css({"background-color":"#f66",
                               "border-top":"solid #f66 1px",
                               "border-bottom":"solid black 1px",});
+            //displaying contacts
+            $('#slt_contact').show();
+            $('#slt_conversation').hide();
         });
 
         $('#lsb_messagesTab').on("click", function(){
@@ -66,6 +74,9 @@
             $('#lsb_contactsTab').css({"background-color":"#f66",
                                 "border-top":"solid #f66 1px",
                                 "border-bottom":"solid black 1px",});
+            $('#slt_conversation').show();
+            $('#slt_contact').hide();
+
         });
         $('#rm_messageInput').keydown(function(e) {
             if (e.keyCode == 16 && e.keyCode == 13){
@@ -78,84 +89,185 @@
                 return false;
             }
         });
+        $('#slt_conversation').on("click", function () {
+            var convo_id = $('#convo_id');
+            var convo_id_val = convo_id.val();
+            var selectedOption = $(this).find(":selected");
+            var match =  (/(.*?)([0-9]+)/g).exec(selectedOption.val());
+            var id = match[2];
+            if (id != convo_id_val) {
+                storeScrollTop(convo_id_val, $('#rm_messageArea').scrollTop());
+            }
+            console.log(id + " " + selectedOption.val());
+            convo_id.attr("value",id);
+            if (!uiAddConversationMessages(id)) {
+                webSocketCon.send(getMessagesJSON(id,DEFAULT_GET_MESSAGES,0));
+            }
+            uiScrollTop(retrieveScrollTop(id));
+        });
         // ***************************************************
 
         // ***************************************************
-        var socket = new WebSocket("ws://" + window.location.host + "/message_route/");
+
+
+        var sent_message_temp_id = [];
+        var webSocketCon = new WebSocket("ws://" + window.location.host + "/message_route/");
         const ACTION = "action",
                 POST_CONTACTS = "post_contacts",
                 POST_CONVERSATIONS = "post_conversations",
                 POST_MESSAGES = "post_messages",
                 SENT_MESSAGES = "sent_messages",
-                SENT_MESSAGES_FAILED = "sent_messages_failed";
+                SENT_MESSAGES_FAILED = "sent_messages_failed",
+                CONNECTED = "connected",
+                DISCONNECTED = "disconnected",
+                RECEIVED_MESSAGE = "received_message";
+
+        var android_connected = true;
 
         var active_json;
-        socket.onmessage = function(e) {
+        var conversations;
+        var contacts;
+        var initial_connect_conversations = true;
+        webSocketCon.onmessage = function(e) {
             active_json = JSON.parse(e.data);
             console.log(active_json[ACTION]);
             switch (active_json[ACTION]) {
                 case POST_CONTACTS:
                         //contacts received, populate contacts section
                         storeContacts(active_json);
+                        uiAddAllContacts();
+                        console.log("Added contacts.");
                     break;
                 case POST_CONVERSATIONS:
                         //conversations received, populate conversations section
                         storeConversations(active_json);
+                        uiAddAllConversations();
+                        //initial connect ask for messages from convo
+                        if (initial_connect_conversations) {
+                            var convos = retrieveConversations();
+                            for (var i in convos) {
+                                var key = Object.keys(convos[i])[0];
+                                console.log("Sending for messages [" + key + "]");
+                                webSocketCon.send(getMessagesJSON(key,
+                                DEFAULT_GET_MESSAGES,
+                                0 /*offset*/));
+                            }
+                            initial_connect_conversations = false;
+                        }
+                        console.log("Added conversations.");
                     break;
                 case POST_MESSAGES:
                         //messages received, populate conversations section
+                        storeMessages(active_json);
+                        var jsonConvoId = active_json[THREAD_ID];
+                        if (jsonConvoId == $('#convo_id').val()) {
+                            uiPrependMessage(jsonConvoId,active_json[jsonConvoId]);
+                        }
                     break;
                 case SENT_MESSAGES:
                         //message successfully sent, ??Change color of message bubble???
+                        var tempIdArr = retrieveTempIdArr();
+                        for (var i in tempIdArr) {
+                            var jsonTemp = JSON.parse(tempIdArr[i]);
+                            if (jsonTemp[TEMP_MESSAGE_ID] == active_json[TEMP_MESSAGE_ID]) {
+                                uiUpdateMessage(active_json[TEMP_MESSAGE_ID],
+                                    active_json[MESSAGE_ID]);
+                                storeTempIdArr(tempIdArr.splice(i,1));
+                            }
+                        }
+                        storeMessages(active_json);
                     break;
                 case SENT_MESSAGES_FAILED:
                         //message failed to send, ??Change color of message bubble???
                     break;
+                case CONNECTED:
+                        //android connected
+                        android_connected = true;
+                        console.log("Is android connected [" + android_connected + "]");
+                    break;
+                case DISCONNECTED:
+                        //android disconnected
+                        android_connected = false;
+                        console.log("Is android connected [" + android_connected + "]");
+                    break;
+                case RECEIVED_MESSAGE:
+                        //received a message check to add to ui
+                        var tempJson = active_json;
+                        var convo_id_val = $('#convo_id').val();
+                        var jsonConvoId = active_json[THREAD_ID];
+                        if (convo_id_val !== null && jsonConvoId == convo_id_val) {
+                            var jsonObject = active_json[jsonConvoId];
+                            for (var i in jsonObject) {
+                                var key = Object.keys(jsonObject[i])[0];
+                                uiAppendMessage(jsonObject[i][key][BODY],
+                                    key,
+                                    jsonObject[i][key][MESSAGE_TYPE]
+                                );
+                            }
+                            storeScrollTop(uiScrollTop(-1));
+                        }
+                        storeMessages(active_json);
+                    break;
             }
-
-{#            var messageRowDiv = $('<div>').css({#}
-{#                "padding":"8px 6px"#}
-{#            });#}
-{#            var messageText = e.data;#}
-{#            var messageTextSpan = $('<span>').html(messageText).css({#}
-{#                "padding":"6px 12px",#}
-{#                "background-color":"#ffcdcd",#}
-{#                "border-radius":"20px",#}
-{#            });#}
-{#            messageRowDiv.append(messageTextSpan);#}
-{#            $('#rm_messageArea').append(messageRowDiv);#}
         };
-        socket.onopen = function() {
-            socket.send(getContacts());
-            socket.send(getConversations());
+        webSocketCon.onopen = function() {
+            startUpCalls();
         };
-        socket.onclose = function() {
-            socket.send("I just left :(");
-            socket = new WebSocket("ws://" + window.location.host + "/message_route/");
+        webSocketCon.onclose = function() {
+            webSocketCon = new WebSocket("ws://" + window.location.host + "/message_route/");
         };
 
         $('#rm_sendBtn').click(function(){
-            var messageRowDiv = $('<div>').css({
-                "height":"30px",
-                "margin":"4px 6px"
-            });
-            var messageText = $('#rm_messageInput').text();
-            var messageTextSpan = $('<span>').html(messageText).css({
-                "float":"right",
-                "padding":"6px 12px",
-                "background-color":"#CDF0FF",
-                "border-radius":"20px",
-            });
-            if(messageText.length > 0) {
-                socket.send(messageText);
-                messageRowDiv.append(messageTextSpan);
-                $('#rm_messageArea').append(messageRowDiv);
-                $('#rm_messageInput').html("");
+            var rm_message_input = $('#rm_messageInput');
+            var convo_id_val = $('#convo_id').val();
+            if (rm_message_input.html().length > 0 && convo_id_val != "") {
+                var rmArea = $('#rm_messageArea');
+                var temp_id = parseInt(String(rmArea.children().last().attr('id')).match(/\d+/));
+                console.log("Temp id message [" + temp_id + "]");
+                var body = rm_message_input.text();
+                var messageObject = JSON.stringify(
+                    {
+                        "action":"send_messages",
+                        "body":body,
+                        "data":"",
+                        "temp_message_id":temp_id,
+                        "numbers": getNumbers(convo_id_val)
+                    }
+                );
+                rm_message_input.html("");
+                console.log(messageObject);
+                //append to ui
+                uiAppendMessage(body, temp_id, TYPE_LOCAL_SEND);
+                //store for future reference
+                storeTempId(temp_id, convo_id_val, body);
+                uiScrollTop(-1);
+                webSocketCon.send( messageObject );
             }
         });
 
-        window.onbeforeunload = function (){
+        //scrolling query more messages
+        $('#rm_messageArea').on("scroll",function(){
+            if($(this).scrollTop() == 0) {
+                var offset = $('#rm_messageArea').children().size();
+                webSocketCon.send(getMessagesJSON($('#convo_id').val(),DEFAULT_GET_MESSAGES,offset));
+            }
+        });
+
+        window.onload = function () {
+            $('#slt_contact').hide();
         };
+
+        function startUpCalls() {
+            console.log(ACTION);
+            webSocketCon.send(JSON.stringify( {
+                "action" : CONNECTED
+            }));
+            //loads contacts
+            webSocketCon.send(getContacts());
+            //loads top conversations
+            webSocketCon.send(getConversations());
+            console.log("Sent for all");
+        }
 
     </script>
     </body>

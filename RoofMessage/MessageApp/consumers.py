@@ -1,3 +1,4 @@
+import json
 import re
 
 from channels import Channel, Group
@@ -13,7 +14,7 @@ from .models import GROUP_ANDROID, GROUP_BROWSER, ANDROID_CONSTANT
 def ws_add(message):
     # Add them to the right group
     group = message.user.groups.all()
-    if group is not None:
+    if len(group) == 1 and (group[0].name == GROUP_ANDROID or group[0].name == GROUP_BROWSER):
         group = group[0].name
         username = message.user.username
         if group == GROUP_ANDROID:
@@ -25,7 +26,7 @@ def ws_add(message):
 @channel_session_user
 def ws_message(message):
     group = message.user.groups.all()
-    if group is not None:
+    if len(group) == 1 and (group[0].name == GROUP_ANDROID or group[0].name == GROUP_BROWSER):
         group = group[0].name
         username = message.user.username
         if group == GROUP_ANDROID:
@@ -37,7 +38,7 @@ def ws_message(message):
             group = GROUP_ANDROID
 
         Group("%s-%s" % (group, username)).send({
-        "text": message['text'],
+            "text": message['text'],
         })
 
 # Connected to websocket.disconnect
@@ -46,12 +47,12 @@ def ws_message(message):
 def ws_disconnect(message):
     # remove them to the right group
     group = message.user.groups.all()
-    if group is not None:
+    if len(group) == 1 and (group[0].name == GROUP_ANDROID or group[0].name == GROUP_BROWSER):
         group = group[0].name
         username = message.user.username
         if group == GROUP_ANDROID:
-            Group("%s-%s" % (GROUP_BROWSER, username)).send({
-                "text": "disconnected",
+            Group("%s-%s" % (GROUP_BROWSER, username[0:username.index(ANDROID_CONSTANT)])).send({
+                "text": json.dumps({'action' : 'disconnected'}),
             })
             username = re.match( r'(.*?)%s'% ANDROID_CONSTANT, username).group(1)
 
