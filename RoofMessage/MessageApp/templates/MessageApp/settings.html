@@ -1,43 +1,59 @@
+{% load staticfiles %}
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="stylesheet" href="{% static "message_app/settings.css" %}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <title>Settings</title>
 </head>
     <body>
-        <h1>Settings</h1>
-        <div id="change_password">
-            {% if pass_change_success %}
-                <p>Congradulations your password has been changed!</p>
-            {% endif %}
-            <form id="change_password_form" method="post" action="{% url 'MessageApp:settings' %}">
-                {% csrf_token %}
-                {{ pass_form.as_p }}
-                <input type="submit" name="change_password" value="Save Changed Password" />
-            </form>
-        </div>
-        <a href="{% url 'MessageApp:index' %}"><input type="button" value="Back"/></a>
-        <br>
-        <form id="delete_account_form" method="post" action="{% url 'MessageApp:delete_account' %}">
-            {% csrf_token %}
-            {% ifnotequal error None %}
-                {{ error }}
+        <div class="panel panel-primary" id="settings_panel">
+            <div class="panel-heading">
+                <h1>Settings</h1>
+            </div>
+            <div class="panel-body">
+                <div id="change_password">
+                {% if pass_change_success %}
+                    <p>Congradulations your password has been changed!</p>
+                {% endif %}
+                <form id="change_password_form" method="post" action="{% url 'MessageApp:settings' %}">
+                    {% csrf_token %}
+                    {{ pass_form.as_p }}
+                    <input type="submit" name="change_password" value="Save Changed Password" />
+                </form>
+                </div>
+                <a href="{% url 'MessageApp:index' %}"><input type="button" value="Back"/></a>
                 <br>
-            {% endifnotequal %}
-            <input class="text_input" type="password" name="password" placeholder="Password" size="50" required/>
-            <input method="submit" type="submit" value="Delete Account"/>
-        </form>
+                <form id="delete_account_form" method="post" action="{% url 'MessageApp:delete_account' %}">
+                    {% csrf_token %}
+                    {% ifnotequal error None %}
+                        {{ error }}
+                        <br>
+                    {% endifnotequal %}
+                    <input class="text_input" type="password" name="password" placeholder="Password" size="50" required/>
+                    <input method="submit" type="submit" value="Delete Account"/>
+                </form>
 
-        {% if not user_profile.activated_account %}
-            {% if email_sent %}
-                <p>An email has just been sent with a new activation code</p>
-            {% endif %}
-            <!--This is active if account has not been activated yet-->
-            <form id="new_activate_account" method="post" action="{% url 'MessageApp:settings' %}">
-                {% csrf_token %}
-                <p>Your account is still not active!</p>
-                <input type="submit" name="activate" value="Send new Activate Account Link" />
-            </form>
-        {% endif %}
+                {% if not user_profile.activated_account %}
+                    {% if email_sent %}
+                        <p>An email has just been sent with a new activation code</p>
+                    {% endif %}
+                    <!--This is active if account has not been activated yet-->
+                    <form id="new_activate_account" method="post" action="{% url 'MessageApp:settings' %}">
+                        {% csrf_token %}
+                        <p>Your account is still not active!</p>
+                        <input type="submit" name="activate" value="Send new Activate Account Link" />
+                    </form>
+                {% endif %}
+          </div>
+        </div>
     </body>
 </html>

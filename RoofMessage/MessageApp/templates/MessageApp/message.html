@@ -7,7 +7,13 @@
         <link rel="stylesheet" href="{% static "message_app/message.css" %}">
         <script src="{% static "message_app/JSONFunctions.js" %}"></script>
         <script src="{% static "message_app/ui_functions.js" %}"></script>
-        <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.2/jquery.min.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
         <title>ROOFtext</title>
         <script type="text/javascript"></script>
     </head>
@@ -26,15 +32,17 @@
                     <div id=lsb_contactsTab class=lsb_toggleTab style="background-color:#f66;
                                                                 border-top:solid #f66 1px;
                                                                 border-right:solid black 1px;
-                                                                border-bottom:solid black 1px;">Contacts</div>
+                                                                border-bottom:solid black 1px;
+                                                                float: left;">Contacts</div>
                     <div id=lsb_messagesTab class=lsb_toggleTab style="border-top:solid black 1px;
-                                                                border-bottom:solid red 1px;">Conversations</div>
+                                                                border-bottom:solid red 1px;
+                                                                float: left;">Conversations</div>
                 </div>
                 <div id="lsb_tabItems">
                     <select class="scroll_data" id="slt_contact" size="41" multiple style="">
                     </select>
-                    <select class="scroll_data" id="slt_conversation" size="41" multiple style="">
-                    </select>
+                    <div class="scroll_data" id="slt_conversation">
+                    </div>
                     <input type="hidden" id="convo_id">
                 </div>
                 <div id="lsb_bottomBtns">
@@ -44,12 +52,46 @@
             </div>
             <div id="rightMessage">
                 <div id="rm_topBar">Jesse Saran</div>
+                <div id="rm_loadBtn">Load More</div>
                 <div id="rm_messageArea"></div>
                 <div id="rm_inputsDiv">
                     <div id="rm_messageInputDiv">
                         <div id="rm_messageInput" contenteditable="true"></div>
                     </div>
                     <div id="rm_sendBtn">Send</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal" id="connect_waiting" tabindex="-1" role="dialog">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">Waiting to connect</h4>
+                    </div>
+                    <div class="modal-body">
+                        <p>
+                            We are waiting for your phone to connect. Make sure your app is connected
+                            to wifi and you are logged in through the app.
+                            <br><br>
+                            If you have not already, please download
+                            the app <a href="https://www.rooftext.com" target="_blank">here</a>.
+                            <br><br>
+                            <button class="btn btn-info" id="loading_button">
+                                <span class="glyphicon glyphicon-refresh spinning"></span> Waiting to connect...
+                            </button>
+                        </p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-primary"
+                                id="button_settings"
+                                onclick="window.open('{% url 'MessageApp:settings' %}')">
+                            Settings
+                        </button>
+                        <button type="button" class="btn btn-outline-primary" onclick="location.href='{% url 'MessageApp:logout' %}'">
+                            Logout
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -88,22 +130,6 @@
                 $('#rm_sendBtn').click();
                 return false;
             }
-        });
-        $('#slt_conversation').on("click", function () {
-            var convo_id = $('#convo_id');
-            var convo_id_val = convo_id.val();
-            var selectedOption = $(this).find(":selected");
-            var match =  (/(.*?)([0-9]+)/g).exec(selectedOption.val());
-            var id = match[2];
-            if (id != convo_id_val) {
-                storeScrollTop(convo_id_val, $('#rm_messageArea').scrollTop());
-            }
-            console.log(id + " " + selectedOption.val());
-            convo_id.attr("value",id);
-            if (!uiAddConversationMessages(id)) {
-                webSocketCon.send(getMessagesJSON(id,DEFAULT_GET_MESSAGES,0));
-            }
-            uiScrollTop(retrieveScrollTop(id));
         });
         // ***************************************************
 
@@ -157,6 +183,7 @@
                         console.log("Added conversations.");
                     break;
                 case POST_MESSAGES:
+
                         //messages received, populate conversations section
                         storeMessages(active_json);
                         var jsonConvoId = active_json[THREAD_ID];
@@ -183,12 +210,21 @@
                 case CONNECTED:
                         //android connected
                         android_connected = true;
+                        startUpCalls();
+                        $('#loading_button').attr('class','btn btn-success');
+                        setTimeout(function () {
+                            $('#connect_waiting').modal('hide');
+                            $('#loading_button').attr('class','btn btn-info');
+                        }, 1000);
                         console.log("Is android connected [" + android_connected + "]");
                     break;
                 case DISCONNECTED:
                         //android disconnected
                         android_connected = false;
+                        $('#connect_waiting').modal('show');
                         console.log("Is android connected [" + android_connected + "]");
+                        //TODO fix backend to not send disconnect on wifi reconnect disconnect
+                        sendConnected();
                     break;
                 case RECEIVED_MESSAGE:
                         //received a message check to add to ui
@@ -204,17 +240,21 @@
                                     jsonObject[i][key][MESSAGE_TYPE]
                                 );
                             }
-                            storeScrollTop(uiScrollTop(-1));
+                            storeScrollTop(jsonConvoId, uiScrollTop(-1));
                         }
-                        storeMessages(active_json);
+                        storeMessages(convo_id_val,active_json);
+                        uiConversationNewMesssage(jsonConvoId);
                     break;
             }
         };
         webSocketCon.onopen = function() {
+            sendConnected();
             startUpCalls();
         };
         webSocketCon.onclose = function() {
-            webSocketCon = new WebSocket("ws://" + window.location.host + "/message_route/");
+            window.setTimeout( function () {
+                webSocketCon = new WebSocket("ws://" + window.location.host + "/message_route/");
+            }, 2000);
         };
 
         $('#rm_sendBtn').click(function(){
@@ -253,22 +293,55 @@
             }
         });
 
+        $('#rm_loadBtn').on("click", function () {
+            var convoIdVal = $('#convo_id').val();
+            if (convoIdVal !== null && convoIdVal) {
+                var rmArea = $('#rm_messageArea');
+                storeScrollTop(convoIdVal, rmArea.scrollTop());
+                var offset = rmArea.children().size();
+                webSocketCon.send(getMessagesJSON(convoIdVal,DEFAULT_GET_MESSAGES,offset));
+            }
+        });
+
         window.onload = function () {
             $('#slt_contact').hide();
+            var contactsTab = $('#lsb_contactsTab');
+            var settingsBtn = $('#lsb_settingsBtn');
+            var scrollData = $('.scroll_data');
+
+            var data = settingsBtn.offset().top-
+                    (contactsTab.position().top+contactsTab.height());
+            scrollData.css('max-height',data+"px");
+            $('#connect_waiting').modal({
+                backdrop: 'static',
+                show:true
+            });
         };
 
         function startUpCalls() {
             console.log(ACTION);
-            webSocketCon.send(JSON.stringify( {
-                "action" : CONNECTED
-            }));
             //loads contacts
             webSocketCon.send(getContacts());
             //loads top conversations
             webSocketCon.send(getConversations());
             console.log("Sent for all");
         }
+        window.onresize = function(event) {
+            //resize left-side-bar
+            var contactsTab = $('#lsb_contactsTab');
+            var settingsBtn = $('#lsb_settingsBtn');
+            var scrollData = $('.scroll_data');
 
+            var data = settingsBtn.offset().top-
+                    (contactsTab.position().top+contactsTab.height());
+            scrollData.css('max-height',data+"px");
+        };
+
+        function sendConnected() {
+            webSocketCon.send(JSON.stringify( {
+                "action" : CONNECTED
+            }));
+        }
     </script>
     </body>
 </html>

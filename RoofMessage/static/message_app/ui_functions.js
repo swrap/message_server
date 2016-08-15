@@ -1,3 +1,22 @@
+var DEFAULT_GET_MESSAGES = 15;
+
+var BODY = "body";
+var MESSAGE_TYPE = "message_type";
+var THREAD_ID = "thread_id";
+var ID = "ID";
+var TYPE_INBOX = 1;
+var TYPE_SENT = 2;
+
+var TYPE_LOCAL_SEND = 20; //waiting to see if successfully sent'
+
+
+var MESSAGE_BACKGROUND_COLOR_ME_SENT = "#ffff00";
+var MESSAGE_BACKGROUND_COLOR_RECEIVED = "#CDF0FF";
+var MESSAGE_BACKGROUND_COLOR_WAITING = "#7C26CB";
+var CONVO_BACKGROUND_COLOR = "#E3D8D5";
+var CONVO_MESSAGE_RECEIVED_COLOR = "#FF5733";
+var CONVO_CLASS = "convoClass";
+
 
 /**
  * Adds all contacts in the conversations_key_array to the ui display = none
@@ -6,31 +25,45 @@ function uiAddAllConversations() {
     $("slt_conversation").empty();
     var jsonArray = retrieveConversations();
     var keys = Object.keys(jsonArray);
+    var slt_conversation = $('#slt_conversation');
+    slt_conversation.empty();
     $.each(jsonArray, function (index, value) {
         var key = Object.keys(value)[0];
         var recip = value[key][RECIPIENTS];
         var text = recip.length;
+        var namesAndNumbers = [];
         for (var r in recip) {
             if (recip[r][FULL_NAME] != null) {
-                text += " [" + recip[r][FULL_NAME] + "]";
+                // text += " [" + recip[r][FULL_NAME] + "]";
+                namesAndNumbers.push(recip[r][FULL_NAME] + " " +
+                    recip[r][PHONE_NUMBER]);
             } else {
-                text += " [" + recip[r][PHONE_NUMBER] + "]";
+                // text += " [" + recip[r][PHONE_NUMBER] + "]";
+                namesAndNumbers.push(recip[r][PHONE_NUMBER]);
             }
         }
-        uiAddConversation(text,key);
+        var createdConvo = createConversationDiv(namesAndNumbers, key);
+        createdConvo.on("click",function () {
+            var convo_id = $('#convo_id');
+            var convo_id_val = convo_id.val();
+            var selectedConvo = $(this);
+
+            var match =  (/(.*?)([0-9]+)/g).exec(selectedConvo.attr('id'));
+
+            var id = match[2];
+            if (id != convo_id_val) {
+                storeScrollTop(convo_id_val, $('#rm_messageArea').scrollTop());
+            }
+            console.log(id + " " + selectedConvo.attr('id'));
+            convo_id.attr("value",id);
+            if (!uiAddConversationMessages(id)) {
+                webSocketCon.send(getMessagesJSON(id,DEFAULT_GET_MESSAGES,0));
+            }
+            uiScrollTop(retrieveScrollTop(id));
+            selectedConvo.css("background-color",CONVO_BACKGROUND_COLOR);
+        });
+        slt_conversation.append(createdConvo);
     });
-}
-
-/**
- * Adds a single conversation to the ui
- * @param text  html text of option item
- * @param value value att of option item
- */
-function uiAddConversation(text,value) {
-    var slt_conversation = document.getElementById("slt_conversation");
-
-    var option = new Option(text,value);
-    slt_conversation.options[slt_conversation.options.length] = option;
 }
 
 /**
@@ -55,17 +88,6 @@ function uiAddContact(text,value) {
     var option = new Option(text,value);
     slt_contact.options[slt_contact.options.length] = option;
 }
-
-var DEFAULT_GET_MESSAGES = 15;
-
-var BODY = "body";
-var MESSAGE_TYPE = "message_type";
-var THREAD_ID = "thread_id";
-var ID = "ID";
-var TYPE_INBOX = 1;
-var TYPE_SENT = 2;
-
-var TYPE_LOCAL_SEND = 20; //waiting to see if successfully sent
 
 /**
  * Removes current messages display and displays the new ones or sends request
@@ -103,13 +125,13 @@ function uiAddConversationMessages(convo_id) {
     return true;
 }
 
-var BACKGROUND_COLOR_ME_SENT = "#ffff00";
-var BACKGROUND_COLOR_RECEIVED = "#CDF0FF";
-var BACKGROUND_COLOR_WAITING = "#7C26CB";
-
 function uiPrependMessage(convo_id,jsonMessageArr) {
     var messageArea = $('#rm_messageArea');
-    var divScroll = $('#'+messageArea.children()[0].id);
+    var divScroll = retrieveScrollTop(convo_id);
+    storeScrollTop(convo_id,"");
+    if (divScroll == null || divScroll == "") {
+        divScroll = $('#'+messageArea.children()[0].id);
+    }
     $.each(jsonMessageArr, function (index, message) {
         $.each(message, function (index, messageInfo) {
             messageArea.prepend(createMessageDiv(messageInfo[BODY],
@@ -118,10 +140,15 @@ function uiPrependMessage(convo_id,jsonMessageArr) {
                 ));
         });
     });
-    var margin = parseInt(divScroll.css("margin-top"))*2;
-    var offsetTop = parseInt(divScroll.offset()["top"]);
-    var special = parseInt(offsetTop-margin);
-    messageArea.scrollTop(special);
+    var finalTop;
+    if (divScroll instanceof jQuery) {
+        var margin = parseInt(divScroll.css("margin-top"))*2;
+        var offsetTop = parseInt(divScroll.offset()["top"]);
+        finalTop = parseInt(offsetTop-margin);
+    } else {
+        finalTop = divScroll;
+    }
+    messageArea.scrollTop(finalTop);
 }
 
 /**
@@ -149,7 +176,7 @@ function createMessageDiv(body, id, type) {
         messageTextSpan = $('<span>').html(body).css({
             "float": "left",
             "padding": "6px 12px",
-            "background-color": BACKGROUND_COLOR_RECEIVED,
+            "background-color": MESSAGE_BACKGROUND_COLOR_RECEIVED,
             "border-radius": "20px",
             "max-width":"45%",
             "word-wrap":"break-word",
@@ -164,7 +191,7 @@ function createMessageDiv(body, id, type) {
         messageTextSpan = $('<span>').html(body).css({
             "float": "right",
             "padding": "6px 12px",
-            "background-color": BACKGROUND_COLOR_ME_SENT,
+            "background-color": MESSAGE_BACKGROUND_COLOR_ME_SENT,
             "border-radius": "20px",
             "max-width":"45%",
             "word-wrap":"break-word",
@@ -179,7 +206,7 @@ function createMessageDiv(body, id, type) {
         messageTextSpan = $('<span>').html(body).css({
             "float": "right",
             "padding": "6px 12px",
-            "background-color": BACKGROUND_COLOR_WAITING,
+            "background-color": MESSAGE_BACKGROUND_COLOR_WAITING,
             "border-radius": "20px",
             "max-width":"45%",
             "word-wrap":"break-word",
@@ -210,6 +237,35 @@ function createMessageDiv(body, id, type) {
 }
 
 /**
+ * Creates a Conversatin div
+ * @param names {array} of names
+ * @param id    id of conversation
+ * @returns {*|jQuery}
+ */
+function createConversationDiv(names, id) {
+    var convoRowDiv = $('<div>').css({
+            "margin": "5px 5px 5px 5px",
+            "border": "1px solid black",
+            "background-color": CONVO_BACKGROUND_COLOR,
+        });
+    convoRowDiv.attr("id",CONVERSATIONS+id);
+    var convoAmountSpan = $('<span>').html(names.length).css({
+            "width": "100%",
+            "display": "block",
+        });
+    convoRowDiv.append(convoAmountSpan);
+    for (var n in names) {
+        var convoNameSpan = $('<span>').html(names[n]).css({
+                "display": "block",
+            });
+        convoRowDiv.append(convoNameSpan)
+    }
+    convoRowDiv.addClass(CONVO_CLASS);
+    convoRowDiv.set
+    return convoRowDiv;
+}
+
+/**
  * Changes the color of message div when it is sent by device
  * @param temp_id
  * @param id
@@ -218,7 +274,7 @@ function uiUpdateMessage(temp_id, id) {
     var messageDiv = $('#' + TEMP_MESSAGE_ID + temp_id);
     if (messageDiv != null) {
         messageDiv.children("span").css("background-color",
-            BACKGROUND_COLOR_ME_SENT);
+            MESSAGE_BACKGROUND_COLOR_ME_SENT);
         messageDiv.attr(ID,MESSAGES + id);
         console.log("Updated message with id [" + id + "]");
     } else {
@@ -238,4 +294,15 @@ function uiScrollTop(location) {
     }
     rmArea.scrollTop(location);
     return location;
+}
+
+/**
+ * Changes color of conversation to color of received message
+ * @param convoId
+ */
+function uiConversationNewMesssage(convoId) {
+    var convo = $('#' + CONVERSATIONS + convoId);
+    convo.css('background-color', CONVO_MESSAGE_RECEIVED_COLOR);
+    var convos = $('#slt_conversation');
+    convos.prepend(convo);
 }
