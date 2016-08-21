@@ -4,9 +4,6 @@
 <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <link rel="stylesheet" href="{% static "message_app/message.css" %}">
-        <script src="{% static "message_app/JSONFunctions.js" %}"></script>
-        <script src="{% static "message_app/ui_functions.js" %}"></script>
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
         <!-- Latest compiled and minified CSS -->
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -14,51 +11,81 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
         <!-- Latest compiled and minified JavaScript -->
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
-        <title>ROOFtext</title>
+
+
+        <link rel="stylesheet" href="{% static "message_app/message.css" %}">
+        <script src="{% static "message_app/JSONFunctions.js" %}"></script>
+        <script src="{% static "message_app/ui_functions.js" %}"></script>
         <script type="text/javascript"></script>
+
+        <title>ROOFtext</title>
     </head>
     <body>
         {% csrf_token %}
+        <div id="bodyDiv"></div>
         <div id="master_container">
             <div id="leftSideBar">
                 <div id=lsb_title>
                     <span style="font-weight: bold">ROOF</span>
-                    <span style="margin-left:-10px; color:pink">text</span>
+                    <span style="margin-left:-10px;">text</span>
                 </div>
                 <div id="lsb_searchBarDiv">
                     <input id=lsb_searchBar type="text" placeholder="Search your contacts">
                 </div>
                 <div id="lsb_tabs">
-                    <div id=lsb_contactsTab class=lsb_toggleTab style="background-color:#f66;
-                                                                border-top:solid #f66 1px;
-                                                                border-right:solid black 1px;
-                                                                border-bottom:solid black 1px;
-                                                                float: left;">Contacts</div>
-                    <div id=lsb_messagesTab class=lsb_toggleTab style="border-top:solid black 1px;
-                                                                border-bottom:solid red 1px;
-                                                                float: left;">Conversations</div>
+                    <div id="lsb_contactsTab" class="lsb_toggleTab">Contacts</div>
+                    <div id="lsb_conversationsTab" class="lsb_toggleTab">Conversations</div>
                 </div>
                 <div id="lsb_tabItems">
-                    <select class="scroll_data" id="slt_contact" size="41" multiple style="">
-                    </select>
-                    <div class="scroll_data" id="slt_conversation">
+                    <div class="list-group" id="slt_contact">
+                    </div>
+                    <input type="hidden" id="contact_ids">
+                    <div class="list-group" id="slt_conversation">
                     </div>
                     <input type="hidden" id="convo_id">
                 </div>
                 <div id="lsb_bottomBtns">
-                    <div id="lsb_settingsBtn" onclick="window.open('{% url 'MessageApp:settings' %}')">Settings</div>
-                    <div id="lsb_logoutBtn" onclick="location.href='{% url 'MessageApp:logout' %}'">Logout</div>
+                    <div class="btn btn-outline-primary" id="lsb_settingsBtn" onclick="window.open('{% url 'MessageApp:settings' %}')">Settings</div>
+                    <div class="btn btn-outline-primary" id="lsb_logoutBtn" onclick="location.href='{% url 'MessageApp:logout' %}'">Logout</div>
                 </div>
+            </div>
+            <div id="new_message_container" hidden>
+                <form>
+                    <div class="form-group">
+                        <label for="recipientInput">Recipients</label>
+                        <ul class="list-group" id="recipientList"></ul>
+                    </div>
+                    <div class="form-group">
+                        <label for="textArea">Message</label>
+                        <textarea class="form-control" id="new_message_textArea" rows="3" style="
+                            resize: vertical;
+                        "></textarea>
+                    </div>
+                    <div class="form-group" style="flex: 1  ;">
+                        <div class="sendBtn" id="new_message_sendBtn" style="
+                            border: solid 1px black;
+                            padding-right: 5px;
+                            float: left;
+                        ">Send</div>
+                        <div class="cancelBtn" id="new_message_cancelBtn" style="
+                            border: solid 1px black;
+                            float: right;
+                        ">Cancel</div>
+                    </div>
+                </form>
             </div>
             <div id="rightMessage">
                 <div id="rm_topBar">Jesse Saran</div>
                 <div id="rm_loadBtn">Load More</div>
                 <div id="rm_messageArea"></div>
                 <div id="rm_inputsDiv">
-                    <div id="rm_messageInputDiv">
-                        <div id="rm_messageInput" contenteditable="true"></div>
+                    <div id="rm_messageInput" contenteditable="true"></div>
+                    <div id="rm_sendArea">
+                        <div id="rm_sendBtn" class="sendBtn">Send</div>
+                        <div id="rm_charCountArea">
+                            <span>Char: <span id="rm_charCount">0</span></span>
+                        </div>
                     </div>
-                    <div id="rm_sendBtn">Send</div>
                 </div>
             </div>
         </div>
@@ -98,41 +125,87 @@
     <script>
         // Listeners
         $('#lsb_contactsTab').on("click", function(){
-            $('#lsb_contactsTab').css({"background-color":"red",
+            $('#lsb_contactsTab').css({"background-color":"white",
                                 "border-top":"solid black 1px",
-                                "border-bottom":"solid red 1px",});
-            $('#lsb_messagesTab').css({"background-color":"#f66",
-                              "border-top":"solid #f66 1px",
+                                "border-bottom":"solid transparent 1px",});
+            $('#lsb_conversationsTab').css({"background-color":"#C77FFF",
+                              "border-top":"solid black 1px",
                               "border-bottom":"solid black 1px",});
             //displaying contacts
             $('#slt_contact').show();
             $('#slt_conversation').hide();
         });
 
-        $('#lsb_messagesTab').on("click", function(){
-            $('#lsb_messagesTab').css({"background-color":"red",
+        $('#lsb_conversationsTab').on("click", function(){
+            $('#lsb_conversationsTab').css({"background-color":"white",
                               "border-top":"solid black 1px",
-                              "border-bottom":"solid red 1px",});
-            $('#lsb_contactsTab').css({"background-color":"#f66",
-                                "border-top":"solid #f66 1px",
+                              "border-bottom":"solid transparent 1px",});
+            $('#lsb_contactsTab').css({"background-color":"#C77FFF",
+                                "border-top":"solid black 1px",
                                 "border-bottom":"solid black 1px",});
             $('#slt_conversation').show();
             $('#slt_contact').hide();
-
         });
-        $('#rm_messageInput').keydown(function(e) {
-            if (e.keyCode == 16 && e.keyCode == 13){
+
+        $('#lsb_searchBar').on("input", function () {
+            $('#lsb_contactsTab').click();
+            var searchText = $(this).first().val();
+            if (searchText.length > 0) {
+                var siblings = $('#slt_contact').children();
+                $.each(siblings, function (index, value) {
+                    var tempValue = $(value);
+                    if (tempValue.text().toUpperCase().indexOf(String(searchText).toUpperCase()) > -1) {
+                        tempValue.show();
+                    } else {
+                        tempValue.hide();
+                    }
+                });
+            } else {
+                $('#slt_contact').children().show();
+            }
+        });
+
+        $("#new_message_cancelBtn").on("click", function () {
+            $("#new_message_container").hide();
+            $("#slt_contact").children().removeClass(CLASS_SELECTED_CONTACT);
+            $("#recipientList").empty();
+            $("#new_message_textArea").text("");
+        });
+
+        $("#new_message_sendBtn").on("click", function() {
+            var children = $("#recipientList").children();
+            var numbers = [];
+            for (var i = 0; i < children.length; i++) {
+                var contact = retrieveContact(children[i].innerText.trim());
+                numbers.push({
+                    "number": getNumbersFromString(contact[PHONE_NUMBER])
+                });
+            }//TODO DOCUMENTATION
+            //TODO HAVE TO REINVENT HOW TO SEND NEW MESSAGES
+            var messageObjectString = prepareMessages($('#new_message_textArea').val(),
+                    "",
+                    numbers,
+                    0);//TODO redo temp id
+            webSocketCon.send(messageObjectString);
+            $('#new_message_cancelBtn').click();
+        });
+
+        var messageInput = $('#rm_messageInput');
+        messageInput.keydown(function(e) {
+            if (e.keyCode == 16 && e.keyCode == 13) {
                 console.log('shift+enter')
                 return true;
             }
-            if(e.keyCode == 13) {
+            if (e.keyCode == 13) {
                 console.log('enter')
                 $('#rm_sendBtn').click();
                 return false;
             }
         });
-        // ***************************************************
 
+        messageInput.bind("DOMSubtreeModified",function() {
+            $('#rm_charCount').html(getNumberCommaFormatted($(this).text().length));
+        });
         // ***************************************************
 
 
@@ -183,7 +256,6 @@
                         console.log("Added conversations.");
                     break;
                 case POST_MESSAGES:
-
                         //messages received, populate conversations section
                         storeMessages(active_json);
                         var jsonConvoId = active_json[THREAD_ID];
@@ -210,19 +282,19 @@
                 case CONNECTED:
                         //android connected
                         android_connected = true;
+                        console.log("Is android connected [" + android_connected + "]");
                         startUpCalls();
                         $('#loading_button').attr('class','btn btn-success');
                         setTimeout(function () {
                             $('#connect_waiting').modal('hide');
                             $('#loading_button').attr('class','btn btn-info');
                         }, 1000);
-                        console.log("Is android connected [" + android_connected + "]");
                     break;
                 case DISCONNECTED:
                         //android disconnected
                         android_connected = false;
-                        $('#connect_waiting').modal('show');
                         console.log("Is android connected [" + android_connected + "]");
+                        $('#connect_waiting').modal('show').focus();
                         //TODO fix backend to not send disconnect on wifi reconnect disconnect
                         sendConnected();
                     break;
@@ -235,22 +307,20 @@
                             var jsonObject = active_json[jsonConvoId];
                             for (var i in jsonObject) {
                                 var key = Object.keys(jsonObject[i])[0];
-                                uiAppendMessage(jsonObject[i][key][BODY],
-                                    key,
-                                    jsonObject[i][key][MESSAGE_TYPE]
-                                );
+                                uiAppendMessage(jsonObject[i][key],key);
                             }
                             storeScrollTop(jsonConvoId, uiScrollTop(-1));
                         }
-                        storeMessages(convo_id_val,active_json);
+                        storeMessages(active_json);
                         uiConversationNewMesssage(jsonConvoId);
                     break;
             }
         };
+
         webSocketCon.onopen = function() {
             sendConnected();
-            startUpCalls();
         };
+
         webSocketCon.onclose = function() {
             window.setTimeout( function () {
                 webSocketCon = new WebSocket("ws://" + window.location.host + "/message_route/");
@@ -262,26 +332,20 @@
             var convo_id_val = $('#convo_id').val();
             if (rm_message_input.html().length > 0 && convo_id_val != "") {
                 var rmArea = $('#rm_messageArea');
-                var temp_id = parseInt(String(rmArea.children().last().attr('id')).match(/\d+/));
+                var temp_id = getNumbersFromString(rmArea.children().last().attr('id'));
                 console.log("Temp id message [" + temp_id + "]");
                 var body = rm_message_input.text();
-                var messageObject = JSON.stringify(
-                    {
-                        "action":"send_messages",
-                        "body":body,
-                        "data":"",
-                        "temp_message_id":temp_id,
-                        "numbers": getNumbers(convo_id_val)
-                    }
-                );
+                var messageObjectString = prepareMessages(body, "", getNumbers(convo_id_val), temp_id);
                 rm_message_input.html("");
-                console.log(messageObject);
+                console.log(messageObjectString);
                 //append to ui
-                uiAppendMessage(body, temp_id, TYPE_LOCAL_SEND);
+                webSocketCon.send( messageObjectString );
+                var messageObject = JSON.parse(messageObjectString)
+                messageObject[MESSAGE_TYPE] = TYPE_LOCAL_SEND;
+                uiAppendMessage(messageObject, temp_id);
                 //store for future reference
                 storeTempId(temp_id, convo_id_val, body);
                 uiScrollTop(-1);
-                webSocketCon.send( messageObject );
             }
         });
 
@@ -305,17 +369,13 @@
 
         window.onload = function () {
             $('#slt_contact').hide();
-            var contactsTab = $('#lsb_contactsTab');
-            var settingsBtn = $('#lsb_settingsBtn');
-            var scrollData = $('.scroll_data');
 
-            var data = settingsBtn.offset().top-
-                    (contactsTab.position().top+contactsTab.height());
-            scrollData.css('max-height',data+"px");
             $('#connect_waiting').modal({
                 backdrop: 'static',
                 show:true
             });
+
+            $('#lsb_conversationsTab').click();
         };
 
         function startUpCalls() {
@@ -326,16 +386,6 @@
             webSocketCon.send(getConversations());
             console.log("Sent for all");
         }
-        window.onresize = function(event) {
-            //resize left-side-bar
-            var contactsTab = $('#lsb_contactsTab');
-            var settingsBtn = $('#lsb_settingsBtn');
-            var scrollData = $('.scroll_data');
-
-            var data = settingsBtn.offset().top-
-                    (contactsTab.position().top+contactsTab.height());
-            scrollData.css('max-height',data+"px");
-        };
 
         function sendConnected() {
             webSocketCon.send(JSON.stringify( {

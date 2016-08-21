@@ -47,26 +47,20 @@ function getMessagesJSON(thread_id, amount, offset) {
 }
 
 /**
- * 
+ * Creates a JSON For sending a message
  * @param body              The text message that will be sent.
  * @param data              NOT USED (but will be image data/etc)  
  * @param numbers           Array of numbers (only one number implemented on backend)
  * @param temp_message_id   The temporary id of the message before getting actual id
  */
-function sendMessages(body, data, numbers, temp_message_id) {
+function prepareMessages(body, data, numbers, temp_message_id) {
     var json = {
         "action" : "send_messages",
         "body" : body,
         "data" : data,
         "temp_message_id" : temp_message_id,
-        "numbers" : []
+        "numbers": numbers,
     };
-    for (var i in numbers) {
-        var number = numbers[i];
-        json.numbers.push({
-            "number" : number
-        })
-    }
     return JSON.stringify(json);
 }
 
@@ -83,11 +77,9 @@ var MESSAGE = "message";
 var DATE = "date";
 var CONVO_ID = "convo_id";
 var NUMBER = "number";
+var KEY = "key";
 
 var TRUE = "true";
-
-//TODO NEED TO REFRACTOR CONTACTS TO ACT LIKE CONVERSATIONS
-var contacts_key_array = [];
 
 //Used for sending a message to send.
 var tempIdArr = [];
@@ -99,26 +91,46 @@ var tempIdArr = [];
  */
 function storeContacts(jsonObject) {
     var contacts = jsonObject[CONTACTS];
+    var jsonStorage = sessionStorage.getItem(CONTACTS);
+    if (jsonStorage == null) {
+        jsonStorage = {};
+    } else {
+        jsonStorage = JSON.parse(jsonStorage);
+    }
+    //todo switch other JSON sets use the key to sort like contacts
     for (var i in contacts) {
         var key = Object.keys(contacts[i])[0];
-        var object = contacts[i][key];
-        contacts_key_array.push(key);
-        key = CONTACTS + key;
-        sessionStorage.setItem(key, JSON.stringify(object));
+        contacts[i][key][KEY] = key;
+        var contact = contacts[i][key][FULL_NAME];
+        jsonStorage[contact] = contacts[i][key];
     }
+    sessionStorage.setItem(CONTACTS, JSON.stringify(jsonStorage));
+}
+
+/**
+ * Used to retrieve a complete array of json contact objects
+ *
+ * @returns {Array}
+ */
+function retrieveContacts() {
+    var contacts = sessionStorage.getItem(CONTACTS);
+    if (contacts == null) {
+        contacts = {};
+    } else {
+        contacts = JSON.parse(contacts);
+    }
+    return contacts;
 }
 
 /**
  * Used to retrieve a complete arraylist of json contact objects
  *
+ * @param id id of the contact object to retrieve
  * @returns {Array}
  */
-function retrieveContacts() {
-    var complete_contact_array = [];
-    for (var i in contacts_key_array) {
-        complete_contact_array.push(JSON.parse(sessionStorage.getItem(CONTACTS + contacts_key_array[i])));
-    }
-    return complete_contact_array;
+function retrieveContact(id) {
+    var contacts_array = JSON.parse(sessionStorage.getItem(CONTACTS));
+    return contacts_array[id];
 }
 
 /**

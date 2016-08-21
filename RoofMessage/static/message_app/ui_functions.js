@@ -4,18 +4,41 @@ var BODY = "body";
 var MESSAGE_TYPE = "message_type";
 var THREAD_ID = "thread_id";
 var ID = "ID";
+var TYPE = "type";
+var MMS = "mms";
 var TYPE_INBOX = 1;
 var TYPE_SENT = 2;
+var PARTS = "parts";
 
-var TYPE_LOCAL_SEND = 20; //waiting to see if successfully sent'
+var TEXT = "TEXT";
+var CONTENT_TYPE = "CONTENT_TYPE";
+var CONTENT_TYPE_TEXT_PLAIN = "text/plain";
 
+var TYPE_LOCAL_SEND = 20; //waiting to see if successfully sent
 
-var MESSAGE_BACKGROUND_COLOR_ME_SENT = "#ffff00";
-var MESSAGE_BACKGROUND_COLOR_RECEIVED = "#CDF0FF";
-var MESSAGE_BACKGROUND_COLOR_WAITING = "#7C26CB";
-var CONVO_BACKGROUND_COLOR = "#E3D8D5";
-var CONVO_MESSAGE_RECEIVED_COLOR = "#FF5733";
-var CONVO_CLASS = "convoClass";
+var CLASS_POINTER = "pointer"; //used for pointer class
+var CLASS_POINTER_NEW_MESSAGE = "new_message_pointer"; //used for pointer class
+
+var MESSAGE_COUNT = "message_count";
+
+var MESSAGE_BACKGROUND_COLOR_ME_SENT = "#C77FFF";
+var MESSAGE_BACKGROUND_COLOR_RECEIVED = "#52CC82";
+var MESSAGE_BACKGROUND_COLOR_WAITING = "#FF7FE5";
+var MESSAGE_TEXT_COLOR = "white";
+
+var CONVO_BACKGROUND_COLOR = "#FFFFFF";
+var CONVO_BACKGROUND_COLOR_SELECTED = "#FF7FE5";
+var CONVO_BACKGROUND_COLOR_MESSAGE_RECEIVED = "#FF927F";
+var CONVO_BACKGROUND_MESSAGE_COUNT = "#8347B2";
+
+var CONTACT_BACKGROUND_COLOR = "#FFFFFF";
+var CONTACT_BACKGROUND_COLOR_SELETED = "#FF7FE5";
+
+var CLASS_SELECTED_CONTACT = "selected_contact";
+var CLASS_REMOVE_SHIFT_SELECT = "remove_shift_select";
+
+var CLASS_RECIPIENTS = "new_message_recipients";
+var RECIPIENT_LIST = "RECIPIENT_LIST";
 
 
 /**
@@ -36,13 +59,20 @@ function uiAddAllConversations() {
             if (recip[r][FULL_NAME] != null) {
                 // text += " [" + recip[r][FULL_NAME] + "]";
                 namesAndNumbers.push(recip[r][FULL_NAME] + " " +
-                    recip[r][PHONE_NUMBER]);
+                    getPhoneNumberFormat(recip[r][PHONE_NUMBER]));
             } else {
                 // text += " [" + recip[r][PHONE_NUMBER] + "]";
-                namesAndNumbers.push(recip[r][PHONE_NUMBER]);
+                namesAndNumbers.push(getPhoneNumberFormat(recip[r][PHONE_NUMBER]));
             }
         }
-        var createdConvo = createConversationDiv(namesAndNumbers, key);
+        var createdConvo = createConversationDiv(namesAndNumbers, key,value[key][MESSAGE_COUNT]);
+
+        //set color selected back to the correct selected color
+        var convoIdVal = $('#convo_id').val();
+        if (convoIdVal == key) {
+            createdConvo.css("background-color", CONVO_BACKGROUND_COLOR_SELECTED);
+        }
+
         createdConvo.on("click",function () {
             var convo_id = $('#convo_id');
             var convo_id_val = convo_id.val();
@@ -52,6 +82,8 @@ function uiAddAllConversations() {
 
             var id = match[2];
             if (id != convo_id_val) {
+                //reset the background color to white
+                $('#' + CONVERSATIONS + convo_id_val).css("background-color", CONVO_BACKGROUND_COLOR);
                 storeScrollTop(convo_id_val, $('#rm_messageArea').scrollTop());
             }
             console.log(id + " " + selectedConvo.attr('id'));
@@ -60,7 +92,7 @@ function uiAddAllConversations() {
                 webSocketCon.send(getMessagesJSON(id,DEFAULT_GET_MESSAGES,0));
             }
             uiScrollTop(retrieveScrollTop(id));
-            selectedConvo.css("background-color",CONVO_BACKGROUND_COLOR);
+            selectedConvo.css("background-color",CONVO_BACKGROUND_COLOR_SELECTED);
         });
         slt_conversation.append(createdConvo);
     });
@@ -70,23 +102,16 @@ function uiAddAllConversations() {
  * Adds all contacts in the contacts_key_array to the ui display = none
  */
 function uiAddAllContacts() {
-    $("slt_contact").find('option').remove().end();
+    var contacts = $("#slt_contact");
+    contacts.empty();
     var jsonArray = retrieveContacts();
-    var contact_keys = contacts_key_array.slice();
     for (var i in jsonArray) {
-        uiAddContact(jsonArray[i][FULL_NAME],CONTACTS + contact_keys[i]);
+        var contact = createContactDiv(i,
+            jsonArray[i][KEY],
+            getPhoneNumberFormat(jsonArray[i][PHONE_NUMBER])
+        );
+        contacts.append(contact);
     }
-}
-
-/**
- * Adds a single contact to the ui
- * @param text  html text of option item
- * @param value value att of option item
- */
-function uiAddContact(text,value) {
-    var slt_contact = document.getElementById("slt_contact");
-    var option = new Option(text,value);
-    slt_contact.options[slt_contact.options.length] = option;
 }
 
 /**
@@ -101,20 +126,14 @@ function uiAddConversationMessages(convo_id) {
         rmArea.empty();
         var tempMessageIdArr = retrieveTempIdArr().slice();
         $.each(messagesArray, function (index, message) {
-            uiAppendMessage(message[BODY],
-                index,
-                message[MESSAGE_TYPE]
-            );
+            uiAppendMessage(message, index);
 
             //if same id then add temp_message right after
             var tempIdArr = retrieveTempIdArr();
             for (var i in tempIdArr) {
                 var jsonTemp = JSON.parse(tempIdArr[i]);
                 if (jsonTemp[TEMP_MESSAGE_ID] == index) {
-                    uiAppendMessage(message[BODY],
-                        jsonTemp[TEMP_MESSAGE_ID],
-                        TYPE_LOCAL_SEND
-                    );
+                    uiAppendMessage(jsonTemp[TEMP_MESSAGE_ID], index);
                 }
             }
         });
@@ -125,6 +144,11 @@ function uiAddConversationMessages(convo_id) {
     return true;
 }
 
+/**
+ * Prepends messages.
+ * @param convo_id
+ * @param jsonMessageArr
+ */
 function uiPrependMessage(convo_id,jsonMessageArr) {
     var messageArea = $('#rm_messageArea');
     var divScroll = retrieveScrollTop(convo_id);
@@ -134,10 +158,10 @@ function uiPrependMessage(convo_id,jsonMessageArr) {
     }
     $.each(jsonMessageArr, function (index, message) {
         $.each(message, function (index, messageInfo) {
-            messageArea.prepend(createMessageDiv(messageInfo[BODY],
-                index,
-                messageInfo[MESSAGE_TYPE]
-                ));
+            //check if message already exists
+            if ($('#' + MESSAGES + index).length == 0 ) {
+                messageArea.prepend(createMessageDiv(messageInfo, index));
+            }
         });
     });
     var finalTop;
@@ -157,8 +181,8 @@ function uiPrependMessage(convo_id,jsonMessageArr) {
  * @param id
  * @param type
  */
-function uiAppendMessage(body, id, type) {
-    var messageRowDiv = createMessageDiv(body, id, type);
+function uiAppendMessage(jsonObject, id) {
+    var messageRowDiv = createMessageDiv(jsonObject, id);
     $('#rm_messageArea').append(messageRowDiv);
 }
 
@@ -169,7 +193,15 @@ function uiAppendMessage(body, id, type) {
  * @param type
  * @returns {*|void}
  */
-function createMessageDiv(body, id, type) {
+function createMessageDiv(jsonObject, id) {
+    var body, type;
+    if (jsonObject[TYPE] == MMS) {
+        body = getTextFromParts(jsonObject[PARTS]);
+        type = jsonObject[MESSAGE_TYPE];
+    } else {
+        body = jsonObject[BODY];
+        type = jsonObject[MESSAGE_TYPE];
+    }
     var messageRowDiv;
     var messageTextSpan;
     if (type == TYPE_INBOX) {
@@ -199,10 +231,10 @@ function createMessageDiv(body, id, type) {
         messageRowDiv = $('<div>').css({
             "margin": "4px 6px",
             "width":"100%",
-            "float":"left",
-        });
-        messageRowDiv.attr("id",MESSAGES+id);
-    } else if (type == TYPE_LOCAL_SEND) {
+            "float":"left", //todo tabindex for the right things
+        });//todo xss protection
+        messageRowDiv.attr("id",MESSAGES+id); //todo obsfucate
+    } else if (type == TYPE_LOCAL_SEND) { //todo add more descriptive documentation
         messageTextSpan = $('<span>').html(body).css({
             "float": "right",
             "padding": "6px 12px",
@@ -233,36 +265,131 @@ function createMessageDiv(body, id, type) {
         });
         messageRowDiv.attr("id",MESSAGES+id);
     }
+    messageTextSpan.css("color",MESSAGE_TEXT_COLOR);
     return messageRowDiv.append(messageTextSpan);
 }
 
 /**
- * Creates a Conversatin div
+ * Creates a Conversation div
  * @param names {array} of names
  * @param id    id of conversation
  * @returns {*|jQuery}
  */
-function createConversationDiv(names, id) {
-    var convoRowDiv = $('<div>').css({
-            "margin": "5px 5px 5px 5px",
-            "border": "1px solid black",
-            "background-color": CONVO_BACKGROUND_COLOR,
-        });
-    convoRowDiv.attr("id",CONVERSATIONS+id);
-    var convoAmountSpan = $('<span>').html(names.length).css({
-            "width": "100%",
-            "display": "block",
-        });
-    convoRowDiv.append(convoAmountSpan);
+function createConversationDiv(names, id, message_count) {
+    var fullString = "";
+    // fullString += names.length + "<br>";
     for (var n in names) {
-        var convoNameSpan = $('<span>').html(names[n]).css({
-                "display": "block",
-            });
-        convoRowDiv.append(convoNameSpan)
+        fullString += (names[n]);
+        if (n != names.length) {
+             fullString += "<br>";
+        }
     }
-    convoRowDiv.addClass(CONVO_CLASS);
-    convoRowDiv.set
+
+    var convoRowDiv = $('<div>').attr({
+            "class": "list-group-item list-group-item-action",
+            "id":CONVERSATIONS+id,
+            "data-toggle": "tooltip",
+            "data-placement": "right",
+            "data-html": true,
+            "title": fullString,
+        }).css({
+        "width": "100%",
+        // "height": "100%",
+        "text-overflow": "ellipsis",
+        "text-align": "left",
+    })
+
+    var convoNameSpan = $('<span>').html(fullString).css({
+        "float": "left",
+        "display": "block",
+    });
+
+    var convoMessageCountSpan = $('<span>').html(
+        getNumberCommaFormatted(message_count))
+            .css({
+                "display": "block",
+                "float": "right",
+                "color": "white",
+                "padding": "3px 3px",
+                "border-radius": "20px",
+                "background-color": CONVO_BACKGROUND_MESSAGE_COUNT,
+            });
+    convoRowDiv.append(convoMessageCountSpan);
+    convoRowDiv.append(convoNameSpan);
+    convoRowDiv.addClass(CLASS_POINTER);
+    convoRowDiv.tooltip();
     return convoRowDiv;
+}
+
+/**
+ * Creates a Contacts div
+ * @param full_name string name associated with contact
+ * @param id    id of conversation
+ * @param phone_number number associated with name of contact
+ * @returns {*|jQuery}
+ */
+function createContactDiv(full_name, id, phone_number) {
+    var contactsRowDiv = $('<div>').attr({
+            "class": "list-group-item list-group-item-action pointer " + CLASS_REMOVE_SHIFT_SELECT,
+            "id":CONTACTS+id,
+            "data-toggle": "tooltip",
+            "data-placement": "right",
+            "title": phone_number,
+        }).css({
+        "width": "100%",
+    });
+    contactsRowDiv.on("click", function (e) {
+        if(!e.shiftKey) {
+            $("#slt_contact").children().removeClass(CLASS_SELECTED_CONTACT);
+            $("#recipientList").empty();
+        }
+        var contact = $(this);
+        contact.addClass(CLASS_SELECTED_CONTACT);
+        //open new message modal
+        var new_message_container = $('#new_message_container');
+        if (!new_message_container.isShown) {
+            $('#new_message_container').show();
+        }
+        var recipientList = $('#recipientList');
+        if ($('#' + RECIPIENT_LIST + id).length == 0) {
+            recipientList.append(createRecipientDiv(contact.text().trim(), id));
+        } else {
+            $('#' + RECIPIENT_LIST + id).remove();
+            contact.removeClass(CLASS_SELECTED_CONTACT);
+        }
+    });
+    var convoNameSpan = $('<span>').html(full_name).attr("id", CONTACTS + id);
+    contactsRowDiv.append(convoNameSpan);
+    contactsRowDiv.tooltip();
+    return contactsRowDiv;
+}
+
+/**
+ * Div containing recipients for a new message. //TODO MAKE scrollable list
+ * //TODO MAKE MAX SIZE for text area
+ * //TODO Make count for chars in text area
+ * @param recipient_name
+ * @param id
+ * @returns {*|jQuery}
+ */
+function createRecipientDiv(recipient_name, id) {
+    var recipientUl = $('<ul>').attr({
+        "class": "list-group-item " + CLASS_RECIPIENTS,
+    });
+    recipientUl.attr("id", RECIPIENT_LIST + id);
+    var removeDiv = $('<div>').attr({
+        "class": "glyphicon glyphicon-remove " + CLASS_POINTER_NEW_MESSAGE,
+        "float": "right",
+    });
+    removeDiv.on("click", function () {
+        var removeDiv = $(this);
+        removeDiv.parent().remove();
+        var key = getNumbersFromString(removeDiv.parent().attr("id"));
+        $('#' + CONTACTS + key).removeClass(CLASS_SELECTED_CONTACT);
+    });
+    recipientUl.append($('<div>').text(recipient_name).attr("float","left"));
+    recipientUl.append(removeDiv);
+    return recipientUl;
 }
 
 /**
@@ -302,7 +429,68 @@ function uiScrollTop(location) {
  */
 function uiConversationNewMesssage(convoId) {
     var convo = $('#' + CONVERSATIONS + convoId);
-    convo.css('background-color', CONVO_MESSAGE_RECEIVED_COLOR);
+    convo.css('background-color', CONVO_BACKGROUND_COLOR_MESSAGE_RECEIVED);
     var convos = $('#slt_conversation');
     convos.prepend(convo);
+}
+
+/**
+ * Returns text from mms
+ * @param {array} parts
+ * @returns {*}
+ */
+function getTextFromParts(parts) {
+    for (var i in parts) {
+        if (parts[i][CONTENT_TYPE] == CONTENT_TYPE_TEXT_PLAIN) {
+            return parts[i][TEXT];
+        }
+    }
+    return "";
+}
+
+/**
+ * Formats the phone number to be presentable for front-end user end
+ * @param phone_number number to be formatted
+ */
+function getPhoneNumberFormat(phone_number) {
+    var formatted_number = "";
+    var raw_number = phone_number.replace(/\D/g,"");
+    if (raw_number.length == 10) {
+        formatted_number += "(";
+        formatted_number += raw_number.substr(0,3);
+        formatted_number += ")-";
+        formatted_number += raw_number.substr(3,3);
+        formatted_number += "-";
+        formatted_number += raw_number.substr(6,4);
+    } else if (raw_number.length==11){
+        formatted_number += "+";
+        formatted_number += raw_number.substr(0,1);
+        formatted_number += "(";
+        formatted_number += raw_number.substr(1,3);
+        formatted_number += ")-";
+        formatted_number += raw_number.substr(4,3);
+        formatted_number += "-";
+        formatted_number += raw_number.substr(7,4);
+    } else {
+        formatted_number = phone_number;
+    }
+    return formatted_number;
+}
+
+/**
+ * Formats a number to output with commos
+ * @param phone_number
+ * @returns {string}
+ */
+function getNumberCommaFormatted(number) {
+    return number.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+/**
+ * Returns integers of id from a string
+ * @param id
+ * @returns {string|XML|void|*}
+ */
+function getNumbersFromString(id) {
+    return id.replace(/\D/g,"");
 }
