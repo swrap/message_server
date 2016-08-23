@@ -40,6 +40,8 @@ var CLASS_REMOVE_SHIFT_SELECT = "remove_shift_select";
 var CLASS_RECIPIENTS = "new_message_recipients";
 var RECIPIENT_LIST = "RECIPIENT_LIST";
 
+var sendingNewMessage = false;
+
 
 /**
  * Adds all contacts in the conversations_key_array to the ui display = none
@@ -124,12 +126,12 @@ function uiAddConversationMessages(convo_id) {
     if (messagesArray !== null) {
         var rmArea = $('#rm_messageArea');
         rmArea.empty();
-        var tempMessageIdArr = retrieveTempIdArr().slice();
+        var tempMessageIdArr = retrieveMessageTempIdArr().slice();
         $.each(messagesArray, function (index, message) {
             uiAppendMessage(message, index);
 
             //if same id then add temp_message right after
-            var tempIdArr = retrieveTempIdArr();
+            var tempIdArr = retrieveMessageTempIdArr();
             for (var i in tempIdArr) {
                 var jsonTemp = JSON.parse(tempIdArr[i]);
                 if (jsonTemp[TEMP_MESSAGE_ID] == index) {
@@ -339,23 +341,26 @@ function createContactDiv(full_name, id, phone_number) {
         "width": "100%",
     });
     contactsRowDiv.on("click", function (e) {
-        if(!e.shiftKey) {
-            $("#slt_contact").children().removeClass(CLASS_SELECTED_CONTACT);
-            $("#recipientList").empty();
-        }
-        var contact = $(this);
-        contact.addClass(CLASS_SELECTED_CONTACT);
-        //open new message modal
-        var new_message_container = $('#new_message_container');
-        if (!new_message_container.isShown) {
-            $('#new_message_container').show();
-        }
-        var recipientList = $('#recipientList');
-        if ($('#' + RECIPIENT_LIST + id).length == 0) {
-            recipientList.append(createRecipientDiv(contact.text().trim(), id));
-        } else {
-            $('#' + RECIPIENT_LIST + id).remove();
-            contact.removeClass(CLASS_SELECTED_CONTACT);
+        //used to tell if sending new message
+        if (!sendingNewMessage) {
+            if(!e.shiftKey) {
+                $("#slt_contact").children().removeClass(CLASS_SELECTED_CONTACT);
+                $("#recipientList").empty();
+            }
+            var contact = $(this);
+            contact.addClass(CLASS_SELECTED_CONTACT);
+            //open new message modal
+            var new_message_container = $('#new_message_container');
+            if (!new_message_container.isShown) {
+                $('#new_message_container').show();
+            }
+            var recipientList = $('#recipientList');
+            if ($('#' + RECIPIENT_LIST + id).length == 0) {
+                recipientList.append(createRecipientDiv(contact.text().trim(), id));
+            } else {
+                $('#' + RECIPIENT_LIST + id).remove();
+                contact.removeClass(CLASS_SELECTED_CONTACT);
+            }
         }
     });
     var convoNameSpan = $('<span>').html(full_name).attr("id", CONTACTS + id);
@@ -493,4 +498,24 @@ function getNumberCommaFormatted(number) {
  */
 function getNumbersFromString(id) {
     return id.replace(/\D/g,"");
+}
+
+/**
+ * Updates the UI sending screen
+ * @param boolean_val
+ */
+function uiSendingNewMessage(boolean_val) {
+    sendingNewMessage = boolean_val;
+    if (sendingNewMessage) {
+        $('#new_message_btns').hide();
+        $('#sending_div').show();
+        $('#new_message_textArea').prop("disabled", true);
+        $('.new_message_pointer').hide();
+    } else {
+        $('#new_message_btns').show();
+        $('#sending_div').hide();
+        $('#new_message_textArea').prop("disabled", false);
+        $('#new_message_cancelBtn').click();
+        $('.new_message_pointer').show();
+    }
 }

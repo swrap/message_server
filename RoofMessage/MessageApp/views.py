@@ -46,7 +46,6 @@ def user_allowed(user):
 
 def index(request):
     # redirects user back to message page
-
     group = Group.objects.all()
     if len(group.filter(name=GROUP_ANDROID)) == 0:
         Group.objects.create(name=GROUP_ANDROID).save()

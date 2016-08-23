@@ -15,7 +15,7 @@
 
         <link rel="stylesheet" href="{% static "message_app/message.css" %}">
         <script src="{% static "message_app/JSONFunctions.js" %}"></script>
-        <script src="{% static "message_app/ui_functions.js" %}"></script>
+        <script src="{% static "message_app/uiFunctions.js" %}"></script>
         <script type="text/javascript"></script>
 
         <title>ROOFtext</title>
@@ -61,7 +61,7 @@
                             resize: vertical;
                         "></textarea>
                     </div>
-                    <div class="form-group" style="flex: 1  ;">
+                    <div id="new_message_btns" style="flex: 1;">
                         <div class="sendBtn" id="new_message_sendBtn" style="
                             border: solid 1px black;
                             padding-right: 5px;
@@ -71,6 +71,12 @@
                             border: solid 1px black;
                             float: right;
                         ">Cancel</div>
+                    </div>
+                    <div id="sending_div" hidden>
+                        <span class="label label-default" id="sending_label" style="font-size: 16px; background-color: #8347B2;">
+                            <span class="glyphicon glyphicon-refresh spinning"></span>
+                            <span id="sending_text"> Attempting to send...</span>
+                        </span>
                     </div>
                 </form>
             </div>
@@ -104,10 +110,11 @@
                             If you have not already, please download
                             the app <a href="https://www.rooftext.com" target="_blank">here</a>.
                             <br><br>
-                            <button class="btn btn-info" id="loading_button">
-                                <span class="glyphicon glyphicon-refresh spinning"></span> Waiting to connect...
-                            </button>
                         </p>
+                        <span class="label label-default" id="loading_label" style="font-size: 16px;">
+                            <span class="glyphicon glyphicon-refresh spinning"></span>
+                            <span id="loading_text"> Waiting to connect...</span>
+                        </span>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-outline-primary"
@@ -169,25 +176,36 @@
             $("#new_message_container").hide();
             $("#slt_contact").children().removeClass(CLASS_SELECTED_CONTACT);
             $("#recipientList").empty();
-            $("#new_message_textArea").text("");
+            $("#new_message_textArea").val("");
         });
 
         $("#new_message_sendBtn").on("click", function() {
             var children = $("#recipientList").children();
-            var numbers = [];
-            for (var i = 0; i < children.length; i++) {
-                var contact = retrieveContact(children[i].innerText.trim());
-                numbers.push({
-                    "number": getNumbersFromString(contact[PHONE_NUMBER])
-                });
-            }//TODO DOCUMENTATION
-            //TODO HAVE TO REINVENT HOW TO SEND NEW MESSAGES
-            var messageObjectString = prepareMessages($('#new_message_textArea').val(),
-                    "",
-                    numbers,
-                    0);//TODO redo temp id
-            webSocketCon.send(messageObjectString);
-            $('#new_message_cancelBtn').click();
+            var text = $('#new_message_textArea').val();
+            if (text.length > 0 && children.length > 0) {
+                var numbersJson = [];
+                for (var i = 0; i < children.length; i++) {
+                    var contact = retrieveContact(children[i].innerText.trim());
+                    var number = getNumbersFromString(contact[PHONE_NUMBER]);
+                    numbersJson.push({
+                        "number": number
+                    });
+                }//TODO DOCUMENTATION
+                //TODO HAVE TO REINVENT HOW TO SEND NEW MESSAGES
+
+                temp_convo_id_count++;
+
+                storeConvoTempId(temp_convo_id_count);
+
+                //update sending message
+                uiSendingNewMessage(true);
+
+                var messageObjectString = prepareMessages(text,
+                        "",
+                        numbersJson,
+                        temp_convo_id_count); //TODO redo temp id
+                webSocketCon.send(messageObjectString);
+            }
         });
 
         var messageInput = $('#rm_messageInput');
@@ -244,12 +262,18 @@
                         //initial connect ask for messages from convo
                         if (initial_connect_conversations) {
                             var convos = retrieveConversations();
+                            var count = 0;
                             for (var i in convos) {
                                 var key = Object.keys(convos[i])[0];
                                 console.log("Sending for messages [" + key + "]");
                                 webSocketCon.send(getMessagesJSON(key,
                                 DEFAULT_GET_MESSAGES,
                                 0 /*offset*/));
+
+                                if (count == 0) {
+                                    break;
+                                }
+                                count++;
                             }
                             initial_connect_conversations = false;
                         }
@@ -265,15 +289,36 @@
                     break;
                 case SENT_MESSAGES:
                         //message successfully sent, ??Change color of message bubble???
-                        var tempIdArr = retrieveTempIdArr();
+
+                        //UPDATING CONVO ID FOR NEW_MESSAGE_SENT (USED FOR CONVOS THAT DO NOT EXIST)
+                        var tempIdArr = retrieveConvoTempIdArr();
+                        for (var i in tempIdArr) {
+                            if (tempIdArr[i] == active_json[TEMP_MESSAGE_ID]) { //TODO RENAME TEMP_MESSAGE_ID to TEMP_ID
+                                tempIdArr.splice(i,1);
+                                //get convo if not already have
+                                if (retrieveConversation(active_json[THREAD_ID]) == null) {
+                                    webSocketCon.send(getConversations()); //TODO WAISTEFUL, MAKE JSON TO REQUEST ONE CONVO
+                                    webSocketCon.send(getMessagesJSON(active_json[THREAD_ID],
+                                            DEFAULT_GET_MESSAGES,
+                                            0));
+                                }
+
+                                //update sending msg
+                                uiSendingNewMessage(false);
+                            }
+                        }
+
+                        //UPDATING TEMP ID FOR MESSAGE SENT
+                        tempIdArr = retrieveMessageTempIdArr();
                         for (var i in tempIdArr) {
                             var jsonTemp = JSON.parse(tempIdArr[i]);
                             if (jsonTemp[TEMP_MESSAGE_ID] == active_json[TEMP_MESSAGE_ID]) {
                                 uiUpdateMessage(active_json[TEMP_MESSAGE_ID],
                                     active_json[MESSAGE_ID]);
-                                storeTempIdArr(tempIdArr.splice(i,1));
+                                tempIdArr.splice(i,1);
                             }
                         }
+
                         storeMessages(active_json);
                     break;
                 case SENT_MESSAGES_FAILED:
@@ -284,11 +329,13 @@
                         android_connected = true;
                         console.log("Is android connected [" + android_connected + "]");
                         startUpCalls();
-                        $('#loading_button').attr('class','btn btn-success');
+                        $('#loading_label').css("background-color", "#52CC82");
+                        $('#loading_text').html("Loading Content..");
                         setTimeout(function () {
                             $('#connect_waiting').modal('hide');
-                            $('#loading_button').attr('class','btn btn-info');
-                        }, 1000);
+                            $('#loading_label').css("background-color", "#C77FFF");
+                        $('#loading_text').html("Waiting to connect...");
+                        }, 1500);
                     break;
                 case DISCONNECTED:
                         //android disconnected
@@ -344,7 +391,7 @@
                 messageObject[MESSAGE_TYPE] = TYPE_LOCAL_SEND;
                 uiAppendMessage(messageObject, temp_id);
                 //store for future reference
-                storeTempId(temp_id, convo_id_val, body);
+                storeMessageTempIdArr(temp_id, convo_id_val, body);
                 uiScrollTop(-1);
             }
         });

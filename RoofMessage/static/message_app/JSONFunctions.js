@@ -47,6 +47,7 @@ function getMessagesJSON(thread_id, amount, offset) {
 }
 
 /**
+ * **************NOTE [TEMP_MESSAGE_ID] COULD BE A CONVO ID************
  * Creates a JSON For sending a message
  * @param body              The text message that will be sent.
  * @param data              NOT USED (but will be image data/etc)  
@@ -72,6 +73,7 @@ var SCROLL_TOP = "scroll_top";
 var FULL_NAME = "full_name";
 var PHONE_NUMBER = "phone_number";
 var TEMP_MESSAGE_ID = "temp_message_id";
+var TEMP_CONVO_ID = "temp_convo_id";
 var MESSAGE_ID = "message_id";
 var MESSAGE = "message";
 var DATE = "date";
@@ -79,10 +81,14 @@ var CONVO_ID = "convo_id";
 var NUMBER = "number";
 var KEY = "key";
 
+var temp_convo_id_count = 0;
+
 var TRUE = "true";
 
 //Used for sending a message to send.
-var tempIdArr = [];
+var messageTempIdArr = [];
+//Used for convos that do not exist
+var convoTempIdArr = [];
 
 /**
  * Used to store all contacts into session storage
@@ -260,8 +266,8 @@ function getNumbers(convo_id) {
  * Used for storing temp message id's
  * @param temp_message_id
  */
-function storeTempId(temp_message_id, convo_id, body) {
-    var tempMessageIdsArr = tempIdArr;
+function storeMessageTempIdArr(temp_message_id, convo_id, body) {
+    var tempMessageIdsArr = messageTempIdArr;
     if (tempMessageIdsArr == null) {
         tempMessageIdsArr = [];
     }
@@ -273,20 +279,27 @@ function storeTempId(temp_message_id, convo_id, body) {
 }
 
 /**
- * Used for storing temp message id's
- * @param temp_message_id
+ * Used for retrieving temp message ids
+ * @returns {array}
  */
-function storeTempIdArr(tempIdArr) {
-    sessionStorage.setItem(TEMP_MESSAGE_ID, JSON.stringify(tempIdArr));
+function retrieveMessageTempIdArr() {
+    return messageTempIdArr;
 }
 
 /**
- * Used for retreiving temp message ids
+ * Used for storing temp convo id's
  * @param temp_message_id
- * @returns {boolean}
  */
-function retrieveTempIdArr() {
-    return tempIdArr;
+function storeConvoTempId(temp_convo_id) {
+    convoTempIdArr.push(temp_convo_id);
+}
+
+/**
+ * Returns the convoTempIdArr
+ * @returns {Array}
+ */
+function retrieveConvoTempIdArr() {
+    return convoTempIdArr;
 }
 
 /**
