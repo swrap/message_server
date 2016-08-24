@@ -51,7 +51,6 @@ function uiAddAllConversations() {
     var jsonArray = retrieveConversations();
     var keys = Object.keys(jsonArray);
     var slt_conversation = $('#slt_conversation');
-    slt_conversation.empty();
     $.each(jsonArray, function (index, value) {
         var key = Object.keys(value)[0];
         var recip = value[key][RECIPIENTS];
@@ -67,36 +66,46 @@ function uiAddAllConversations() {
                 namesAndNumbers.push(getPhoneNumberFormat(recip[r][PHONE_NUMBER]));
             }
         }
-        var createdConvo = createConversationDiv(namesAndNumbers, key,value[key][MESSAGE_COUNT]);
+        var convoIdDiv = $('#' + CONVERSATIONS + key);
+        //if exists create and add div
+        if (convoIdDiv.length == 0) {
+            var createdConvo = createConversationDiv(namesAndNumbers, key, value[key][MESSAGE_COUNT]);
 
-        //set color selected back to the correct selected color
-        var convoIdVal = $('#convo_id').val();
-        if (convoIdVal == key) {
-            createdConvo.css("background-color", CONVO_BACKGROUND_COLOR_SELECTED);
+            //set color selected back to the correct selected color
+            var convoIdVal = $('#convo_id').val();
+            if (convoIdVal == key) {
+                createdConvo.css("background-color", CONVO_BACKGROUND_COLOR_SELECTED);
+            }
+
+            createdConvo.on("click",function () {
+                var convo_id = $('#convo_id');
+                var convo_id_val = convo_id.val();
+                var selectedConvo = $(this);
+
+                var match =  (/(.*?)([0-9]+)/g).exec(selectedConvo.attr('id'));
+
+                var id = match[2];
+                if (id != convo_id_val) {
+                    //reset the background color to white
+                    $('#' + CONVERSATIONS + convo_id_val).css("background-color", CONVO_BACKGROUND_COLOR);
+                    storeScrollTop(convo_id_val, $('#rm_messageArea').scrollTop());
+                }
+                console.log(id + " " + selectedConvo.attr('id'));
+                convo_id.attr("value",id);
+                if (!uiAddConversationMessages(id)) {
+                    webSocketCon.send(getMessagesJSON(id,DEFAULT_GET_MESSAGES,0));
+                }
+                uiScrollTop(retrieveScrollTop(id));
+                selectedConvo.css("background-color",CONVO_BACKGROUND_COLOR_SELECTED);
+            });
+            slt_conversation.append(createdConvo);
+        } else {
+            //updating div if already exists
+            var span = convoIdDiv.children("span")[0];
+            span.innerText = span.textContent = value[key][MESSAGE_COUNT];
+            slt_conversation.append(convoIdDiv);
         }
 
-        createdConvo.on("click",function () {
-            var convo_id = $('#convo_id');
-            var convo_id_val = convo_id.val();
-            var selectedConvo = $(this);
-
-            var match =  (/(.*?)([0-9]+)/g).exec(selectedConvo.attr('id'));
-
-            var id = match[2];
-            if (id != convo_id_val) {
-                //reset the background color to white
-                $('#' + CONVERSATIONS + convo_id_val).css("background-color", CONVO_BACKGROUND_COLOR);
-                storeScrollTop(convo_id_val, $('#rm_messageArea').scrollTop());
-            }
-            console.log(id + " " + selectedConvo.attr('id'));
-            convo_id.attr("value",id);
-            if (!uiAddConversationMessages(id)) {
-                webSocketCon.send(getMessagesJSON(id,DEFAULT_GET_MESSAGES,0));
-            }
-            uiScrollTop(retrieveScrollTop(id));
-            selectedConvo.css("background-color",CONVO_BACKGROUND_COLOR_SELECTED);
-        });
-        slt_conversation.append(createdConvo);
     });
 }
 
@@ -105,13 +114,16 @@ function uiAddAllConversations() {
  */
 function uiAddAllContacts() {
     var contacts = $("#slt_contact");
-    contacts.empty();
     var jsonArray = retrieveContacts();
     for (var i in jsonArray) {
-        var contact = createContactDiv(i,
-            jsonArray[i][KEY],
-            getPhoneNumberFormat(jsonArray[i][PHONE_NUMBER])
-        );
+        var contact = $('#' + CONTACTS + jsonArray[i][KEY]);
+        //if does not exists create new field
+        if (contact.length == 0) {
+            contact = createContactDiv(i,
+                jsonArray[i][KEY],
+                getPhoneNumberFormat(jsonArray[i][PHONE_NUMBER])
+            );
+        }
         contacts.append(contact);
     }
 }

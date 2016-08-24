@@ -270,7 +270,7 @@
                                 DEFAULT_GET_MESSAGES,
                                 0 /*offset*/));
 
-                                if (count == 0) {
+                                if (count > 10) {
                                     break;
                                 }
                                 count++;
@@ -301,6 +301,8 @@
                                     webSocketCon.send(getMessagesJSON(active_json[THREAD_ID],
                                             DEFAULT_GET_MESSAGES,
                                             0));
+                                } else {
+                                    $('#slt_conversation').prepend($('#' + CONVERSATIONS + active_json[THREAD_ID]));
                                 }
 
                                 //update sending msg
