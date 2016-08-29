@@ -49,62 +49,67 @@
                     </div>
                 </div>
                 <div class="right_side" style="text-align: center;">
-                    <h2>Sign In</h2>
-                    <form  id="user_login" method="post" action="{% url 'MessageApp:login' %}">
-                        <fieldset>
-                            {% csrf_token %}
-                            <div id="username" style="width: 200px">
-                                <input class="form-control text_input" type="text" name="username" placeholder="Username" size="50" autofocus
-                                         autocomplete="on" required title="Please enter username"/>
-                            </div>
-                            <div id="password" style="width: 200px">
-                                <input class="form-control text_input" type="password" name="password" placeholder="Password" size="50" required/>
-                            </div>
-                            <div id="buttons" style="display: flex; width: 200px">
-                                <div id="register" style="width: 100px; margin-right: 7px;">
-                                    <input class="btn btn-outline-primary signup" onclick="$('#create_user').show()" type="button" value="Register" />
+                    {% if not user.is_authenticated %}
+                        <h2>Sign In</h2>
+                        <form  id="user_login" method="post" action="{% url 'MessageApp:login' %}">
+                            <fieldset>
+                                {% csrf_token %}
+                                <div id="username" style="width: 200px">
+                                    <input class="form-control text_input" type="text" name="username" placeholder="Username" size="50" autofocus
+                                             autocomplete="on" required title="Please enter username"/>
                                 </div>
-                                <div id="login" style="width: 100px">
-                                    <input class="btn btn-outline-primary login" type="submit" value="Login">
+                                <div id="password" style="width: 200px">
+                                    <input class="form-control text_input" type="password" name="password" placeholder="Password" size="50" required/>
                                 </div>
-                            </div>
-                        </fieldset>
-                    </form>
-                    <a href="{% url 'MessageApp:new_password_send' %}">Forgot Password</a>
-                    <div id="user_reg">
-                        <form class="form-inline" id="create_user" hidden>
-                            {% csrf_token %}
-                            <h2>New User</h2>
-                            <p>
-                                <label for="id_username">Username:</label>
-                                <input id="id_username" class="form-control text_input" maxlength="30" name="username" type="text" />
-                                <span class="helptext"><br>Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only.</span>
-                                <br>
-                                <label for="id_email">Email address:</label>
-                                <input id="id_email" class="form-control text_input" maxlength="254" name="email" type="email" />
-                                <br>
-                                <label for="id_first_name">First name:</label>
-                                <input id="id_first_name" class="form-control text_input" maxlength="30" name="first_name" type="text" />
-                                <br>
-                                <label for="id_last_name">Last name:</label>
-                                <input id="id_last_name" class="form-control text_input" maxlength="30" name="last_name" type="text" />
-                                <br>
-                                <label for="id_password">Password:</label>
-                                <input id="id_password" class="form-control text_input" name="password" type="password" />
-                                <br>
-                                <label for="id_rep_pass">Confirm Password:</label>
-                                <input id="id_rep_pass" class="form-control text_input" name="rep_pass" onChange="PasswordMatch()" oninvalid="PasswordMatch()" type="password" />
-                            </p>
-                            <div id="buttons" style="display: flex; width: 200px">
-                                <div style="width: 117px; margin-right: 7px;">
-                                    <input id="register_register"class="btn btn-outline-primary signup" onclick="" type="submit" name="submit" value="Register Confirm" />
+                                <div id="buttons" style="display: flex; width: 200px">
+                                    <div id="register" style="width: 100px; margin-right: 7px;">
+                                        <input class="btn btn-outline-primary signup" onclick="$('#create_user').show()" type="button" value="Register" />
+                                    </div>
+                                    <div id="login" style="width: 100px">
+                                        <input class="btn btn-outline-primary login" type="submit" value="Login">
+                                    </div>
                                 </div>
-                                <div style="width: 100px">
-                                    <input id="register_cancel" class="btn btn-outline-primary login" onclick="$('#create_user').hide();" type="button" value="Hide" />
-                                </div>
-                            </div>
+                            </fieldset>
                         </form>
-                    </div>
+                        <a href="{% url 'MessageApp:new_password_send' %}">Forgot Password</a>
+                        <div id="user_reg">
+                            <form class="form-inline" id="create_user" hidden>
+                                {% csrf_token %}
+                                <h2>New User</h2>
+                                <p>
+                                    <label for="id_username">Username:</label>
+                                    <input id="id_username" class="form-control text_input" maxlength="30" name="username" type="text" />
+                                    <span class="helptext"><br>Required. 30 characters or fewer. Letters, digits and @/./+/-/_ only.</span>
+                                    <br>
+                                    <label for="id_email">Email address:</label>
+                                    <input id="id_email" class="form-control text_input" maxlength="254" name="email" type="email" />
+                                    <br>
+                                    <label for="id_first_name">First name:</label>
+                                    <input id="id_first_name" class="form-control text_input" maxlength="30" name="first_name" type="text" />
+                                    <br>
+                                    <label for="id_last_name">Last name:</label>
+                                    <input id="id_last_name" class="form-control text_input" maxlength="30" name="last_name" type="text" />
+                                    <br>
+                                    <label for="id_password">Password:</label>
+                                    <input id="id_password" class="form-control text_input" name="password" type="password" />
+                                    <br>
+                                    <label for="id_rep_pass">Confirm Password:</label>
+                                    <input id="id_rep_pass" class="form-control text_input" name="rep_pass" onChange="PasswordMatch()" oninvalid="PasswordMatch()" type="password" />
+                                </p>
+                                <div id="buttons" style="display: flex; width: 200px">
+                                    <div style="width: 117px; margin-right: 7px;">
+                                        <input id="register_register"class="btn btn-outline-primary signup" onclick="" type="submit" name="submit" value="Register Confirm" />
+                                    </div>
+                                    <div style="width: 100px">
+                                        <input id="register_cancel" class="btn btn-outline-primary login" onclick="$('#create_user').hide();" type="button" value="Hide" />
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    {% else %}
+                        <p>You are already logged in! Click below to go to the message page!</p>
+                        <a href="{% url 'MessageApp:message' %}"><button class="btn btn-lg btn-outline-primary" id="message_pageBtn" >Message Page</button></a>
+                    {% endif %}
                 </div>
             </div>
             <div class="nav_bar_section" id="what_is" class="background_switch">
@@ -148,39 +153,41 @@
 
     <script>
     $('body').scrollspy({ target: '#nav_bar' });
-    $(document).ready(function () {
-        $('#create_user').submit(function (e) {
-            e.preventDefault();
-            $('#create_user').children('p').children('input').attr("readonly",true);
-            $('#register_register').attr('disabled',true);
-            var data = $('#create_user').serialize();
-            $.ajax({
-                url: '{% url 'MessageApp:register' %}',
-                type: 'POST',
-                data: data,
-            })
-            .done(function(response) {
-                $('label').css('color','black');
-                $('input').popover('destroy');
+    {% if not user.is_authenticated %}
+        $(document).ready(function () {
+            $('#create_user').submit(function (e) {
+                e.preventDefault();
+                $('#create_user').children('p').children('input').attr("readonly",true);
+                $('#register_register').attr('disabled',true);
+                var data = $('#create_user').serialize();
+                $.ajax({
+                    url: '{% url 'MessageApp:register' %}',
+                    type: 'POST',
+                    data: data,
+                })
+                .done(function(response) {
+                    $('label').css('color','black');
+                    $('input').popover('destroy');
 
-            }).fail(function(response) {
-                $('label').css('color','black');
-                $('input').popover('destroy');
-                var responseJSON = JSON.parse(response["responseText"]);
-                for(var i = 0; i < Object.keys(responseJSON).length; i++) {
-                    var key = Object.keys(responseJSON)[i];
-                    $("label[for='id_" + key + "']").css("color","red");
-                    $('#id_' + key ).attr({
-                        'rel':'popover',
-                        'data-content':responseJSON[key],
-                        'data-trigger':"focus"
-                    }).popover();
-                }
+                }).fail(function(response) {
+                    $('label').css('color','black');
+                    $('input').popover('destroy');
+                    var responseJSON = JSON.parse(response["responseText"]);
+                    for(var i = 0; i < Object.keys(responseJSON).length; i++) {
+                        var key = Object.keys(responseJSON)[i];
+                        $("label[for='id_" + key + "']").css("color","red");
+                        $('#id_' + key ).attr({
+                            'rel':'popover',
+                            'data-content':responseJSON[key],
+                            'data-trigger':"focus"
+                        }).popover();
+                    }
+                });
+                $('#create_user').children('p').children('input').attr("readonly",false);
+                $('#register_register').attr('disabled',false);
             });
-            $('#create_user').children('p').children('input').attr("readonly",false);
-            $('#register_register').attr('disabled',false);
         });
-    });
+    {% endif %}
 
     function PasswordMatch(){
         var password = $("#id_password");

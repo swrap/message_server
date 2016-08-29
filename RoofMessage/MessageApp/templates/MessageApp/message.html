@@ -15,7 +15,7 @@
         <link rel="stylesheet" href="{% static "message_app/message.css" %}">
         <script src="{% static "message_app/JSONFunctions.js" %}"></script>
         <script src="{% static "message_app/uiFunctions.js" %}"></script>
-        <script type="text/javascript"></script>
+        <scriptf type="text/javascript"></scriptf>
         <title>Rooftext</title>
     </head>
     <body>
@@ -115,6 +115,9 @@
                         </span>
                     </div>
                     <div class="modal-footer">
+                        <button type="button" class="btn btn-outline-primary" onclick="location.href='{% url 'MessageApp:index' %}'">
+                            Home Page
+                        </button>
                         <button type="button" class="btn btn-outline-primary"
                                 id="button_settings"
                                 onclick="window.open('{% url 'MessageApp:settings' %}')">

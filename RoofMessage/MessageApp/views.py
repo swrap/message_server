@@ -53,9 +53,6 @@ def index(request):
     if len(group.filter(name=GROUP_BROWSER)) == 0:
         Group.objects.create(name=GROUP_BROWSER).save()
 
-    if request.user.is_authenticated():
-        return redirect('MessageApp:message')
-
     user_form = UserForm()
     context = {"user_form": user_form}
     print("YES")
@@ -71,7 +68,6 @@ def user_logout(request):
         logout(request)
         # Takes the user back to the index page.
         return redirect('MessageApp:index')
-
 
 def user_login(request):
     # redirects user back to homepage

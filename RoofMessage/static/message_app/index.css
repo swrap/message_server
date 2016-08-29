@@ -152,3 +152,12 @@ li a:hover {
 .error_with {
     color: red;
 }
+
+#message_pageBtn {
+    background-color: #8347B2;
+    color: white;
+}
+
+#message_pageBtn:hover{
+    background-color: #C77FFF;
+}
