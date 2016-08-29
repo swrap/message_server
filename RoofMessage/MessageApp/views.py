@@ -1,4 +1,5 @@
 import copy
+import json
 from datetime import timedelta
 
 from django.contrib.sessions.models import Session
@@ -54,7 +55,11 @@ def index(request):
 
     if request.user.is_authenticated():
         return redirect('MessageApp:message')
-    return render(request, 'MessageApp/index.html', {})
+
+    user_form = UserForm()
+    context = {"user_form": user_form}
+    print("YES")
+    return render(request, 'MessageApp/index.html', context)
 
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
@@ -240,14 +245,13 @@ def register(request):
             message = email_template.render(Context({"activation_key" : link}))
             send_email(subject, message, user.email)
             # logger.info("User \"" + user.username + "\" has been registered")
-
-            return redirect('MessageApp:index')
         else:
             print(user_form.errors)
+            response = HttpResponse(json.dumps(user_form.errors), content_type='application/json')
+            response.status_code = 400
+            return response
     else:
-        user_form = UserForm()
-    context = {"user_form": user_form}
-    return render(request, 'MessageApp/register.html', context)
+        return HttpResponse(status_code=403)
 
 def new_password_send(request):
     change_screen = False
