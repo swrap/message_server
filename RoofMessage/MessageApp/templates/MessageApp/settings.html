@@ -1,48 +1,44 @@
+{% extends 'link_page_base.html' %}
 {% load staticfiles %}
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <link rel="stylesheet" href="{% static "message_app/settings.css" %}">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-        <!-- Latest compiled and minified CSS -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-        <!-- Optional theme -->
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-        <!-- Latest compiled and minified JavaScript -->
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+{% block block_head %}
     <title>Settings</title>
-</head>
-    <body>
-        <div class="panel panel-primary" id="settings_panel">
-            <div class="panel-heading">
-                <h1>Settings</h1>
-            </div>
-            <div class="panel-body">
+{% endblock %}
+
+{% block body_block %}
+    <div class="panel panel-primary" id="settings_panel">
+        <div class="panel-heading panel_header">
+            <h1>Settings</h1>
+        </div>
+        <div class="panel-body">
+            <li class = "list-group-item">
                 <div id="change_password">
                 {% if pass_change_success %}
-                    <p>Congradulations your password has been changed!</p>
+                    <p>Congratulations your password has been changed!</p>
                 {% endif %}
                 <form id="change_password_form" method="post" action="{% url 'MessageApp:settings' %}">
                     {% csrf_token %}
                     {{ pass_form.as_p }}
-                    <input type="submit" name="change_password" value="Save Changed Password" />
+                    <input class="btn btn-outline-primary actionBtn" type="submit" name="change_password" value="Save Changed Password" />
                 </form>
                 </div>
-                <a href="{% url 'MessageApp:index' %}"><input type="button" value="Back"/></a>
+                <a href="{% url 'MessageApp:message' %}"><input class="btn btn-outline-primary actionBtn" type="button" value="Back to Message Page"/></a>
                 <br>
+            </li>
+            <li class = "list-group-item">
                 <form id="delete_account_form" method="post" action="{% url 'MessageApp:delete_account' %}">
                     {% csrf_token %}
                     {% ifnotequal error None %}
                         {{ error }}
                         <br>
                     {% endifnotequal %}
-                    <input class="text_input" type="password" name="password" placeholder="Password" size="50" required/>
-                    <input method="submit" type="submit" value="Delete Account"/>
+                    <div class="input-group">
+                        <input class="form-control text_input inputArea" type="password" name="password" placeholder="Password" size="50" required/>
+                        <input class="btn btn-outline-primary actionBtn" method="submit" type="submit" value="Delete Account"/>
+                    </div>
                 </form>
-
-                {% if not user_profile.activated_account %}
+            {% if not user_profile.activated_account %}
+                <li class = "list-group-item">
                     {% if email_sent %}
                         <p>An email has just been sent with a new activation code</p>
                     {% endif %}
@@ -50,10 +46,10 @@
                     <form id="new_activate_account" method="post" action="{% url 'MessageApp:settings' %}">
                         {% csrf_token %}
                         <p>Your account is still not active!</p>
-                        <input type="submit" name="activate" value="Send new Activate Account Link" />
+                        <input class="btn btn-outline-primary actionBtn" type="submit" name="activate" value="Send new Activate Account Link" />
                     </form>
-                {% endif %}
-          </div>
+                </li>
+            {% endif %}
         </div>
-    </body>
-</html>
+    </div>
+{% endblock %}

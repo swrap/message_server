@@ -1,10 +1,17 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Delete Account Data</title>
-</head>
-<body>
-    <h3>Account Data Deleted</h3>
-</body>
-</html>
+{% extends 'link_page_base.html' %}
+{% load staticfiles %}
+
+{% block block_head %}
+    <title>Deactivate Account</title>
+{% endblock %}
+
+{% block body_block %}
+    <div class="panel panel-primary" id="settings_panel">
+        <div class="panel-heading panel_header">
+            <h1>Deactivate Account</h1>
+        </div>
+        <div class="panel-body">
+            <p style="font-size: 18px;">Your account has been closed and deactivated</p>
+        </div>
+    </div>
+{% endblock %}

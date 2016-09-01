@@ -43,6 +43,7 @@ input{
 
 .login:hover{
     background-color: #C77FFF;
+    color: white;
 }
 
 .signup{
@@ -53,6 +54,7 @@ input{
 
 .signup:hover{
     background-color: #C77FFF;
+    color: white;
 }
 
 .pure-button{
@@ -60,11 +62,16 @@ input{
 }
 
 #title {
+    font-size: 100px;
+    font-weight: bold;
+    text-shadow:
+    -1px -1px 0 #8347B2,
+    1px -1px 0 #8347B2,
+    -1px 1px 0 #8347B2,
+    1px 1px 0 #8347B2;
     color: white;
-    font-size: 50px;
     width: 400px;
     display: inline-block;
-    text-align: center;
 }
 
 h1 {
@@ -160,4 +167,24 @@ li a:hover {
 
 #message_pageBtn:hover{
     background-color: #C77FFF;
+}
+
+
+#right_side_signIn {
+    float: left;
+    align-content: left;
+    align-items: flex-start;
+}
+
+.table_left {
+    width: 100px;
+}
+
+.table_left > label{
+    float: right;
+    height: 100%;
+    width: 100%;
+    padding: 0;
+    padding-right: 10px;
+    text-align: right;
 }
