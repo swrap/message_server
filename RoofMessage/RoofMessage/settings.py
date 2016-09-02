@@ -23,9 +23,15 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '835setwc%vdpi552lq*%^21mfpj+&2xbnwxwu_eklg4xumvd_i'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['rooftext.com','129.21.149.180','0.0.0.0','127.0.0.1','127.0.0.0']
+
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_SSL_REDIRECT = True
+USE_X_FORWARDED_HOST = True
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 #the forwarding for @login_required
 LOGIN_URL = '/'
@@ -35,16 +41,24 @@ EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = "bleepdodeepydo@gmail.com"
 EMAIL_HOST_PASSWORD = "ASM2j5bb2/^hadsb"
-DOMAIN_HOST = "http://127.0.0.1:8000" #"http://yourdomain.com/"
+DOMAIN_HOST = "https://rooftext.com" #"http://yourdomain.com/"
 
 #USED IN VIEWS_AJAX should be in properties file in the future
 MESSAGE_LOAD = 50
 
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+
+ADMINS = [('Jesse','jesse.saranwrap@gmail.com'),('Tommy','accounts2952@gmail.com')]
+
 #Channels
 CHANNEL_LAYERS = {
     "default": {
-        "BACKEND": "asgiref.inmemory.ChannelLayer",
+        "BACKEND": "asgi_redis.RedisChannelLayer",
         "ROUTING": "MessageApp.routing.channel_routing",
+	"Config": {
+		"hosts": [os.environ.get('REDIS_URL', 'redis://127.0.0.1:6379')],
+	}
     },
 }
 
@@ -77,8 +91,9 @@ ROOT_URLCONF = 'RoofMessage.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': ["static/email/",
-                 "RoofMessage/static/email/"],
+        'DIRS': [#"static/email/",
+                 #"RoofMessage/static/email/",
+                 "/home/jesse/rooftext/messagerepo/static_files/email/"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -144,12 +159,76 @@ USE_TZ = True
 STATIC_URL = '/static/'
 
 #static files .css, .js, etc.
-STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR),"static_files")#"/var/www/example.com/static/"
+STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR),"static_files/")#"/var/www/example.com/static/"
 
 #user files
-MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR),"media_files")#"/var/www/example.com/static/"
+MEDIA_ROOT = os.path.join(os.path.dirname(BASE_DIR),"media_files/")#"/var/www/example.com/static/"
 
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, "static"),
 #    '/var/www/static/',
 ]
+
+#logging
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'filters': {
+        'require_debug_false': {
+            '()': 'django.utils.log.RequireDebugFalse'
+        }
+    },
+    'handlers': {
+        'mail_admins': {
+            'level': 'INFO',
+            'filters': ['require_debug_false'],
+            'class': 'django.utils.log.AdminEmailHandler'
+        },
+        # 'applogfile': {
+        #     'level': 'DEBUG',
+        #     'class': 'logging.handlers.RotatingFileHandler',
+        #     'filename': os.path.join(BASE_DIR, 'APPNAME.log'),
+        #     'maxBytes': 1024 * 1024 * 15,  # 15MB
+        #     'backupCount': 10,
+        # },
+    },
+    'loggers': {
+        'django.request': {
+            'handlers': ['mail_admins'],
+            'level': 'INFO',
+            'propagate': True,
+        },
+        # 'MessageApp': {
+        #     'handlers': ['applogfile',],
+        #     'level': 'DEBUG',
+        # },
+    }
+}
+# LOGGING = {
+#     'version': 1,
+#     'disable_existing_loggers': False,
+#     'filters': {
+#         'require_debug_false': {
+#             '()': 'django.utils.log.RequireDebugFalse'
+#         }
+#     },
+#
+#     'handlers': {
+#         'mail_admins': {
+#             'level': 'ERROR',
+#             'filters': ['require_debug_false'],
+#             'class': 'django.utils.log.AdminEmailHandler'
+#         },
+#      'console':{
+#             'level': 'INFO',
+#             'class': 'logging.StreamHandler',
+#         },
+#     },
+#     'loggers': {
+#         'django.request': {
+#             'handlers': ['mail_admins'],
+#             'level': 'ERROR',
+#             'propagate': True,
+#         },
+#     }
+# }

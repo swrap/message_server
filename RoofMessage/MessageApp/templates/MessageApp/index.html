@@ -113,7 +113,7 @@
                                                 <label for="id_password">Password:</label>
                                             </th>
                                             <th>
-                                                <input id="id_password" class="form-control text_input" name="password" type="password" />
+                                                <input id="id_password" class="form-control text_input" name="password" onChange="passwordMatch()" oninvalid="passwordMatch()" oninput="passwordMatch()" type="password" />
                                             </th>
                                         </tr>
                                         <tr>
@@ -121,21 +121,21 @@
                                                 <label for="id_rep_pass">Confirm Password:</label>
                                             </th>
                                             <th>
-                                                <input id="id_rep_pass" class="form-control text_input" name="rep_pass" onChange="passwordMatch()" oninvalid="passwordMatch()" type="password" />
+                                                <input id="id_rep_pass" class="form-control text_input" name="rep_pass" onChange="passwordMatch()" oninvalid="passwordMatch()" oninput="passwordMatch()" type="password" />
                                             </th>
                                         </tr>
                                         <tr>
                                             <th class="table_left">
-                                                <label for="id_alpha_key" class="table_left">Alpha Code:</label>
+                                                <label for="id_key" class="table_left">Alpha Key:</label>
                                             </th>
                                             <th>
-                                                <input id="id_alpha_key" class="form-control text_input" name="alpha_key" type="password" />
+                                                <input id="id_key" class="form-control text_input" name="key" type="text" />
                                             </th>
                                         </tr>
                                     </table>
                                     <div id="buttons" style="display: flex; width: 200px">
                                         <div style="width: 117px; margin-right: 7px;">
-                                            <input id="register_register"class="btn btn-outline-primary signup" onclick="" type="submit" name="submit" value="Register Confirm" />
+                                            <input id="register_register"class="btn btn-outline-primary signup" onclick="passwordMatch()" type="submit" name="submit" value="Register Confirm" />
                                         </div>
                                         <div style="width: 100px">
                                             <input id="register_cancel" class="btn btn-outline-primary login" onclick="$('#create_user').hide();" type="button" value="Hide" />
@@ -233,11 +233,16 @@
                     for(var i = 0; i < Object.keys(responseJSON).length; i++) {
                         var key = Object.keys(responseJSON)[i];
                         $("label[for='id_" + key + "']").css("color","red");
-                        $('#id_' + key ).attr({
+                        var currentInput = $('#id_' + key );
+                        currentInput.attr({
                             'rel':'popover',
                             'data-content':responseJSON[key],
                             'data-trigger':"focus"
                         }).popover();
+
+                        if (i == 0) {
+                            currentInput.focus();
+                        }
                     }
                 });
                 $('#create_user').children('p').children('input').attr("readonly",false);
@@ -246,13 +251,24 @@
         });
     {% endif %}
 
-    function asswordMatch(){
+    function passwordMatch(){
         var password = $("#id_password");
         var confirm_password = $("#id_rep_pass");
-        if(password.value != confirm_password.value) {
-            confirm_password.setCustomValidity("Passwords Don't Match");
+        if(password.val().length == 0) {
+            password.get(0).setCustomValidity("Passwords length is to short.");
+            password.css("background-color", "#ffaaaa");
+        } else if (confirm_password.val().length == 0) {
+            confirm_password.get(0).setCustomValidity("Passwords length is to short.");
+            confirm_password.css("background-color", "#ffaaaa");
+        } else if(password.val() != confirm_password.val()) {
+            confirm_password.get(0).setCustomValidity("Passwords Don't Match");
+            confirm_password.css("background-color", "#ffaaaa");
+            password.css("background-color", "#ffaaaa");
         } else {
-            confirm_password.setCustomValidity('');
+            password.get(0).setCustomValidity('');
+            confirm_password.get(0).setCustomValidity('');
+            confirm_password.css("background-color", "#95e7b5");
+            password.css("background-color", "#95e7b5");
         }
     }
 

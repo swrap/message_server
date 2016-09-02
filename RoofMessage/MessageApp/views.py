@@ -16,8 +16,8 @@ from django.shortcuts import render, redirect
 from django.views.decorators.cache import cache_control
 from django.http import HttpResponse
 
-from . import views_android
-from .models import UserProfile, AndroidModel, GROUP_ANDROID, GROUP_BROWSER
+from .views_android import *
+from .models import UserProfile, AndroidModel, GROUP_ANDROID, GROUP_BROWSER, Key
 from .forms import UserForm, PasswordForm, NewPasswordForm
 
 # CONSTANT FOR KEY
@@ -27,10 +27,11 @@ LINK_EXPIRATION = 2 #days for new pass link to expire
 
 #Email file Constants
 from django.conf import settings
-EMAIL_DELETE_ACCOUNT = "deleted_account.html"
-EMAIL_NEW_PASSWORD_LINK = "new_password_link.html"
-EMAIL_PASSWORD_CHANGE_NOTIFICATION = "pass_change_email.html"
-EMAIL_VERIFY_ACCOUNT= "verify_account_email.html"
+EMAIL_DELETE_ACCOUNT = settings.STATIC_ROOT + "email/deleted_account.html"
+EMAIL_NEW_PASSWORD_LINK = settings.STATIC_ROOT + "email/new_password_link.html"
+EMAIL_PASSWORD_CHANGE_NOTIFICATION = settings.STATIC_ROOT + "email/pass_change_email.html"
+EMAIL_VERIFY_ACCOUNT= settings.STATIC_ROOT + "email/verify_account_email.html"
+EMAIL_ALPHA_KEY = settings.STATIC_ROOT + "email/new_alpha_key.html"
 
 #used as decorator!
 #checks both if user exists and if exists
@@ -103,7 +104,7 @@ def delete_account(request):
             except User.DoesNotExist:
                 user = None
             try:
-                android_user = User.objects.get(username=str(user.username + views_android.ANDROID_CONSTANT))
+                android_user = User.objects.get(username=str(user.username + ANDROID_CONSTANT))
             except User.DoesNotExist:
                 android_user = None
             if user is not None and android_user is not None:
@@ -158,7 +159,7 @@ def settings_page(request):
                     user = None
 
                 try:
-                    android_username = str(request.user.username + views_android.ANDROID_CONSTANT)
+                    android_username = str(request.user.username + ANDROID_CONSTANT)
                     android_user = User.objects.get(username=android_username)
                 except User.DoesNotExist:
                     android_user = None
@@ -224,7 +225,7 @@ def register(request):
             user_profile.reset_key = RESET_KEY_NOT_USABLE
             user_profile.save()
 
-            android_user = User.objects.create(username=str(user.username + views_android.ANDROID_CONSTANT))
+            android_user = User.objects.create(username=str(user.username + ANDROID_CONSTANT))
             android_user.first_name = user.first_name
             android_user.last_name = user.last_name
             android_user.set_password(user_form.cleaned_data['password'])
@@ -243,15 +244,14 @@ def register(request):
             send_email(subject, message, user.email, False)
             # logger.info("User \"" + user.username + "\" has been registered")
             response = HttpResponse()
-            response.status_code = 200
+            response.status = 200
             return response
         else:
             print(user_form.errors)
-            response = HttpResponse(json.dumps(user_form.errors), content_type='application/json')
-            response.status_code = 400
+            response = HttpResponse(json.dumps(user_form.errors), content_type='application/json', status=400)
             return response
     else:
-        return HttpResponse(status_code=403)
+        return HttpResponse(status=403)
 
 def new_password_send(request):
     change_screen = False
@@ -295,7 +295,7 @@ def new_password_link(request, key):
             android_user = None
             if user_profile is not None:
                 try:
-                    android_username = str(user_profile.user.username + views_android.ANDROID_CONSTANT)
+                    android_username = str(user_profile.user.username + ANDROID_CONSTANT)
                     android_user = User.objects.get(username=android_username)
                 except User.DoesNotExist:
                     android_user = None
@@ -348,6 +348,13 @@ def activate(request, key):
 
     expired_or_not_right = True
     return render(request, 'MessageApp/activate.html', locals())
+
+def send_alpha_key(alpha_key, email):
+    subject = "Alpha Key"
+    from RoofMessage import settings
+    email_template = get_template(EMAIL_ALPHA_KEY)
+    message = email_template.render(Context({"alpha_key": alpha_key}))
+    send_email(subject, message, email, True)
 
 def send_email(subject, message, email, forward):
     try:

@@ -13,6 +13,7 @@ from .models import GROUP_ANDROID, GROUP_BROWSER, ANDROID_CONSTANT
 @channel_session_user_from_http
 def ws_add(message):
     # Add them to the right group
+    print("ADDING")
     group = message.user.groups.all()
     if len(group) == 1 and (group[0].name == GROUP_ANDROID or group[0].name == GROUP_BROWSER):
         group = group[0].name

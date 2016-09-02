@@ -79,7 +79,7 @@
                 </form>
             </div>
             <div id="rightMessage">
-                <div id="rm_topBar">Jesse Saran</div>
+                <div id="rm_topBar">{{ user.username}}</div>
                 <div id="rm_loadBtn">Load More</div>
                 <div id="rm_messageArea"></div>
                 <div id="rm_inputsDiv">
@@ -229,7 +229,7 @@
 
 
         var sent_message_temp_id = [];
-        var webSocketCon = new WebSocket("ws://" + window.location.host + "/message_route/");
+        var webSocketCon = new WebSocket("wss://" + window.location.host + "/message_route/");
         const ACTION = "action",
                 POST_CONTACTS = "post_contacts",
                 POST_CONVERSATIONS = "post_conversations",
@@ -373,7 +373,7 @@
 
         webSocketCon.onclose = function() {
             window.setTimeout( function () {
-                webSocketCon = new WebSocket("ws://" + window.location.host + "/message_route/");
+                webSocketCon = new WebSocket("wss://" + window.location.host + "/message_route/");
             }, 2000);
         };
 
