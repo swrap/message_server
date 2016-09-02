@@ -17,7 +17,7 @@ from django.views.decorators.cache import cache_control
 from django.http import HttpResponse
 
 from . import views_android
-from .models import UserProfile, AndroidModel, GROUP_ANDROID, GROUP_BROWSER
+from .models import UserProfile, AndroidModel, GROUP_ANDROID, GROUP_BROWSER, Key
 from .forms import UserForm, PasswordForm, NewPasswordForm
 
 # CONSTANT FOR KEY

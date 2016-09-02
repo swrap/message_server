@@ -127,3 +127,6 @@ class Message(models.Model):
     time = models.TimeField(default=timezone.now())
     text = models.CharField(max_length=1000)
     conversation = models.ForeignKey(Conversation)
+
+class Key(models.Model):
+    key = models.CharField(max_length=30, null=True, default='', unique=True)

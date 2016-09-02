@@ -126,10 +126,10 @@
                                         </tr>
                                         <tr>
                                             <th class="table_left">
-                                                <label for="id_alpha_key" class="table_left">Alpha Code:</label>
+                                                <label for="id_key" class="table_left">Alpha Key:</label>
                                             </th>
                                             <th>
-                                                <input id="id_alpha_key" class="form-control text_input" name="alpha_key" type="password" />
+                                                <input id="id_key" class="form-control text_input" name="key" type="text" />
                                             </th>
                                         </tr>
                                     </table>
@@ -233,11 +233,16 @@
                     for(var i = 0; i < Object.keys(responseJSON).length; i++) {
                         var key = Object.keys(responseJSON)[i];
                         $("label[for='id_" + key + "']").css("color","red");
-                        $('#id_' + key ).attr({
+                        var currentInput = $('#id_' + key );
+                        currentInput.attr({
                             'rel':'popover',
                             'data-content':responseJSON[key],
                             'data-trigger':"focus"
                         }).popover();
+
+                        if (i == 0) {
+                            currentInput.focus();
+                        }
                     }
                 });
                 $('#create_user').children('p').children('input').attr("readonly",false);
@@ -246,10 +251,10 @@
         });
     {% endif %}
 
-    function asswordMatch(){
+    function passwordMatch(){
         var password = $("#id_password");
         var confirm_password = $("#id_rep_pass");
-        if(password.value != confirm_password.value) {
+        if(password.val() != confirm_password.val()) {
             confirm_password.setCustomValidity("Passwords Don't Match");
         } else {
             confirm_password.setCustomValidity('');

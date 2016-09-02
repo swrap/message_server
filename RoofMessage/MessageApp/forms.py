@@ -1,6 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 
+from .models import Key
 from . import views_android
 
 
@@ -10,6 +11,8 @@ class UserForm(forms.ModelForm):
                                widget=forms.PasswordInput(attrs={"onChange":'PasswordMatch()',
                                                                  "oninvalid":'PasswordMatch()'}),
                                )
+    key = forms.CharField(widget=forms.TextInput(), max_length=30)
+
     # checks to see if the username is in existance already
     def clean_username(self):
         username = self.cleaned_data['username']
@@ -31,6 +34,15 @@ class UserForm(forms.ModelForm):
         rep_pass = self.cleaned_data['rep_pass']
         if (rep_pass and rep_pass) and (password != rep_pass):
                 raise forms.ValidationError("Passwords do NOT match")
+
+    def clean_key(self):
+        self_key = self.cleaned_data['key']
+        key_object = Key.objects.filter(key=self_key)
+        if key_object.__len__() == 0:
+            raise forms.ValidationError("Sorry alpha key is not recognized.")
+        else:
+            key_object = key_object[0]
+            key_object.delete()
 
     def __init__(self, *args, **kwargs):
         super(UserForm, self).__init__(*args, **kwargs)
