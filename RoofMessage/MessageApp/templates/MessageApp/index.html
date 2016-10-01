@@ -44,9 +44,15 @@
                     <div id="right_side_signIn">
                         {% if not user.is_authenticated %}
                             <h2>Sign In</h2>
-                            <form  id="user_login" method="post" action="{% url 'MessageApp:login' %}">
+                            <form id="user_login" method="post" action="{% url 'MessageApp:login' %}">
                                 <fieldset>
                                     {% csrf_token %}
+                                    <div>
+                                        {{ login }}
+                                        {% if reset %}
+                                            <a href="{% url 'MessageApp:new_password_send' %}">reset password</a>
+                                        {% endif %}
+                                    </div>
                                     <div id="username" style="width: 200px">
                                         <input class="form-control text_input" type="text" name="username" placeholder="Username" size="50" autofocus
                                                  autocomplete="on" required title="Please enter username"/>
@@ -69,7 +75,6 @@
                                 <form class="form-inline" id="create_user" hidden>
                                     {% csrf_token %}
                                     <h2>New User</h2>
-{#                                    //TODO Put in table to make tommy happy#}
                                     <table>
                                         <tr>
                                             <th class="table_left">
@@ -173,7 +178,14 @@
                 </div>
                 <div class="right_side">
                     <p>
-                        RoofText is a simple way to text from your computer through your phone.
+                        RoofText is a simple way to text from any computer through your phone. It gets your contacts
+                        conversation and messages in an easy to use GUI. It allows you to not only view your conversations,
+                        but also to send text and multi-media messages directly from the browser you are on!<br><br>
+                        Better yet, we store NONE of your data. Thats right, the only thing that we have is your login
+                        information! And then you might think, how do we access it? Well what we use is an app on your
+                        phone that allows you to get the data directly from your phone and then send it to whatever browser
+                        you are using it from. Even if you leave your phone at home, as long as it is connected to the
+                        internet you can access all your messages!
                     </p>
                 </div>
             </div>
@@ -184,9 +196,9 @@
                 <div class="right_side">
                     <p>
                         How do you install?<br>
-                        <ol>
+                        <ol style="display: inline-block; width: 90%;">
                             <li>Register an account above.</li>
-                            <li>Install the app (testing it as you read, should be available on the Android App Store by end of September 2017).</li>
+                            <li>Install the app (testing it as you read, should be available on the Android App Store by mid October 2016).</li>
                             <li>Login in with your account credentials from the app.</li>
                             <li>Login here and text away!</li>
                         </ol>
@@ -199,7 +211,10 @@
                 </div>
                 <div class="right_side">
                     <p>
-                        RoofText is a simple way to text from your computer through your phone.
+                        Our team is a bit small. I am a computer science major entending to deliver a product that I
+                        will use everyday. This started as a mere pipe dream, but the code base has grown exponentially
+                        and so has the product. For now the plan is to continue coding on it with updates and releases.
+                        <br><br>Feel free to contact our team anytime with questions or concerns at: help@rooftext.com.
                     </p>
                 </div>
             </div>

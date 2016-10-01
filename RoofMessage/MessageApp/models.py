@@ -13,7 +13,7 @@ from django.utils.datetime_safe import date
 GROUP_ANDROID = "Android"
 GROUP_BROWSER = "Browser"
 
-MAX_ATTEMPTS = 10
+MAX_ATTEMPTS = 5
 ANDROID_CONSTANT = str("_ANDROID")
 
 class AndroidModel(models.Model):
@@ -52,7 +52,6 @@ class AndroidModel(models.Model):
         group = Group.objects.get(name=GROUP_ANDROID)
         group.user_set.add(self.user)
 
-
 class UserProfile(models.Model):
     activate_key = models.CharField(max_length=64, null=True, default='')
     reset_confirm_key = models.CharField(max_length=64, null=True, default='')
@@ -60,6 +59,8 @@ class UserProfile(models.Model):
     new_pass_created = models.DateField(default=timezone.now())
     user = models.OneToOneField(User, on_delete=models.CASCADE, default='')
     activated_account = models.BooleanField(default=False)
+    attempts = models.PositiveIntegerField(default=0)
+    amount_good_till = models.DateField(default=timezone.now())
 
     def __str__(self):
         return self.user.username
@@ -111,6 +112,12 @@ class UserProfile(models.Model):
         self.reset_confirm_key = hashlib.sha256(salt + usernamesalt).hexdigest()
         self.save()
         return self.reset_confirm_key
+
+
+    def check_attempts(self):
+        if self.attempts >= MAX_ATTEMPTS:
+            return False
+        return True
 
 class Contact(models.Model):
     contact = models.OneToOneField(User, on_delete=models.CASCADE,default='')

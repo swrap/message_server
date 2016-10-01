@@ -2,24 +2,42 @@ from django.contrib.auth import authenticate, logout, login
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponse
+from django.shortcuts import render
 
-from .models import AndroidModel, ANDROID_CONSTANT, MAX_ATTEMPTS
+from .models import AndroidModel, ANDROID_CONSTANT, MAX_ATTEMPTS, UserProfile
 from .forms import UserLoginForm
 
 def android_login(request):
     if request.POST:
         username = request.POST['username']
+
+        try:
+            user_unauthenticated = User.objects.get(username=username)
+        except User.DoesNotExist:
+            user_unauthenticated = None
+        if user_unauthenticated:
+            try:
+                user_profile = UserProfile.objects.get(user=user_unauthenticated)
+                user_profile.attempts += 1
+                user_profile.save()
+            except UserProfile.DoesNotExist:
+                user_profile = None
+            if user_profile and not user_profile.check_attempts():
+                return HttpResponse(request, status=460, reason_phrase="Please reset password, account password "
+                                                                       "attempted to many times.")
+
         username = username + ANDROID_CONSTANT
         password = request.POST['password']
 
         user = authenticate(username=username, password=password)
         if user is not None:
             login(request, user)
+            user_profile.attempts = 0
+            user_profile.save()
             return HttpResponse(request, status=200)
     elif request.method == "GET":
         user_form = UserLoginForm()
         context = {"user_form": user_form}
-        from django.shortcuts import render
         return render(request, 'MessageApp/android_login.html', context, status=200)
 
     return HttpResponse(request, status=400)

@@ -80,13 +80,31 @@ def user_login(request):
         username = request.POST.get('username')
         password = request.POST.get('password')
         user = authenticate(username=username, password=password)
+
+        try:
+            user_unauthenticated = User.objects.get(username=username)
+        except User.DoesNotExist:
+            user_unauthenticated = None
+        if user_unauthenticated:
+            try:
+                user_profile = UserProfile.objects.get(user=user_unauthenticated)
+                user_profile.attempts += 1
+                user_profile.save()
+            except UserProfile.DoesNotExist:
+                user_profile = None
+            if user_profile and not user_profile.check_attempts():
+                return render(request, 'MessageApp/index.html', {"login": "Account has too many attempts. "
+                            "Please ", "reset": True},
+                            status=400)
         if user:
             if user.is_active:
                 login(request, user)
+                user_profile.attempts = 0
+                user_profile.save()
                 return redirect('MessageApp:message')
             else:
                 return render(request, 'MessageApp/index.html',
-                              {"login": "Account is disabled contact us to find out why!"})
+                              {"login": "Account is disabled."})
         else:
             return render(request, 'MessageApp/index.html', {"login": "Incorrect Login Username or password"}, status=400)
     else:
@@ -305,6 +323,17 @@ def new_password_link(request, key):
                 days = date.today()-user_profile.new_pass_created
                 time_delta = timedelta(days=LINK_EXPIRATION)
                 if days < time_delta:
+                    #delete all all unexpired sessions from user with new password
+                    all_unexpired_sessions_for_user(user_profile.user).delete()
+                    all_unexpired_sessions_for_user(android_user).delete()
+                    user_profile.attempts = 0
+                    try:
+                        android_model = AndroidModel.objects.get(user=android_user)
+                        android_model.attempts = 0
+                        android_model.save()
+                    except UserProfile.DoesNotExist:
+                        android_model = None
+
                     user_profile.user.set_password(new_pass_form.cleaned_data['new_password'])
                     user_profile.user.save()
                     user_profile.reset_key = RESET_KEY_NOT_USABLE
@@ -372,3 +401,14 @@ def send_email(subject, message, email, forward):
 @login_required()
 def message(request):
     return render(request, 'MessageApp/message.html', {})
+
+def all_unexpired_sessions_for_user(user):
+    user_sessions = []
+    from django.utils.datetime_safe import datetime
+    all_sessions  = Session.objects.filter(expire_date__gte=datetime.now())
+    for session in all_sessions:
+        session_data = session.get_decoded()
+        if user.pk == session_data.get('_auth_user_id'):
+            user_sessions.append(session.pk)
+    return Session.objects.filter(pk__in=user_sessions)
+
