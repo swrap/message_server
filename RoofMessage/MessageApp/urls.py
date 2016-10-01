@@ -1,4 +1,5 @@
 from django.conf.urls import url
+from django.views.generic import TemplateView
 
 # Url patterns that django follows and directs to the specified views.
 from django.contrib.auth.models import Group
@@ -26,4 +27,7 @@ urlpatterns = [
     #ANDROID CALLS
     url(r'^android_login/$', views_android.android_login, name='android_login'),
     url(r'^android_logout/$', views_android.android_logout, name='android_logout'),
+
+    #ROBOT.TXT
+    url(r'^robots\.txt$', TemplateView.as_view(template_name='robots.txt')),
 ]
