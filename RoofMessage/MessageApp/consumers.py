@@ -8,14 +8,16 @@ from channels.auth import http_session_user, channel_session_user, channel_sessi
 # Connected to websocket.connect
 from .models import GROUP_ANDROID, GROUP_BROWSER, ANDROID_CONSTANT
 
+import logging
+log = logging.getLogger("RoofMessage")
 
 @enforce_ordering(slight=True)
 @channel_session_user_from_http
 def ws_add(message):
     # Add them to the right group
-    print("ADDING")
     group = message.user.groups.all()
     if len(group) == 1 and (group[0].name == GROUP_ANDROID or group[0].name == GROUP_BROWSER):
+    	log.debug("Login [" + message.user.username + "] [" + group[0].name + "]")
         group = group[0].name
         username = message.user.username
         if group == GROUP_ANDROID:
@@ -27,7 +29,9 @@ def ws_add(message):
 @channel_session_user
 def ws_message(message):
     group = message.user.groups.all()
+    log.debug("Message [" +  str(len(group)) + "]")
     if len(group) == 1 and (group[0].name == GROUP_ANDROID or group[0].name == GROUP_BROWSER):
+    	log.debug("Message [" +  group[0].name + "]")
         group = group[0].name
         username = message.user.username
         if group == GROUP_ANDROID:
@@ -49,6 +53,7 @@ def ws_disconnect(message):
     # remove them to the right group
     group = message.user.groups.all()
     if len(group) == 1 and (group[0].name == GROUP_ANDROID or group[0].name == GROUP_BROWSER):
+    	log.debug("Logout [" + message.user.username + "] [" + group[0].name + "]")
         group = group[0].name
         username = message.user.username
         if group == GROUP_ANDROID:

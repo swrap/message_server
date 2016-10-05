@@ -93,6 +93,7 @@ TEMPLATES = [
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [#"static/email/",
                  #"RoofMessage/static/email/",
+		 "/home/jesse/rooftext/messagerepo/static_files/",
                  "/home/jesse/rooftext/messagerepo/static_files/email/"],
         'APP_DIRS': True,
         'OPTIONS': {
@@ -178,11 +179,25 @@ LOGGING = {
             '()': 'django.utils.log.RequireDebugFalse'
         }
     },
+    'formatters': {
+        'standard': {
+            'format' : "[%(asctime)s] %(levelname)s [%(name)s:%(lineno)s] %(message)s",
+            'datefmt' : "%d/%b/%Y %H:%M:%S"
+        },
+    },
     'handlers': {
         'mail_admins': {
             'level': 'INFO',
             'filters': ['require_debug_false'],
             'class': 'django.utils.log.AdminEmailHandler'
+        },
+	'logfile': {
+            'level':'DEBUG',
+            'class':'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(os.path.dirname(BASE_DIR),"logfile"),
+            'maxBytes': 1024*1024*50,
+            'backupCount': 5,
+            'formatter': 'standard',
         },
         # 'applogfile': {
         #     'level': 'DEBUG',
@@ -198,10 +213,14 @@ LOGGING = {
             'level': 'INFO',
             'propagate': True,
         },
+        'RoofMessage': {
+            'handlers': ['logfile'],
+            'level': 'DEBUG',
+        },
         # 'MessageApp': {
         #     'handlers': ['applogfile',],
         #     'level': 'DEBUG',
-        # },
+        # }}
     }
 }
 # LOGGING = {

@@ -106,6 +106,7 @@ p, li {
     float: left;
     width: 50%;
     height: 100%;
+    margin-right: 50px;
     vertical-align: text-bottom;
 }
 
@@ -171,7 +172,7 @@ li a:hover {
 
 
 #right_side_signIn {
-    float: left;
+    float: center;
     align-content: left;
     align-items: flex-start;
 }

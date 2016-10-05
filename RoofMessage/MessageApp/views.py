@@ -127,21 +127,20 @@ def delete_account(request):
                 android_user = None
             if user is not None and android_user is not None:
                 user.is_active = False
-                user.is_authenticated = False
                 user.save()
                 android_user.is_active = False
-                android_user.is_authenticated = False
                 android_user.save()
 
                 logout(request)
-
-                # send mail about account delete
+                
+		# send mail about account delete
                 subject = "Deleted Account (AUTOMATED EMAIL, DO NOT RESPOND)"
                 from RoofMessage import settings
                 email_template = get_template(EMAIL_DELETE_ACCOUNT)
                 message = email_template.render()
                 send_email(subject, message, user.email, True)
                 user.delete()
+		android_user.delete()
                 return render(request, 'MessageApp/delete_account.html', locals())
         else:
             error = "Must enter correct password in order to delete account."
