@@ -17,7 +17,7 @@ def ws_add(message):
     # Add them to the right group
     group = message.user.groups.all()
     if len(group) == 1 and (group[0].name == GROUP_ANDROID or group[0].name == GROUP_BROWSER):
-    	log.debug("Login [" + message.user.username + "] [" + group[0].name + "]")
+        log.debug("Login [" + message.user.username + "] [" + group[0].name + "]")
         group = group[0].name
         username = message.user.username
         if group == GROUP_ANDROID:
@@ -31,7 +31,7 @@ def ws_message(message):
     group = message.user.groups.all()
     log.debug("Message [" +  str(len(group)) + "]")
     if len(group) == 1 and (group[0].name == GROUP_ANDROID or group[0].name == GROUP_BROWSER):
-    	log.debug("Message [" +  group[0].name + "]")
+        log.debug("Message [" +  group[0].name + "]")
         group = group[0].name
         username = message.user.username
         if group == GROUP_ANDROID:
@@ -53,7 +53,7 @@ def ws_disconnect(message):
     # remove them to the right group
     group = message.user.groups.all()
     if len(group) == 1 and (group[0].name == GROUP_ANDROID or group[0].name == GROUP_BROWSER):
-    	log.debug("Logout [" + message.user.username + "] [" + group[0].name + "]")
+        log.debug("Logout [" + message.user.username + "] [" + group[0].name + "]")
         group = group[0].name
         username = message.user.username
         if group == GROUP_ANDROID:

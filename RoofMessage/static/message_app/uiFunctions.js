@@ -9,10 +9,12 @@ var MMS = "mms";
 var TYPE_INBOX = 1;
 var TYPE_SENT = 2;
 var PARTS = "parts";
+var _DATA = "_data";
 
 var TEXT = "TEXT";
 var CONTENT_TYPE = "CONTENT_TYPE";
 var CONTENT_TYPE_TEXT_PLAIN = "text/plain";
+var CONTENT_TYPE_IMAGE = "image";
 
 var TYPE_LOCAL_SEND = 20; //waiting to see if successfully sent
 
@@ -88,14 +90,16 @@ function uiAddAllConversations() {
                 if (id != convo_id_val) {
                     //reset the background color to white
                     $('#' + CONVERSATIONS + convo_id_val).css("background-color", CONVO_BACKGROUND_COLOR);
-                    storeScrollTop(convo_id_val, $('#rm_messageArea').scrollTop());
+                    storeScrollTop(convo_id_val, getRMAdjustedScrollTop());
                 }
                 console.log(id + " " + selectedConvo.attr('id'));
                 convo_id.attr("value",id);
                 if (!uiAddConversationMessages(id)) {
                     webSocketCon.send(getMessagesJSON(id,DEFAULT_GET_MESSAGES,0));
                 }
-                uiScrollTop(retrieveScrollTop(id));
+                setTimeout(function(){
+                    uiScrollTop(retrieveScrollTop(id));
+                }, 300);
                 selectedConvo.css("background-color",CONVO_BACKGROUND_COLOR_SELECTED);
             });
             slt_conversation.append(createdConvo);
@@ -141,7 +145,6 @@ function uiAddConversationMessages(convo_id) {
         var tempMessageIdArr = retrieveMessageTempIdArr().slice();
         $.each(messagesArray, function (index, message) {
             uiAppendMessage(message, index);
-
             //if same id then add temp_message right after
             var tempIdArr = retrieveMessageTempIdArr();
             for (var i in tempIdArr) {
@@ -165,11 +168,11 @@ function uiAddConversationMessages(convo_id) {
  */
 function uiPrependMessage(convo_id,jsonMessageArr) {
     var messageArea = $('#rm_messageArea');
-    var divScroll = retrieveScrollTop(convo_id);
-    storeScrollTop(convo_id,"");
-    if (divScroll == null || divScroll == "") {
-        divScroll = $('#'+messageArea.children()[0].id);
-    }
+    // var divScroll = retrieveScrollTop(convo_id);
+    // storeScrollTop(convo_id,"-1");
+    // if (divScroll == null || divScroll == "") {
+    //     divScroll = $('#'+messageArea.children()[0].id);
+    // }
     $.each(jsonMessageArr, function (index, message) {
         $.each(message, function (index, messageInfo) {
             //check if message already exists
@@ -178,15 +181,15 @@ function uiPrependMessage(convo_id,jsonMessageArr) {
             }
         });
     });
-    var finalTop;
-    if (divScroll instanceof jQuery) {
-        var margin = parseInt(divScroll.css("margin-top"))*2;
-        var offsetTop = parseInt(divScroll.offset()["top"]);
-        finalTop = parseInt(offsetTop-margin);
-    } else {
-        finalTop = divScroll;
-    }
-    messageArea.scrollTop(finalTop);
+    // var finalTop;
+    // if (divScroll instanceof jQuery) {
+    //     var margin = parseInt(divScroll.css("margin-top"))*2;
+    //     var offsetTop = parseInt(divScroll.offset()["top"]);
+    //     finalTop = parseInt(offsetTop-margin);
+    // } else {
+    //     finalTop = divScroll;
+    // }
+    // messageArea.scrollTop(finalTop);
 }
 
 /**
@@ -208,9 +211,10 @@ function uiAppendMessage(jsonObject, id) {
  * @returns {*|void}
  */
 function createMessageDiv(jsonObject, id) {
-    var body, type;
-    if (jsonObject[TYPE] == MMS) {
+    var body, type, data = false, mms = (jsonObject[TYPE] == MMS);
+    if (mms) {
         body = getTextFromParts(jsonObject[PARTS]);
+        data = hasDataFromParts(jsonObject[PARTS]);
         type = jsonObject[MESSAGE_TYPE];
     } else {
         body = jsonObject[BODY];
@@ -218,35 +222,82 @@ function createMessageDiv(jsonObject, id) {
     }
     var messageRowDiv;
     var messageTextSpan;
+    var messageDataSpan;
     if (type == TYPE_INBOX) {
-        messageTextSpan = $('<span>').html(body).css({
-            "float": "left",
-            "padding": "6px 12px",
-            "background-color": MESSAGE_BACKGROUND_COLOR_RECEIVED,
-            "border-radius": "20px",
-            "max-width":"45%",
-            "word-wrap":"break-word",
-        });
         messageRowDiv = $('<div>').css({
             "margin": "4px 6px",
             "width":"100%",
             "float":"left",
         });
+        if(data) {
+            messageDataSpan = $('<span>').html("Click me to load image!")
+                .addClass("data")
+                .css({
+                    "float": "left",
+                    "display": "block",
+                    "clear": "left",
+                })
+                .attr("id",DATA+id);
+            messageDataSpan.on("click",function () {
+                if(!retrieveDataLoad($(this).attr('id'))) {
+                    var num = getNumbersFromString($(this).attr('id'));
+                    webSocketCon.send(prepareGetData(num));
+                    $(this).html("  Loading...");
+                    $(this).prepend($('<span>').addClass("glyphicon glyphicon-refresh spinning"));
+                }
+            });
+        }
+        if((mms && body != "") || !mms) {
+            messageTextSpan = $('<span>').html(body).css({
+                "float": "left",
+                "padding": "6px 12px",
+                "background-color": MESSAGE_BACKGROUND_COLOR_RECEIVED,
+                "border-radius": "20px",
+                "max-width":"45%",
+                "word-wrap":"break-word",
+                "color":MESSAGE_TEXT_COLOR,
+                "display":"block",
+                "clear":"left",
+            });
+        }
         messageRowDiv.attr("id",MESSAGES+id);
     } else if (type == TYPE_SENT) {
-        messageTextSpan = $('<span>').html(body).css({
-            "float": "right",
-            "padding": "6px 12px",
-            "background-color": MESSAGE_BACKGROUND_COLOR_ME_SENT,
-            "border-radius": "20px",
-            "max-width":"45%",
-            "word-wrap":"break-word",
-        });
         messageRowDiv = $('<div>').css({
             "margin": "4px 6px",
-            "width":"100%",
-            "float":"left", //todo tabindex for the right things
+            "width": "100%",
+            "float": "left", //todo tabindex for the right things
         });//todo xss protection
+        if(data) {
+            messageDataSpan = $('<span>').html("Click me to load image!")
+                .addClass("data")
+                .css({
+                    "float": "right",
+                    "display": "block",
+                    "clear": "right",
+                })
+                .attr("id",DATA+id);
+            messageDataSpan.on("click",function () {
+                if(!retrieveDataLoad($(this).attr('id'))) {
+                    var num = getNumbersFromString($(this).attr('id'));
+                    webSocketCon.send(prepareGetData(num));
+                    $(this).html("  Loading...");
+                    $(this).prepend($('<span>').addClass("glyphicon glyphicon-refresh spinning"));
+                }
+            });
+        }
+        if((mms && body != "") || !mms) {
+            messageTextSpan = $('<span>').html(body).css({
+                "float": "right",
+                "padding": "6px 12px",
+                "background-color": MESSAGE_BACKGROUND_COLOR_ME_SENT,
+                "border-radius": "20px",
+                "max-width": "45%",
+                "word-wrap": "break-word",
+                "color":MESSAGE_TEXT_COLOR,
+                "display":"block",
+                "clear":"right",
+            });
+        }
         messageRowDiv.attr("id",MESSAGES+id); //todo obsfucate
     } else if (type == TYPE_LOCAL_SEND) { //todo add more descriptive documentation
         messageTextSpan = $('<span>').html(body).css({
@@ -256,6 +307,7 @@ function createMessageDiv(jsonObject, id) {
             "border-radius": "20px",
             "max-width":"45%",
             "word-wrap":"break-word",
+            "color":MESSAGE_TEXT_COLOR,
         });
         messageRowDiv = $('<div>').css({
             "margin": "4px 6px",
@@ -271,6 +323,7 @@ function createMessageDiv(jsonObject, id) {
             "border-radius":"20px",
             "max-width":"45%",
             "word-wrap":"break-word",
+            "color":MESSAGE_TEXT_COLOR,
         });
         messageRowDiv = $('<div>').css({
             "margin":"4px 6px",
@@ -279,8 +332,12 @@ function createMessageDiv(jsonObject, id) {
         });
         messageRowDiv.attr("id",MESSAGES+id);
     }
-    messageTextSpan.css("color",MESSAGE_TEXT_COLOR);
-    return messageRowDiv.append(messageTextSpan);
+
+    messageRowDiv.append(messageTextSpan);
+    if(messageDataSpan != null) {
+        messageRowDiv.append(messageDataSpan);
+    }
+    return messageRowDiv;
 }
 
 /**
@@ -311,7 +368,7 @@ function createConversationDiv(names, id, message_count) {
         // "height": "100%",
         "text-overflow": "ellipsis",
         "text-align": "left",
-    })
+    });
 
     var convoNameSpan = $('<span>').html(fullString).css({
         "float": "left",
@@ -431,12 +488,17 @@ function uiUpdateMessage(temp_id, id) {
  * @param location
  * @return location used for chaining
  */
-function uiScrollTop(location) {
+function uiScrollTop(tag) {
     var rmArea = $('#rm_messageArea');
-    if (location < 0 || location == null) {
-        location = rmArea[0].scrollHeight;
+    if (tag == null || location < 0) {
+        //if less < 0 or null than will choose newest element
+        var children = rmArea.children();
+        tag = $('#' + children[children.length-1].id).offset().top;
     }
-    rmArea.scrollTop(location);
+    var location = tag-rmArea.offset().top;
+    rmArea.animate({
+        scrollTop: location
+    });
     return location;
 }
 
@@ -464,6 +526,21 @@ function getTextFromParts(parts) {
     }
     return "";
 }
+
+/**
+ * Returns data from mms
+ * @param {array} parts
+ * @returns {*}
+ */
+function hasDataFromParts(parts) {
+    for (var i in parts) {
+        if (parts[i][CONTENT_TYPE].includes(CONTENT_TYPE_IMAGE)) {
+            return true
+        }
+    }
+    return false;
+}
+
 
 /**
  * Formats the phone number to be presentable for front-end user end
@@ -530,4 +607,12 @@ function uiSendingNewMessage(boolean_val) {
         $('#new_message_cancelBtn').click();
         $('.new_message_pointer').show();
     }
+}
+
+/**
+ * Returns adjusted scroll top for container
+ */
+function getRMAdjustedScrollTop() {
+    var rmArea = $('#rm_messageArea');
+    return rmArea.offset().top+rmArea.scrollTop();
 }

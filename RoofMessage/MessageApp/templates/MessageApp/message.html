@@ -131,6 +131,17 @@
                 </div>
             </div>
         </div>
+
+        <div class="modal fade" id="imageModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+          <div class="modal-dialog">
+            <div class="modal-content">
+              <div class="modal-body">
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <img id="imageModalIMG" src="" class="imagepreview" style="width: 100%;" >
+              </div>
+            </div>
+          </div>
+        </div>
     <script>
         // Listeners
         $('#lsb_contactsTab').on("click", function(){
@@ -230,7 +241,7 @@
 
 
         var sent_message_temp_id = [];
-        var webSocketCon = new WebSocket("wss://" + window.location.host + "/message_route/");
+        var webSocketCon = new WebSocket("ws://" + window.location.host + "/message_route/");
         const ACTION = "action",
                 POST_CONTACTS = "post_contacts",
                 POST_CONVERSATIONS = "post_conversations",
@@ -239,7 +250,9 @@
                 SENT_MESSAGES_FAILED = "sent_messages_failed",
                 CONNECTED = "connected",
                 DISCONNECTED = "disconnected",
-                RECEIVED_MESSAGE = "received_message";
+                RECEIVED_MESSAGE = "received_message",
+                POST_DATA = "post_data";
+        var DATA = "data";
 
         var android_connected = true;
 
@@ -247,6 +260,7 @@
         var conversations;
         var contacts;
         var initial_connect_conversations = true;
+
         webSocketCon.onmessage = function(e) {
             active_json = JSON.parse(e.data);
             console.log(active_json[ACTION]);
@@ -365,6 +379,49 @@
                         storeMessages(active_json);
                         uiConversationNewMesssage(jsonConvoId);
                     break;
+                case POST_DATA:
+                        //received data call
+                        console.log("POST DATA! [" + active_json[MESSAGE_ID]);
+
+                        //storeData(active_json[MESSAGE_ID], active_json[DATA]);
+
+                        //attempts to find image
+                        var FAIL = "fail";
+                        if (active_json[FAIL]) {
+                            $('#' + DATA + active_json[MESSAGE_ID])
+                                    .removeClass()
+                                    .off('click')
+                                    .addClass("data_fail")
+                                    .html('Error loading. Currently only support images data.');
+                        } else {
+                            var IMG = "image";
+                            var img = $('#'+DATA + active_json[MESSAGE_ID] + IMG);
+
+                            if(img.length == 0) {
+                                //if image is not found then create new image object
+                                var tempH = $('<a>')
+                                        .attr("href","#")
+                                        .attr("class","imageTop");
+                                img = $('<img id="' + DATA + active_json[MESSAGE_ID] + IMG + '">')
+                                        .attr('src','data:image/png;base64,')
+                                        .hide()
+                                        .addClass("img_area")
+                                        .css("float",$('#' + DATA + active_json[MESSAGE_ID]).css("float"))
+                                        .css("clear",$('#' + DATA + active_json[MESSAGE_ID]).css("clear"));
+                                tempH.append(img);
+                                $('#' + MESSAGES + active_json[MESSAGE_ID]).append(tempH);
+                            }
+                            //append to img
+                            img.attr('src', img.attr('src') + active_json[DATA]);
+
+                            var FINISH = "finish";
+                            if(active_json[FINISH]){
+                                //if it is the last section then notify gui to update
+                                img.show()
+                                $('#' + DATA + active_json[MESSAGE_ID]).remove();
+                            }
+                        }
+                    break;
             }
         };
 
@@ -373,9 +430,11 @@
         };
 
         webSocketCon.onclose = function() {
-            window.setTimeout( function () {
-                webSocketCon = new WebSocket("wss://" + window.location.host + "/message_route/");
-            }, 2000);
+            $('#connect_waiting').modal({
+                backdrop: 'static',
+                show:true
+            });
+            window.timerID=setInterval(function(){start("wss://" + window.location.host + "/message_route/")}, 3000);
         };
 
         $('#rm_sendBtn').click(function(){
@@ -396,13 +455,18 @@
                 uiAppendMessage(messageObject, temp_id);
                 //store for future reference
                 storeMessageTempIdArr(temp_id, convo_id_val, body);
-                uiScrollTop(-1);
+                storeScrollTop(convo_id_val,uiScrollTop(-1));
             }
+        });
+
+        $(document).on("click", "a.imageTop",function(){
+            $('#imageModalIMG').attr('src', $(this).find('img').attr('src'));
+            $('#imageModal').modal("show");
         });
 
         //scrolling query more messages
         $('#rm_messageArea').on("scroll",function(){
-            if($(this).scrollTop() == 0) {
+            if($(this).offset().top == 0) {
                 var offset = $('#rm_messageArea').children().size();
                 webSocketCon.send(getMessagesJSON($('#convo_id').val(),DEFAULT_GET_MESSAGES,offset));
             }
@@ -410,12 +474,12 @@
 
         $('#rm_loadBtn').on("click", function () {
             var convoIdVal = $('#convo_id').val();
-            if (convoIdVal !== null && convoIdVal) {
-                var rmArea = $('#rm_messageArea');
-                storeScrollTop(convoIdVal, rmArea.scrollTop());
-                var offset = rmArea.children().size();
-                webSocketCon.send(getMessagesJSON(convoIdVal,DEFAULT_GET_MESSAGES,offset));
-            }
+            //if (convoIdVal !== null && convoIdVal) {
+            //    var rmArea = $('#rm_messageArea');
+            //    storeScrollTop(convoIdVal, rmArea.children()[0].offset().top-rmArea.offset().top+rmArea.scrollTop());
+            //    var offset = rmArea.children().size();
+            //    webSocketCon.send(getMessagesJSON(convoIdVal,DEFAULT_GET_MESSAGES,offset));
+            //}
         });
 
         window.onload = function () {

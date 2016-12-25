@@ -317,3 +317,46 @@ function storeScrollTop(convo_id, scrollTop) {
 function retrieveScrollTop(convo_id) {
     return sessionStorage.getItem(SCROLL_TOP + convo_id);
 }
+
+/**
+ * Store data part for message. NOTE THIS FUNCTION
+ * DOES NOT OVERWRITE***** IT APPENDS IF DATA ALREADY
+ * IS THERE*****
+ * @param message_id
+ */
+function storeData(message_id, data) {
+    var d = sessionStorage.getItem(DATA + message_id);
+    d = (d == null ? "" : d);
+    sessionStorage.setItem(DATA + message_id, d + data);
+}
+
+/**
+ * Retreive data part for message
+ * @param message_id
+ */
+function retrieveData(message_id) {
+    return sessionStorage.getItem(DATA + message_id);
+}
+
+/**
+ * Returns stringified json version of data you want to retrieve
+ *
+ * @param message_id       message_id for the message data you want to get
+ * @param content_loc      location of the content on the device
+ */
+function prepareGetData(message_id) {
+    sessionStorage.setItem(DATA + message_id + DATA, true);
+    var json = {
+        "action" : "get_data",
+        "message_id" : message_id
+    };
+    return JSON.stringify(json);
+}
+
+/**
+ * Returns whether or not the current data is being loaded or has been loaded
+ * @param message_id
+ */
+function retrieveDataLoad(message_id) {
+    return sessionStorage.getItem(DATA + message_id + DATA);
+}

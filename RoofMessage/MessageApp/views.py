@@ -140,7 +140,7 @@ def delete_account(request):
                 message = email_template.render()
                 send_email(subject, message, user.email, True)
                 user.delete()
-		android_user.delete()
+                android_user.delete()
                 return render(request, 'MessageApp/delete_account.html', locals())
         else:
             error = "Must enter correct password in order to delete account."
