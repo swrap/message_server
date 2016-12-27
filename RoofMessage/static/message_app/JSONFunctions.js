@@ -322,26 +322,6 @@ function retrieveScrollTop(convo_id) {
 }
 
 /**
- * Store data part for message. NOTE THIS FUNCTION
- * DOES NOT OVERWRITE***** IT APPENDS IF DATA ALREADY
- * IS THERE*****
- * @param message_id
- */
-function storeData(message_id, data) {
-    var d = sessionStorage.getItem(DATA + message_id);
-    d = (d == null ? "" : d);
-    sessionStorage.setItem(DATA + message_id, d + data);
-}
-
-/**
- * Retreive data part for message
- * @param message_id
- */
-function retrieveData(message_id) {
-    return sessionStorage.getItem(DATA + message_id);
-}
-
-/**
  * Returns stringified json version of data you want to retrieve
  *
  * @param message_id       message_id for the message data you want to get

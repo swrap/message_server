@@ -237,7 +237,7 @@ html,body{
     overflow: hidden;
     color: white;
     background-color: #C77FFF;
-    border: 1px solid #111111;
+    border-bottom: 1px solid #111111;
 }
 
 #rm_loadBtn:hover{

@@ -382,7 +382,7 @@
                         var convo_id_val = $('#convo_id').val();
                         var jsonConvoId = active_json[THREAD_ID];
 
-                        var convoDiv = convoDivExists(convo_id_val);
+                        var convoDiv = convoDivExists(jsonConvoId);
                         if (convoDiv != null) {
                             //if the convoDiv exists update date the div by appending the messages
                             var jsonObject = active_json[jsonConvoId];
@@ -477,7 +477,7 @@
                 messageObject[MESSAGE_TYPE] = TYPE_LOCAL_SEND;
                 var convoDiv = $('#' + CONVO + convo_id_val);
                 uiAppendMessage(messageObject, temp_id, convoDiv);
-                convoDiv.css("background-color",CONVO_BACKGROUND_COLOR_SELECTED);
+                $('#' + CONVERSATIONS + convo_id_val).css("background-color",CONVO_BACKGROUND_COLOR_SELECTED);
                 //store for future reference
                 storeMessageTempIdArr(temp_id, convo_id_val, body);
                 storeScrollTop(convo_id_val,uiScrollTop(-1));
@@ -499,13 +499,20 @@
             }
         });
 
+        var loadWait = true,
+                loadWaitTime = 1000;
+
         $('#rm_loadBtn').on("click", function () {
-            var convoIdVal = $('#convo_id').val();
-            if (convoIdVal !== null && convoIdVal) {
-                var rmArea = $('#rm_messageArea');
-                var key = Object.keys(retrieveMessages(convoIdVal)[0]);
-                var offset = retrieveMessages(convoIdVal)[0][key][DATE_RECIEVED];
-                webSocketCon.send(getMessagesJSON(convoIdVal,DEFAULT_GET_MESSAGES,offset,0/*before*/));
+            if (loadWait) {
+                var convoIdVal = $('#convo_id').val();
+                if (convoIdVal !== null && convoIdVal) {
+                    var rmArea = $('#rm_messageArea');
+                    var key = Object.keys(retrieveMessages(convoIdVal)[0]);
+                    var offset = retrieveMessages(convoIdVal)[0][key][DATE_RECIEVED];
+                    webSocketCon.send(getMessagesJSON(convoIdVal,DEFAULT_GET_MESSAGES,offset,0/*before*/));
+                }
+                loadWait = false;
+                setTimeout(function() { loadWait = true }, loadWaitTime);
             }
         });
 
