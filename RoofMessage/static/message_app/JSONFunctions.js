@@ -230,8 +230,8 @@ function storeMessages(jsonObject) {
         var messages = jsonConvoMessages.concat(jsonStorage).sort(function (a, b) {
             return a[Object.keys(a)[0]][DATE_RECIEVED]-b[Object.keys(b)[0]][DATE_RECIEVED];
         });
-        messages = messages.filter(function (item, index) {
-            return messages.indexOf(item) === index;
+        messages = messages.filter(function(item, pos, ary) {
+            return !pos || Object.keys(item)[0] != Object.keys(ary[pos - 1])[0];
         });
         sessionStorage.setItem(key, JSON.stringify(messages));
     }
