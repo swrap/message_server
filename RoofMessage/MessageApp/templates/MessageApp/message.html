@@ -380,6 +380,11 @@
                         }
                         storeMessages(active_json);
                         uiConversationNewMesssage(jsonConvoId);
+                        //if conversation is not here then load it
+                        if (!retrieveConversation(convo_id_val)) {
+                            //TODO will need to change to send a new convo and push to top of queue and change color
+                            //NEED TO LOAD SPECIFIC CONVERSATIONS
+                        }
                     break;
                 case POST_DATA:
                         //received data call
@@ -458,6 +463,7 @@
                 //store for future reference
                 storeMessageTempIdArr(temp_id, convo_id_val, body);
                 storeScrollTop(convo_id_val,uiScrollTop(-1));
+
             }
         });
 

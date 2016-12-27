@@ -90,7 +90,7 @@ function uiAddAllConversations() {
                 var id = match[2];
                 if (id != convo_id_val) {
                     //reset the background color to white
-                    $('#' + CONVERSATIONS + convo_id_val).css("background-color", CONVO_BACKGROUND_COLOR);
+                    $('#' + CONVERSATIONS + convo_id_val).css("background-color", "");
                     storeScrollTop(convo_id_val, getRMAdjustedScrollTop());
                 }
                 console.log(id + " " + selectedConvo.attr('id'));
