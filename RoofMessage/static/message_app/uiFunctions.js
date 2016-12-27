@@ -170,11 +170,7 @@ function uiAddConversationMessages(convo_id) {
  */
 function uiPrependMessage(convo_id,jsonMessageArr) {
     var messageArea = $('#rm_messageArea');
-    // var divScroll = retrieveScrollTop(convo_id);
-    // storeScrollTop(convo_id,"-1");
-    // if (divScroll == null || divScroll == "") {
-    //     divScroll = $('#'+messageArea.children()[0].id);
-    // }
+    var divScroll = $('#'+messageArea.children()[0].id);
     $.each(jsonMessageArr, function (index, message) {
         $.each(message, function (index, messageInfo) {
             //check if message already exists
@@ -183,6 +179,7 @@ function uiPrependMessage(convo_id,jsonMessageArr) {
             }
         });
     });
+    uiScrollTop(divScroll.offset().top);
     // var finalTop;
     // if (divScroll instanceof jQuery) {
     //     var margin = parseInt(divScroll.css("margin-top"))*2;
@@ -492,10 +489,11 @@ function uiUpdateMessage(temp_id, id) {
  */
 function uiScrollTop(tag) {
     var rmArea = $('#rm_messageArea');
-    if (tag == null || location < 0) {
+    if (tag == null || tag < 0) {
         //if less < 0 or null than will choose newest element
-        var children = rmArea.children();
-        tag = $('#' + children[children.length-1].id).offset().top;
+        // var children = rmArea.children();
+        // tag = $('#' + children[children.length-1].id).offset().top;
+        tag = 1000000;
     }
     var location = tag-rmArea.offset().top;
     rmArea.animate({
