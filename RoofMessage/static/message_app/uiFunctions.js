@@ -10,6 +10,7 @@ var TYPE_INBOX = 1;
 var TYPE_SENT = 2;
 var PARTS = "parts";
 var _DATA = "_data";
+var DATE_RECIEVED = "date_recieved";
 
 var TEXT = "TEXT";
 var CONTENT_TYPE = "CONTENT_TYPE";
@@ -95,7 +96,8 @@ function uiAddAllConversations() {
                 console.log(id + " " + selectedConvo.attr('id'));
                 convo_id.attr("value",id);
                 if (!uiAddConversationMessages(id)) {
-                    webSocketCon.send(getMessagesJSON(id,DEFAULT_GET_MESSAGES,0));
+                    //no messages found, sending request for more
+                    webSocketCon.send(getMessagesJSON(id,DEFAULT_GET_MESSAGES,-1,0/*before*/));
                 }
                 setTimeout(function(){
                     uiScrollTop(retrieveScrollTop(id));

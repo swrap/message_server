@@ -28,20 +28,21 @@ function getConversations() {
  * @param amount
  * @param offset NOTE if offset < 0 will query amount in array to send
  */
-function getMessagesJSON(thread_id, amount, offset) {
+function getMessagesJSON(thread_id, amount, offset, period) {
     if (thread_id == null) {
         return false;
     }
 
-    if (parseInt(offset) < 0) {
-        var keys = Object.keys(retrieveMessages(thread_id));
-        offset = keys.length;
-    }
+    // if (parseInt(offset) < 0) {
+    //     var keys = Object.keys(retrieveMessages(thread_id));
+    //     offset = keys.length;
+    // }
     var json = {
         "action" : "get_messages",
         "thread_id" : thread_id,
         "amount" : amount,
-        "offset" : offset
+        "offset" : offset,
+        "period" : period
     };
     return JSON.stringify(json);
 }
