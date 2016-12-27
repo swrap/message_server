@@ -215,24 +215,26 @@ function retrieveConversation(convo_id) {
  */
 function storeMessages(jsonObject) {
     var conversation = jsonObject[THREAD_ID];
+
     var key = MESSAGES + conversation;
     var jsonStorage = sessionStorage.getItem(key);
     if (jsonStorage == null) {
-        jsonStorage = JSON.stringify({});
-    }
-    jsonStorage = JSON.parse(jsonStorage);
-    var jsonConvoMessages = jsonObject[conversation];
-    for (var i in jsonConvoMessages) {
-        var tempKey = Object.keys(jsonConvoMessages[i])[0];
-        jsonStorage[tempKey] = jsonConvoMessages[i][tempKey];
-    }
-    //TODO may need to get rid of sorting after depending?
-    // const ordered = {};
-    // Object.keys(jsonStorage).sort().forEach(function(key) {
-    //         ordered[key] = jsonStorage[key];
-    //     });
+        sessionStorage.setItem(key, JSON.stringify(jsonObject[conversation].sort(function (a, b) {
+            return a[Object.keys(a)[0]][DATE_RECIEVED]-b[Object.keys(b)[0]][DATE_RECIEVED];
+        })
+    ));
+    } else {
+        var jsonConvoMessages = jsonObject[conversation];
+        jsonStorage = JSON.parse(jsonStorage);
 
-    sessionStorage.setItem(key, JSON.stringify(jsonStorage));
+        var messages = jsonConvoMessages.concat(jsonStorage).sort(function (a, b) {
+            return a[Object.keys(a)[0]][DATE_RECIEVED]-b[Object.keys(b)[0]][DATE_RECIEVED];
+        });
+        messages = messages.filter(function (item, index) {
+            return messages.indexOf(item) === index;
+        });
+        sessionStorage.setItem(key, JSON.stringify(messages));
+    }
     return true;
 }
 

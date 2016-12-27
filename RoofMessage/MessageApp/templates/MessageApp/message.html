@@ -297,12 +297,22 @@
                         console.log("Added conversations.");
                     break;
                 case POST_MESSAGES:
+                        console.log(active_json[THREAD_ID]);
                         //messages received, populate conversations section
                         storeMessages(active_json);
                         var jsonConvoId = active_json[THREAD_ID];
                         var convoIdVal = $('#convo_id').val();
                         if (jsonConvoId == convoIdVal) {
-                            uiPrependMessage(jsonConvoId,active_json[jsonConvoId],convoIdVal);
+                            //convoDiv empty for specific convo then addAllMessages
+                            var convoDiv = convoDivExists(convoIdVal);
+                            if (convoDiv == null) {
+                                //problems if click on convo before loaded
+                                //should append in this case
+                                //was making conversation appear backwards
+                                uiAddConversationMessages(convoIdVal)
+                            } else {
+                                uiPrependMessage(jsonConvoId,active_json[jsonConvoId],convoIdVal);
+                            }
                         }
                     break;
                 case SENT_MESSAGES:
@@ -483,7 +493,8 @@
         $('#rm_messageArea').on("scroll",function(){
             if($(this).offset().top == 0) {
                 var convo_id = $('#convo_id').val();
-                var offset = retrieveMessages(convo_id)[0][DATE_RECIEVED];
+                var messageZero = retrieveMessages(convo_id)[0];
+                var offset = messageZero[Objects.key(messageZero)[0]][DATE_RECIEVED];
                 webSocketCon.send(getMessagesJSON(convo_id,DEFAULT_GET_MESSAGES,offset,0/*before*/));
             }
         });
@@ -492,8 +503,8 @@
             var convoIdVal = $('#convo_id').val();
             if (convoIdVal !== null && convoIdVal) {
                 var rmArea = $('#rm_messageArea');
-                var key = Object.keys(retrieveMessages(convoIdVal))[0];
-                var offset = retrieveMessages(convoIdVal)[key][DATE_RECIEVED];
+                var key = Object.keys(retrieveMessages(convoIdVal)[0]);
+                var offset = retrieveMessages(convoIdVal)[0][key][DATE_RECIEVED];
                 webSocketCon.send(getMessagesJSON(convoIdVal,DEFAULT_GET_MESSAGES,offset,0/*before*/));
             }
         });

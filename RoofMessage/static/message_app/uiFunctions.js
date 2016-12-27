@@ -161,14 +161,15 @@ function uiAddConversationMessages(convo_id) {
             convoDiv = $('<div id="' + CONVO + convo_id + '">');
             rmArea.append(convoDiv);
             //conversation does not exist, add all messages
-            $.each(messagesArray, function (index, message) {
-                uiAppendMessage(message, index, convoDiv);
+            $.each(messagesArray, function (index, jsonObject) {
+                var key = Object.keys(jsonObject)[0];
+                uiAppendMessage(jsonObject[key], key, convoDiv);
                 //if same id then add temp_message right after
                 var tempIdArr = retrieveMessageTempIdArr();
                 for (var i in tempIdArr) {
                     var jsonTemp = JSON.parse(tempIdArr[i]);
-                    if (jsonTemp[TEMP_MESSAGE_ID] == index) {
-                        uiAppendMessage(jsonTemp[TEMP_MESSAGE_ID], index, convoDiv);
+                    if (jsonTemp[TEMP_MESSAGE_ID] == key) {
+                        uiAppendMessage(jsonTemp[TEMP_MESSAGE_ID], key, convoDiv);
                     }
                 }
             });
@@ -275,7 +276,8 @@ function createMessageDiv(jsonObject, id) {
                 "max-width":"45%",
                 "word-wrap":"break-word",
                 "color":MESSAGE_TEXT_COLOR,
-                "display":"block",
+                "display":"inline-block",
+                "word-break":"break-word",
                 "clear":"left",
             });
         }
@@ -313,7 +315,8 @@ function createMessageDiv(jsonObject, id) {
                 "max-width": "45%",
                 "word-wrap": "break-word",
                 "color":MESSAGE_TEXT_COLOR,
-                "display":"block",
+                "display":"inline-block",
+                "word-break":"break-word",
                 "clear":"right",
             });
         }
@@ -326,6 +329,8 @@ function createMessageDiv(jsonObject, id) {
             "border-radius": "20px",
             "max-width":"45%",
             "word-wrap":"break-word",
+            "display":"inline-block",
+            "word-break":"break-word",
             "color":MESSAGE_TEXT_COLOR,
         });
         messageRowDiv = $('<div>').css({
@@ -342,6 +347,8 @@ function createMessageDiv(jsonObject, id) {
             "border-radius":"20px",
             "max-width":"45%",
             "word-wrap":"break-word",
+            "display":"inline-block",
+            "word-break":"break-word",
             "color":MESSAGE_TEXT_COLOR,
         });
         messageRowDiv = $('<div>').css({
