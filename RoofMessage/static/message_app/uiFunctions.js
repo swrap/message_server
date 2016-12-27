@@ -34,6 +34,8 @@ var CONVO_BACKGROUND_COLOR_SELECTED = "#B697FA";
 var CONVO_BACKGROUND_COLOR_MESSAGE_RECEIVED = "#8EE6B7";
 var CONVO_BACKGROUND_MESSAGE_COUNT = "#8347B2";
 
+var CONVO = "convo";
+
 var CONTACT_BACKGROUND_COLOR = "#FFFFFF";
 var CONTACT_BACKGROUND_COLOR_SELETED = "#FF7FE5";
 
@@ -83,26 +85,33 @@ function uiAddAllConversations() {
             createdConvo.on("click",function () {
                 var convo_id = $('#convo_id');
                 var convo_id_val = convo_id.val();
+
                 var selectedConvo = $(this);
+                var id = getNumbersFromString(selectedConvo.attr('id'));
 
-                var match =  (/(.*?)([0-9]+)/g).exec(selectedConvo.attr('id'));
+                //selected id does not equal convo id currently on
+                if(id != convo_id_val) {
+                    if (id != convo_id_val) {
+                        //reset the background color to white
+                        $('#' + CONVERSATIONS + convo_id_val).css("background-color", "");
+                        storeScrollTop(convo_id_val, getRMAdjustedScrollTop());
+                    }
 
-                var id = match[2];
-                if (id != convo_id_val) {
-                    //reset the background color to white
-                    $('#' + CONVERSATIONS + convo_id_val).css("background-color", "");
-                    storeScrollTop(convo_id_val, getRMAdjustedScrollTop());
+                    console.log(id + " " + selectedConvo.attr('id'));
+                    convo_id.attr("value",id);
+
+                    if (!uiAddConversationMessages(id)) {
+                        //no messages found, sending request for more
+                        webSocketCon.send(getMessagesJSON(id,DEFAULT_GET_MESSAGES,-1,0/*before*/));
+                    } else {
+                        //convo messages were found hide current convo messages
+                        $('#' + CONVO + convo_id_val).hide();
+                    }
+                    setTimeout(function() {
+                        uiScrollTop(retrieveScrollTop(id));
+                    }, 300);
+                    selectedConvo.css("background-color",CONVO_BACKGROUND_COLOR_SELECTED);
                 }
-                console.log(id + " " + selectedConvo.attr('id'));
-                convo_id.attr("value",id);
-                if (!uiAddConversationMessages(id)) {
-                    //no messages found, sending request for more
-                    webSocketCon.send(getMessagesJSON(id,DEFAULT_GET_MESSAGES,-1,0/*before*/));
-                }
-                setTimeout(function(){
-                    uiScrollTop(retrieveScrollTop(id));
-                }, 300);
-                selectedConvo.css("background-color",CONVO_BACKGROUND_COLOR_SELECTED);
             });
             slt_conversation.append(createdConvo);
         } else {
@@ -143,19 +152,27 @@ function uiAddConversationMessages(convo_id) {
     console.log("Adding messages from [" + convo_id + "]");
     if (messagesArray !== null) {
         var rmArea = $('#rm_messageArea');
-        rmArea.empty();
         var tempMessageIdArr = retrieveMessageTempIdArr().slice();
-        $.each(messagesArray, function (index, message) {
-            uiAppendMessage(message, index);
-            //if same id then add temp_message right after
-            var tempIdArr = retrieveMessageTempIdArr();
-            for (var i in tempIdArr) {
-                var jsonTemp = JSON.parse(tempIdArr[i]);
-                if (jsonTemp[TEMP_MESSAGE_ID] == index) {
-                    uiAppendMessage(jsonTemp[TEMP_MESSAGE_ID], index);
+
+        var convoDiv = $('#' + CONVO + convo_id).show();
+
+        //adds convo to rmArea if not already existed
+        if (convoDiv.length == 0) {
+            convoDiv = $('<div id="' + CONVO + convo_id + '">');
+            rmArea.append(convoDiv);
+            //conversation does not exist, add all messages
+            $.each(messagesArray, function (index, message) {
+                uiAppendMessage(message, index, convoDiv);
+                //if same id then add temp_message right after
+                var tempIdArr = retrieveMessageTempIdArr();
+                for (var i in tempIdArr) {
+                    var jsonTemp = JSON.parse(tempIdArr[i]);
+                    if (jsonTemp[TEMP_MESSAGE_ID] == index) {
+                        uiAppendMessage(jsonTemp[TEMP_MESSAGE_ID], index, convoDiv);
+                    }
                 }
-            }
-        });
+            });
+        }
     } else {
         console.log("Null value for conversation.");
         return false;
@@ -167,39 +184,42 @@ function uiAddConversationMessages(convo_id) {
  * Prepends messages.
  * @param convo_id
  * @param jsonMessageArr
+ * @param convoId - conversation to add messages to
  */
-function uiPrependMessage(convo_id,jsonMessageArr) {
-    var messageArea = $('#rm_messageArea');
-    var divScroll = $('#'+messageArea.children()[0].id);
+function uiPrependMessage(convo_id,jsonMessageArr,convoId) {
+    var convoDiv = convoDivExists(convo_id);
+    var rmArea = $('#rm_messageArea');
+    var divScroll = -1;
+    if (convoDiv == null) {
+        //convo div does not exist create it and append it
+        convoDiv = $('<div id="' + CONVO + convoId + '">');
+        $('#rm_messageArea').append(convoDiv);
+    } else {
+        divScroll = rmArea.scrollTop()-rmArea.offset().top;
+    }
     $.each(jsonMessageArr, function (index, message) {
         $.each(message, function (index, messageInfo) {
             //check if message already exists
             if ($('#' + MESSAGES + index).length == 0 ) {
-                messageArea.prepend(createMessageDiv(messageInfo, index));
+                convoDiv.prepend(createMessageDiv(messageInfo, index));
             }
         });
     });
-    uiScrollTop(divScroll.offset().top);
-    // var finalTop;
-    // if (divScroll instanceof jQuery) {
-    //     var margin = parseInt(divScroll.css("margin-top"))*2;
-    //     var offsetTop = parseInt(divScroll.offset()["top"]);
-    //     finalTop = parseInt(offsetTop-margin);
-    // } else {
-    //     finalTop = divScroll;
-    // }
-    // messageArea.scrollTop(finalTop);
+    if (divScroll >= 0) {
+        divScroll += (rmArea.offset().top*2);
+    }
+    uiScrollTop(divScroll);
 }
 
 /**
  * Appends messages to the message area
  * @param body
  * @param id
- * @param type
+ * @param convoDiv - conversation to add messages to
  */
-function uiAppendMessage(jsonObject, id) {
+function uiAppendMessage(jsonObject, id, convoDiv) {
     var messageRowDiv = createMessageDiv(jsonObject, id);
-    $('#rm_messageArea').append(messageRowDiv);
+    convoDiv.append(messageRowDiv);
 }
 
 /**
@@ -615,4 +635,17 @@ function uiSendingNewMessage(boolean_val) {
 function getRMAdjustedScrollTop() {
     var rmArea = $('#rm_messageArea');
     return rmArea.offset().top+rmArea.scrollTop();
+}
+
+/**
+ * Returns a new convo and adds it to the message area (rmArea)
+ * or it returns an already created div
+ * @param convoId
+ */
+function convoDivExists(convoId) {
+    var convoDiv = $('#' + CONVO + convoId);
+    if (convoDiv.length == 0) {
+        return null;
+    }
+    return convoDiv;
 }

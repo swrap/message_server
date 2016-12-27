@@ -300,8 +300,9 @@
                         //messages received, populate conversations section
                         storeMessages(active_json);
                         var jsonConvoId = active_json[THREAD_ID];
-                        if (jsonConvoId == $('#convo_id').val()) {
-                            uiPrependMessage(jsonConvoId,active_json[jsonConvoId]);
+                        var convoIdVal = $('#convo_id').val();
+                        if (jsonConvoId == convoIdVal) {
+                            uiPrependMessage(jsonConvoId,active_json[jsonConvoId],convoIdVal);
                         }
                     break;
                 case SENT_MESSAGES:
@@ -370,15 +371,20 @@
                         var tempJson = active_json;
                         var convo_id_val = $('#convo_id').val();
                         var jsonConvoId = active_json[THREAD_ID];
-                        if (convo_id_val !== null && jsonConvoId == convo_id_val) {
+
+                        var convoDiv = convoDivExists(convo_id_val);
+                        if (convoDiv != null) {
+                            //if the convoDiv exists update date the div by appending the messages
                             var jsonObject = active_json[jsonConvoId];
                             for (var i in jsonObject) {
                                 var key = Object.keys(jsonObject[i])[0];
-                                uiAppendMessage(jsonObject[i][key],key);
+                                uiAppendMessage(jsonObject[i][key],key,convoDiv);
                             }
-                            storeScrollTop(jsonConvoId, uiScrollTop(-1));
+                            storeScrollTop(jsonConvoId, -1);
                         }
+
                         storeMessages(active_json);
+                        //update the conversation color to state that it has a new message
                         uiConversationNewMesssage(jsonConvoId);
                         //if conversation is not here then load it
                         if (!retrieveConversation(convo_id_val)) {
@@ -456,14 +462,15 @@
                 rm_message_input.html("");
                 console.log(messageObjectString);
                 //append to ui
-                webSocketCon.send( messageObjectString );
+                webSocketCon.send(messageObjectString);
                 var messageObject = JSON.parse(messageObjectString)
                 messageObject[MESSAGE_TYPE] = TYPE_LOCAL_SEND;
-                uiAppendMessage(messageObject, temp_id);
+                var convoDiv = $('#' + CONVO + convo_id_val);
+                uiAppendMessage(messageObject, temp_id, convoDiv);
+                convoDiv.css("background-color",CONVO_BACKGROUND_COLOR_SELECTED);
                 //store for future reference
                 storeMessageTempIdArr(temp_id, convo_id_val, body);
                 storeScrollTop(convo_id_val,uiScrollTop(-1));
-
             }
         });
 
@@ -485,8 +492,6 @@
             var convoIdVal = $('#convo_id').val();
             if (convoIdVal !== null && convoIdVal) {
                 var rmArea = $('#rm_messageArea');
-                //storeScrollTop(convoIdVal, rmArea.children()[0].offset().top-rmArea.offset().top+rmArea.scrollTop());
-                //var offset = rmArea.children().size();
                 var key = Object.keys(retrieveMessages(convoIdVal))[0];
                 var offset = retrieveMessages(convoIdVal)[key][DATE_RECIEVED];
                 webSocketCon.send(getMessagesJSON(convoIdVal,DEFAULT_GET_MESSAGES,offset,0/*before*/));
