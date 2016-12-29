@@ -388,7 +388,7 @@
                             var jsonObject = active_json[jsonConvoId];
                             for (var i in jsonObject) {
                                 var key = Object.keys(jsonObject[i])[0];
-                                uiAppendMessage(jsonObject[i][key],key,convoDiv);
+                                uiAppendMessage(jsonObject[i][key],key,convoDiv,convo_id_val);
                             }
                             storeScrollTop(jsonConvoId, -1);
                         }
@@ -476,7 +476,7 @@
                 var messageObject = JSON.parse(messageObjectString)
                 messageObject[MESSAGE_TYPE] = TYPE_LOCAL_SEND;
                 var convoDiv = $('#' + CONVO + convo_id_val);
-                uiAppendMessage(messageObject, temp_id, convoDiv);
+                uiAppendMessage(messageObject, temp_id, convoDiv, convo_id_val);
                 $('#' + CONVERSATIONS + convo_id_val).css("background-color",CONVO_BACKGROUND_COLOR_SELECTED);
                 //store for future reference
                 storeMessageTempIdArr(temp_id, convo_id_val, body);

@@ -27,6 +27,7 @@ urlpatterns = [
     #ANDROID CALLS
     url(r'^android_login/$', views_android.android_login, name='android_login'),
     url(r'^android_logout/$', views_android.android_logout, name='android_logout'),
+    url(r'^android_version/$', views_android.check_version, name='android_check_version'),
 
     #ROBOT.TXT
     url(r'^robots\.txt$', TemplateView.as_view(template_name='robots.txt')),

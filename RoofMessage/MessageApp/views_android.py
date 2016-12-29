@@ -3,6 +3,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.conf import settings
+import os
 
 from .models import AndroidModel, ANDROID_CONSTANT, MAX_ATTEMPTS, UserProfile
 from .forms import UserLoginForm
@@ -23,8 +25,10 @@ def android_login(request):
             except UserProfile.DoesNotExist:
                 user_profile = None
             if user_profile and not user_profile.check_attempts():
-                return HttpResponse(request, status=460, reason_phrase="Please reset password, account password "
-                                                                       "attempted to many times.")
+                reason = "Please reset password, account password attempted to many times."
+                response = HttpResponse(request, status=460)
+                response.reason_phrase = reason
+                return response
 
         username = username + ANDROID_CONSTANT
         password = request.POST['password']
@@ -77,3 +81,6 @@ def get_android_model(user):
         return user.androidmodel__set.get(user=user)
     except AndroidModel.DoesNotExist:
         return None
+
+def check_version(request):
+    return render(request, 'MessageApp/android_version.html', status=200)

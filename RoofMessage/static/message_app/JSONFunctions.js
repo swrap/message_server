@@ -97,21 +97,21 @@ var convoTempIdArr = [];
  * @param jsonObject    json contacts arraylist (contains contact json objects)
  */
 function storeContacts(jsonObject) {
-    var contacts = jsonObject[CONTACTS];
     var jsonStorage = sessionStorage.getItem(CONTACTS);
+    var jsonContacts = jsonObject[CONTACTS];
     if (jsonStorage == null) {
-        jsonStorage = {};
+        sessionStorage.setItem(CONTACTS, JSON.stringify(jsonContacts));
     } else {
         jsonStorage = JSON.parse(jsonStorage);
+        var contacts = jsonContacts.concat(jsonStorage).sort(function (a, b) {
+            return Object.keys(a)[0]-Object.keys(b)[0];
+        });
+
+        contacts = contacts.filter(function(item, pos, ary) {
+            return !pos || Object.keys(item)[0] != Object.keys(ary[pos - 1])[0];
+        });
+        sessionStorage.setItem(CONTACTS, JSON.stringify(contacts));
     }
-    //todo switch other JSON sets use the key to sort like contacts
-    for (var i in contacts) {
-        var key = Object.keys(contacts[i])[0];
-        contacts[i][key][KEY] = key;
-        var contact = contacts[i][key][FULL_NAME];
-        jsonStorage[contact] = contacts[i][key];
-    }
-    sessionStorage.setItem(CONTACTS, JSON.stringify(jsonStorage));
 }
 
 /**
@@ -137,7 +137,13 @@ function retrieveContacts() {
  */
 function retrieveContact(id) {
     var contacts_array = JSON.parse(sessionStorage.getItem(CONTACTS));
-    return contacts_array[id];
+    $.each(contacts_array, function (index, value) {
+        var key = Object.keys(value)[0];
+        if (key == id) {
+            return value[key][FULL_NAME];
+        }
+    });
+    return "UNKNOWN";
 }
 
 /**

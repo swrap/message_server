@@ -11,6 +11,8 @@ var TYPE_SENT = 2;
 var PARTS = "parts";
 var _DATA = "_data";
 var DATE_RECIEVED = "date_recieved";
+var CONTACT_ID = "contact_id";
+var ADDRESS = "address";
 
 var TEXT = "TEXT";
 var CONTENT_TYPE = "CONTENT_TYPE";
@@ -131,12 +133,13 @@ function uiAddAllContacts() {
     var contacts = $("#slt_contact");
     var jsonArray = retrieveContacts();
     for (var i in jsonArray) {
-        var contact = $('#' + CONTACTS + jsonArray[i][KEY]);
+        var key = Object.keys(jsonArray[i])[0];
+        var contact = $('#' + CONTACTS + key);
         //if does not exists create new field
         if (contact.length == 0) {
-            contact = createContactDiv(i,
-                jsonArray[i][KEY],
-                getPhoneNumberFormat(jsonArray[i][PHONE_NUMBER])
+            contact = createContactDiv(jsonArray[i][key][FULL_NAME],
+                key,
+                getPhoneNumberFormat(jsonArray[i][key][PHONE_NUMBER])
             );
         }
         contacts.append(contact);
@@ -163,13 +166,13 @@ function uiAddConversationMessages(convo_id) {
             //conversation does not exist, add all messages
             $.each(messagesArray, function (index, jsonObject) {
                 var key = Object.keys(jsonObject)[0];
-                uiAppendMessage(jsonObject[key], key, convoDiv);
+                uiAppendMessage(jsonObject[key], key, convoDiv, convo_id);
                 //if same id then add temp_message right after
                 var tempIdArr = retrieveMessageTempIdArr();
                 for (var i in tempIdArr) {
                     var jsonTemp = JSON.parse(tempIdArr[i]);
                     if (jsonTemp[TEMP_MESSAGE_ID] == key) {
-                        uiAppendMessage(jsonTemp[TEMP_MESSAGE_ID], key, convoDiv);
+                        uiAppendMessage(jsonTemp[TEMP_MESSAGE_ID], key, convoDiv, convo_id);
                     }
                 }
             });
@@ -202,7 +205,7 @@ function uiPrependMessage(convo_id,jsonMessageArr,convoId) {
         $.each(message, function (index, messageInfo) {
             //check if message already exists
             if ($('#' + MESSAGES + index).length == 0 ) {
-                convoDiv.prepend(createMessageDiv(messageInfo, index));
+                convoDiv.prepend(createMessageDiv(messageInfo, index, convoId));
             }
         });
     });
@@ -214,24 +217,28 @@ function uiPrependMessage(convo_id,jsonMessageArr,convoId) {
 
 /**
  * Appends messages to the message area
- * @param body
- * @param id
+ * @param id - id of message
  * @param convoDiv - conversation to add messages to
  */
-function uiAppendMessage(jsonObject, id, convoDiv) {
-    var messageRowDiv = createMessageDiv(jsonObject, id);
+function uiAppendMessage(jsonObject, id, convoDiv, convoId) {
+    var messageRowDiv = createMessageDiv(jsonObject, id, convoId);
     convoDiv.append(messageRowDiv);
 }
 
 /**
  * Creates and returns a message div
- * @param body
- * @param id
- * @param type
+ * @param jsonObject
+ * @param id - message id
+ * @param convoId
  * @returns {*|void}
  */
-function createMessageDiv(jsonObject, id) {
-    var body, type, data = false, mms = (jsonObject[TYPE] == MMS);
+function createMessageDiv(jsonObject, id, convoId) {
+    var body,
+        type,
+        data = false,
+        mms = (jsonObject[TYPE] == MMS),
+        multi = retrieveConversation(convoId)[RECIPIENTS].length > 1;
+
     if (mms) {
         body = getTextFromParts(jsonObject[PARTS]);
         data = hasDataFromParts(jsonObject[PARTS]);
@@ -279,7 +286,20 @@ function createMessageDiv(jsonObject, id) {
                 "display":"inline-block",
                 "word-break":"break-word",
                 "clear":"left",
+                "font-size": "16px",
             });
+        }
+        if (multi) {
+            if (messageTextSpan != undefined) {
+                messageTextSpan.html(messageTextSpan.html() + "<br>");
+                var contactTextSpan = $('<span>').html(matchAddressFromConvo(convoId,jsonObject[ADDRESS])).css({
+                    "word-wrap":"break-word",
+                    "display":"inline-block",
+                    "word-break":"break-word",
+                    "font-size":"13px",
+                });
+                messageTextSpan.append(contactTextSpan);
+            }
         }
         messageRowDiv.attr("id",MESSAGES+id);
     } else if (type == TYPE_SENT) {
@@ -318,6 +338,7 @@ function createMessageDiv(jsonObject, id) {
                 "display":"inline-block",
                 "word-break":"break-word",
                 "clear":"right",
+                "font-size": "16px",
             });
         }
         messageRowDiv.attr("id",MESSAGES+id); //todo obsfucate
@@ -332,6 +353,7 @@ function createMessageDiv(jsonObject, id) {
             "display":"inline-block",
             "word-break":"break-word",
             "color":MESSAGE_TEXT_COLOR,
+            "font-size": "16px",
         });
         messageRowDiv = $('<div>').css({
             "margin": "4px 6px",
@@ -350,6 +372,7 @@ function createMessageDiv(jsonObject, id) {
             "display":"inline-block",
             "word-break":"break-word",
             "color":MESSAGE_TEXT_COLOR,
+            "font-size": "16px",
         });
         messageRowDiv = $('<div>').css({
             "margin":"4px 6px",
@@ -655,4 +678,23 @@ function convoDivExists(convoId) {
         return null;
     }
     return convoDiv;
+}
+
+/**
+ * Takes in a convoId and an address, looks through convo and matches
+ * any address's that equal the given address, returns name
+ * @param convoId
+ * @param address
+ * @returns {string}
+ */
+function matchAddressFromConvo(convoId, address) {
+    var recipients = retrieveConversation(convoId)[RECIPIENTS];
+    for(var i = 0; i < recipients.length; i++) {
+        var value = recipients[i];
+        var key = Object.keys(value)[0];
+        if (address == value[PHONE_NUMBER]) {
+            return value[FULL_NAME];
+        }
+    }
+    return "UNKNOWN";
 }
