@@ -330,14 +330,16 @@ function retrieveScrollTop(convo_id) {
 /**
  * Returns stringified json version of data you want to retrieve
  *
- * @param message_id       message_id for the message data you want to get
- * @param content_loc      location of the content on the device
+ * @param partId       part_id for the part data you want to get
+ * @param content_type      content type for the location
+ * @param messageID      id of the message
  */
-function prepareGetData(message_id) {
-    sessionStorage.setItem(DATA + message_id + DATA, true);
+function prepareGetData(partId, content_type, messageId) {
     var json = {
         "action" : "get_data",
-        "message_id" : message_id
+        "message_id" : messageId,
+        "part_id" : partId,
+        "content_type" : content_type,
     };
     return JSON.stringify(json);
 }

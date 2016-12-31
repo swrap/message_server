@@ -13,6 +13,8 @@ var _DATA = "_data";
 var DATE_RECIEVED = "date_recieved";
 var CONTACT_ID = "contact_id";
 var ADDRESS = "address";
+var PART_ID = "part_id";
+var DATALOAD = "DATALOAD";
 
 var TEXT = "TEXT";
 var CONTENT_TYPE = "CONTENT_TYPE";
@@ -156,27 +158,35 @@ function uiAddConversationMessages(convo_id) {
     if (messagesArray !== null) {
         var rmArea = $('#rm_messageArea');
         var tempMessageIdArr = retrieveMessageTempIdArr().slice();
-
         var convoDiv = $('#' + CONVO + convo_id).show();
 
         //adds convo to rmArea if not already existed
         if (convoDiv.length == 0) {
-            convoDiv = $('<div id="' + CONVO + convo_id + '">');
+            convoDiv = $('<div id="' + CONVO + convo_id + '">').show();
             rmArea.append(convoDiv);
-            //conversation does not exist, add all messages
-            $.each(messagesArray, function (index, jsonObject) {
-                var key = Object.keys(jsonObject)[0];
-                uiAppendMessage(jsonObject[key], key, convoDiv, convo_id);
-                //if same id then add temp_message right after
-                var tempIdArr = retrieveMessageTempIdArr();
-                for (var i in tempIdArr) {
-                    var jsonTemp = JSON.parse(tempIdArr[i]);
-                    if (jsonTemp[TEMP_MESSAGE_ID] == key) {
-                        uiAppendMessage(jsonTemp[TEMP_MESSAGE_ID], key, convoDiv, convo_id);
-                    }
-                }
-            });
         }
+
+        //conversation does not exist, add all messages
+        $.each(messagesArray, function (index, jsonObject) {
+            var key = Object.keys(jsonObject)[0];
+
+            var messageDiv = $('#' + MESSAGES + key);
+            if (messageDiv.length == 0) {
+                uiAppendMessage(jsonObject[key], key, convoDiv, convo_id);
+            } else {
+                //if the message does exist then just append it do not recreate div
+                convoDiv.append(messageDiv);
+            }
+
+            //if same id then add temp_message right after
+            var tempIdArr = retrieveMessageTempIdArr();
+            for (var i in tempIdArr) {
+                var jsonTemp = JSON.parse(tempIdArr[i]);
+                if (jsonTemp[TEMP_MESSAGE_ID] == key) {
+                    uiAppendMessage(jsonTemp[TEMP_MESSAGE_ID], key, convoDiv, convo_id);
+                }
+            }
+        });
     } else {
         console.log("Null value for conversation.");
         return false;
@@ -249,7 +259,7 @@ function createMessageDiv(jsonObject, id, convoId) {
     }
     var messageRowDiv;
     var messageTextSpan;
-    var messageDataSpan;
+    var messageDataDiv;
     if (type == TYPE_INBOX) {
         messageRowDiv = $('<div>').css({
             "margin": "4px 6px",
@@ -257,20 +267,30 @@ function createMessageDiv(jsonObject, id, convoId) {
             "float":"left",
         });
         if(data) {
-            messageDataSpan = $('<span>').html("Click me to load image!")
-                .addClass("data")
-                .css({
-                    "float": "left",
-                    "display": "block",
-                    "clear": "left",
-                })
-                .attr("id",DATA+id);
-            messageDataSpan.on("click",function () {
-                if(!retrieveDataLoad($(this).attr('id'))) {
-                    var num = getNumbersFromString($(this).attr('id'));
-                    webSocketCon.send(prepareGetData(num));
-                    $(this).html("  Loading...");
-                    $(this).prepend($('<span>').addClass("glyphicon glyphicon-refresh spinning"));
+            messageDataDiv = $('<div>');
+            $.each(jsonObject[PARTS], function (index, value) {
+                if (value[CONTENT_TYPE] != "text/plain") {
+                    var messageDataSpan = $('<span>').html("Click me to load image!")
+                        .addClass("data")
+                        .css({
+                            "float": "left",
+                            "display": "block",
+                            "clear": "left",
+                        })
+                        .attr("id",DATA+value['id'])
+                        .attr("val",value[CONTENT_TYPE]);
+                    messageDataSpan.on("click",function () {
+                        if(!retrieveDataLoad($(this).attr('id'))) {
+                            var id = getNumbersFromString($(this).attr('id'));
+                            var content_type = $(this).attr('val');
+                            var messageId = getNumbersFromString($(this).parent().parent().attr('id'));
+                            webSocketCon.send(prepareGetData(id,content_type,messageId));
+                            $(this).html("  Loading...");
+                            $(this).prepend($('<span>').addClass("glyphicon glyphicon-refresh spinning"));
+                            $(this).attr('id', DATALOAD + id);
+                        }
+                    });
+                    messageDataDiv.append(messageDataSpan);
                 }
             });
         }
@@ -308,22 +328,27 @@ function createMessageDiv(jsonObject, id, convoId) {
             "width": "100%",
             "float": "left", //todo tabindex for the right things
         });//todo xss protection
+
         if(data) {
-            messageDataSpan = $('<span>').html("Click me to load image!")
-                .addClass("data")
-                .css({
-                    "float": "right",
-                    "display": "block",
-                    "clear": "right",
-                })
-                .attr("id",DATA+id);
-            messageDataSpan.on("click",function () {
-                if(!retrieveDataLoad($(this).attr('id'))) {
-                    var num = getNumbersFromString($(this).attr('id'));
-                    webSocketCon.send(prepareGetData(num));
-                    $(this).html("  Loading...");
-                    $(this).prepend($('<span>').addClass("glyphicon glyphicon-refresh spinning"));
-                }
+            $.each(jsonObject[PARTS], function (index, value) {
+                messageDataDiv = $('<div>');
+                var messageDataSpan = $('<span>').html("Click me to load image!")
+                    .addClass("data")
+                    .css({
+                        "float": "right",
+                        "display": "block",
+                        "clear": "right",
+                    })
+                    .attr("id",DATA+value[ID]);
+                messageDataSpan.on("click",function () {
+                    if(!retrieveDataLoad($(this).attr('id'))) {
+                        var num = getNumbersFromString($(this).attr('id'));
+                        webSocketCon.send(prepareGetData(value[ID],value[CONTENT_TYPE]));
+                        $(this).html("  Loading...");
+                        $(this).prepend($('<span>').addClass("glyphicon glyphicon-refresh spinning"));
+                    }
+                });
+                messageDataDiv.append(messageDataSpan);
             });
         }
         if((mms && body != "") || !mms) {
@@ -383,8 +408,8 @@ function createMessageDiv(jsonObject, id, convoId) {
     }
 
     messageRowDiv.append(messageTextSpan);
-    if(messageDataSpan != null) {
-        messageRowDiv.append(messageDataSpan);
+    if(messageDataDiv != null) {
+        messageRowDiv.append(messageDataDiv);
     }
     return messageRowDiv;
 }

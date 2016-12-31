@@ -404,35 +404,39 @@
                     break;
                 case POST_DATA:
                         //received data call
-                        console.log("POST DATA! [" + active_json[MESSAGE_ID]);
+                        console.log("POST DATA! [" + active_json['id'] + "]");
 
                         //storeData(active_json[MESSAGE_ID], active_json[DATA]);
 
                         //attempts to find image
                         var FAIL = "fail";
                         if (active_json[FAIL]) {
-                            $('#' + DATA + active_json[MESSAGE_ID])
+                            $('#' + DATA + active_json[PART_ID])
                                     .removeClass()
                                     .off('click')
                                     .addClass("data_fail")
                                     .html('Error loading. Currently only support images data.');
                         } else {
                             var IMG = "image";
-                            var img = $('#'+DATA + active_json[MESSAGE_ID] + IMG);
-
+                            var img = $('#'+DATA + active_json[PART_ID] + IMG);
+                            var dataLoad = $('#' + DATALOAD + active_json[PART_ID]);
                             if(img.length == 0) {
                                 //if image is not found then create new image object
                                 var tempH = $('<a>')
                                         .attr("href","#")
                                         .attr("class","imageTop");
-                                img = $('<img id="' + DATA + active_json[MESSAGE_ID] + IMG + '">')
+                                img = $('<img id="' + DATA + active_json[PART_ID] + IMG + '">')
                                         .attr('src','data:image/png;base64,')
+                                        .css("clear","left")
                                         .hide()
                                         .addClass("img_area")
+                                        //HEY YOU****************************************************
+                                        //YOU NEED TO INCLUDE MESSAGE_ID ****************************
+                                        //OR ITLL BE A PROBLEM
                                         .css("float",$('#' + DATA + active_json[MESSAGE_ID]).css("float"))
                                         .css("clear",$('#' + DATA + active_json[MESSAGE_ID]).css("clear"));
                                 tempH.append(img);
-                                $('#' + MESSAGES + active_json[MESSAGE_ID]).append(tempH);
+                                tempH.insertAfter(dataLoad);
                             }
                             //append to img
                             img.attr('src', img.attr('src') + active_json[DATA]);
@@ -440,8 +444,8 @@
                             var FINISH = "finish";
                             if(active_json[FINISH]){
                                 //if it is the last section then notify gui to update
-                                img.show()
-                                $('#' + DATA + active_json[MESSAGE_ID]).remove();
+                                img.show();
+                                dataLoad.remove();
                             }
                         }
                     break;
@@ -477,10 +481,17 @@
                 messageObject[MESSAGE_TYPE] = TYPE_LOCAL_SEND;
                 var convoDiv = $('#' + CONVO + convo_id_val);
                 uiAppendMessage(messageObject, temp_id, convoDiv, convo_id_val);
-                $('#' + CONVERSATIONS + convo_id_val).css("background-color",CONVO_BACKGROUND_COLOR_SELECTED);
+                $('#slt_conversation').prepend(
+                        $('#' + CONVERSATIONS + convo_id_val)
+                                .css("background-color",CONVO_BACKGROUND_COLOR_SELECTED));
                 //store for future reference
                 storeMessageTempIdArr(temp_id, convo_id_val, body);
                 storeScrollTop(convo_id_val,uiScrollTop(-1));
+
+                var convo = $('#' + CONVERSATIONS + convoId);
+                convo.css('background-color', CONVO_BACKGROUND_COLOR_MESSAGE_RECEIVED);
+                var convos = $('#slt_conversation');
+                convos.prepend(convo);
             }
         });
 
