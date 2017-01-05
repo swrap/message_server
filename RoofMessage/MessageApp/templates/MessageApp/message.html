@@ -198,7 +198,7 @@
             if (text.length > 0 && children.length > 0) {
                 var numbersJson = [];
                 for (var i = 0; i < children.length; i++) {
-                    var contact = retrieveContact(children[i].innerText.trim());
+                    var contact = retrieveContact(getNumbersFromString(children[i].id));
                     var number = getNumbersFromString(contact[PHONE_NUMBER]);
                     numbersJson.push({
                         "number": number
@@ -282,11 +282,18 @@
                             for (var i in convos) {
                                 var key = Object.keys(convos[i])[0];
                                 console.log("Sending for messages [" + key + "]");
-                                webSocketCon.send(getMessagesJSON(key,
-                                DEFAULT_GET_MESSAGES,
-                                -1 /*offset*/,
-                                0 /*before*/));
-
+                                var convo = retrieveMessages(key);
+                                if (convo == null) {
+                                    webSocketCon.send(getMessagesJSON(key,
+                                    DEFAULT_GET_MESSAGES,
+                                    -1 /*offset*/,
+                                    0 /*before*/));
+                                } else {
+                                    webSocketCon.send(getMessagesJSON(key,
+                                    DEFAULT_GET_MESSAGES,
+                                     convo[convo.length-1][Object.keys(convo[convo.length-1])][DATE_RECIEVED]/*offset*/,
+                                    1 /*after*/));
+                                }
                                 if (count > 10) {
                                     break;
                                 }
@@ -313,6 +320,11 @@
                             } else {
                                 uiPrependMessage(jsonConvoId,active_json[jsonConvoId],convoIdVal);
                             }
+                        }
+
+                        //if convo for message does not exist then ask for update of all messages
+                        if ($('#' + CONVERSATIONS + jsonConvoId).length == 0) {
+                            webSocketCon.send(getConversations());
                         }
                     break;
                 case SENT_MESSAGES:
@@ -383,8 +395,9 @@
                         var jsonConvoId = active_json[THREAD_ID];
 
                         var convoDiv = convoDivExists(jsonConvoId);
-                        if (convoDiv != null) {
+                        if (convoDiv != null && convo_id_val == jsonConvoId) {
                             //if the convoDiv exists update date the div by appending the messages
+                            //only updates ui with same convoid with json id
                             var jsonObject = active_json[jsonConvoId];
                             for (var i in jsonObject) {
                                 var key = Object.keys(jsonObject[i])[0];
@@ -400,6 +413,8 @@
                         if (!retrieveConversation(convo_id_val)) {
                             //TODO will need to change to send a new convo and push to top of queue and change color
                             //NEED TO LOAD SPECIFIC CONVERSATIONS
+                            //FOR NOW USING GENERAL LOAD
+                            webSocketCon.send(getConversations());
                         }
                     break;
                 case POST_DATA:
@@ -487,11 +502,6 @@
                 //store for future reference
                 storeMessageTempIdArr(temp_id, convo_id_val, body);
                 storeScrollTop(convo_id_val,uiScrollTop(-1));
-
-                var convo = $('#' + CONVERSATIONS + convoId);
-                convo.css('background-color', CONVO_BACKGROUND_COLOR_MESSAGE_RECEIVED);
-                var convos = $('#slt_conversation');
-                convos.prepend(convo);
             }
         });
 

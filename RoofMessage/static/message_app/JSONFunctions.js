@@ -100,11 +100,26 @@ function storeContacts(jsonObject) {
     var jsonStorage = sessionStorage.getItem(CONTACTS);
     var jsonContacts = jsonObject[CONTACTS];
     if (jsonStorage == null) {
-        sessionStorage.setItem(CONTACTS, JSON.stringify(jsonContacts));
+        var contacts = jsonContacts.sort(function (a, b) {
+            var num = 0;
+            if (a[Object.keys(a)[0]][FULL_NAME] > b[Object.keys(b)[0]][FULL_NAME]) {
+                num = 1;
+            } else if (a[Object.keys(a)[0]][FULL_NAME] < b[Object.keys(b)[0]][FULL_NAME]) {
+                num = -1;
+            }
+            return  num;
+        });
+        sessionStorage.setItem(CONTACTS, JSON.stringify(contacts));
     } else {
         jsonStorage = JSON.parse(jsonStorage);
-        var contacts = jsonContacts.concat(jsonStorage).sort(function (a, b) {
-            return Object.keys(a)[0]-Object.keys(b)[0];
+        var contacts = jsonContacts.sort(function (a, b) {
+            var num = 0;
+            if (a[Object.keys(a)[0]][FULL_NAME] > b[Object.keys(b)[0]][FULL_NAME]) {
+                num = 1;
+            } else if (a[Object.keys(a)[0]][FULL_NAME] < b[Object.keys(b)[0]][FULL_NAME]) {
+                num = -1;
+            }
+            return  num;
         });
 
         contacts = contacts.filter(function(item, pos, ary) {
@@ -129,13 +144,31 @@ function retrieveContacts() {
     return contacts;
 }
 
+
 /**
  * Used to retrieve a complete arraylist of json contact objects
  *
  * @param id id of the contact object to retrieve
- * @returns {Array}
  */
 function retrieveContact(id) {
+    var contacts_array = JSON.parse(sessionStorage.getItem(CONTACTS));
+    for(var i = 0; i < contacts_array.length; i++) {
+        var value = contacts_array[i];
+        var key = Object.keys(value)[0];
+        if (key == id) {
+            return value[key];
+        }
+    }
+    return null;
+}
+
+
+/**
+ * Used to retrieve a complete arraylist of json contact objects
+ *
+ * @param id id of the contact object to retrieve
+ */
+function retrieveContactName(id) {
     var contacts_array = JSON.parse(sessionStorage.getItem(CONTACTS));
     $.each(contacts_array, function (index, value) {
         var key = Object.keys(value)[0];

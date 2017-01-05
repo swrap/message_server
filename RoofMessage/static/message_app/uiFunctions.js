@@ -124,7 +124,6 @@ function uiAddAllConversations() {
             span.innerText = span.textContent = value[key][MESSAGE_COUNT];
             slt_conversation.append(convoIdDiv);
         }
-
     });
 }
 
