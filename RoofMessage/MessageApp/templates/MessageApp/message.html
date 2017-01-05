@@ -291,7 +291,7 @@
                                 } else {
                                     webSocketCon.send(getMessagesJSON(key,
                                     DEFAULT_GET_MESSAGES,
-                                     convo[convo.length-1][Object.keys(convo[convo.length-1])][DATE_RECIEVED]/*offset*/,
+                                     convo[0][Object.keys(convo[0])][DATE_RECIEVED]/*offset*/,
                                     1 /*after*/));
                                 }
                                 if (count > 10) {
