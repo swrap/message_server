@@ -114,8 +114,8 @@ function uiAddAllConversations() {
                     setTimeout(function() {
                         uiScrollTop(retrieveScrollTop(id));
                     }, 300);
-                    selectedConvo.css("background-color",CONVO_BACKGROUND_COLOR_SELECTED);
                 }
+                selectedConvo.css("background-color",CONVO_BACKGROUND_COLOR_SELECTED);
             });
             slt_conversation.append(createdConvo);
         } else {
