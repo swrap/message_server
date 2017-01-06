@@ -241,7 +241,6 @@
 
 
         var sent_message_temp_id = [];
-        var webSocketCon = new WebSocket("ws://" + window.location.host + "/message_route/");
         const ACTION = "action",
                 POST_CONTACTS = "post_contacts",
                 POST_CONVERSATIONS = "post_conversations",
@@ -261,7 +260,13 @@
         var contacts;
         var initial_connect_conversations = true;
 
-        webSocketCon.onmessage = function(e) {
+        var DEFAULT_TITLE = "RoofText";
+        var MESSAGE_TITLE = "RoofText";
+        var titleInterval;
+
+        var URL = "ws://" + window.location.host + "/message_route/";
+
+        var webOnMessage = function(e) {
             active_json = JSON.parse(e.data);
             console.log(active_json[ACTION]);
             switch (active_json[ACTION]) {
@@ -290,7 +295,7 @@
                                     0 /*before*/));
                                 } else {
                                     webSocketCon.send(getMessagesJSON(key,
-                                    DEFAULT_GET_MESSAGES,
+                                    DEFAULT_GET_MESSAGES_AFTER,
                                      convo[0][Object.keys(convo[0])][DATE_RECIEVED]/*offset*/,
                                     1 /*after*/));
                                 }
@@ -416,6 +421,15 @@
                             //FOR NOW USING GENERAL LOAD
                             webSocketCon.send(getConversations());
                         }
+
+                        //if not in focus change title of tab
+                        if (!inFocus) {
+                            MESSAGE_TITLE = "You have a message.";
+                            titleInterval = setInterval(function(){
+                                var title = document.title;
+                                document.title = (title == DEFAULT_TITLE ? MESSAGE_TITLE : DEFAULT_TITLE);
+                            }, 750);
+                        }
                     break;
                 case POST_DATA:
                         //received data call
@@ -467,17 +481,31 @@
             }
         };
 
-        webSocketCon.onopen = function() {
+        var webOnOpen = function() {
             sendConnected();
         };
 
-        webSocketCon.onclose = function() {
-            $('#connect_waiting').modal({
-                backdrop: 'static',
-                show:true
-            });
-            window.timerID=setInterval(function(){start("wss://" + window.location.host + "/message_route/")}, 3000);
-        };
+        var webOnErrorClose = function(){
+                $('#connect_waiting').modal({
+                    backdrop: 'static',
+                    show:true
+                });
+                setTimeout(function(){
+                    console.log("Starting loop");
+                    webSocketCon = start(URL);
+                }, 7500);
+            };
+
+        var webSocketCon = start();
+
+        function start(){
+            ws = new WebSocket(URL);
+            ws.onopen = webOnOpen;
+            ws.onmessage = webOnMessage;
+            //ws.onerror = webOnErrorClose;
+            ws.onclose = webOnErrorClose;
+            return ws;
+        }
 
         $('#rm_sendBtn').click(function(){
             var rm_message_input = $('#rm_messageInput');
@@ -561,7 +589,25 @@
             webSocketCon.send(JSON.stringify( {
                 "action" : CONNECTED
             }));
+            console.log("Connected");
         }
+
+        //used to keep track if window is in focus or not
+        var inFocus = 1;
+        $(window).focus(function() {
+            inFocus = 1;
+            if (titleInterval != null) {
+                clearInterval(titleInterval);
+                document.title = DEFAULT_TITLE;
+                titleInterval = null;
+                console.log("In focus.");
+            }
+        });
+
+        $(window).blur(function() {
+            inFocus = 0;
+            console.log("Out of focus.");
+        });
     </script>
     </body>
 </html>

@@ -1,4 +1,5 @@
 var DEFAULT_GET_MESSAGES = 15;
+var DEFAULT_GET_MESSAGES_AFTER = 20;
 
 var BODY = "body";
 var MESSAGE_TYPE = "message_type";
