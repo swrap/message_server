@@ -430,10 +430,13 @@
                         //if not in focus change title of tab
                         if (!inFocus) {
                             MESSAGE_TITLE = "You have a message.";
-                            titleInterval = setInterval(function(){
-                                var title = document.title;
-                                document.title = (title == DEFAULT_TITLE ? MESSAGE_TITLE : DEFAULT_TITLE);
-                            }, 750);
+                            if (titleInterval == null) {
+                                //if null then do not create a new one
+                                titleInterval = setInterval(function(){
+                                    var title = document.title;
+                                    document.title = (title == DEFAULT_TITLE ? MESSAGE_TITLE : DEFAULT_TITLE);
+                                }, 750);
+                            }
                         }
                     break;
                 case POST_DATA:
