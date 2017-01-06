@@ -264,7 +264,11 @@
         var MESSAGE_TITLE = "RoofText";
         var titleInterval;
 
-        var URL = "ws://" + window.location.host + "/message_route/";
+	{% if DEBUG %}
+        	var URL = "ws://" + window.location.host + "/message_route/";
+	{% else %}
+        	var URL = "wss://" + window.location.host + "/message_route/";
+	{% endif %}
 
         var webOnMessage = function(e) {
             active_json = JSON.parse(e.data);
