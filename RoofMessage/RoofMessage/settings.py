@@ -40,8 +40,8 @@ if not DEBUG:
     #CONSTANTS FOR EMAIL
     EMAIL_USE_TLS = True
     EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_HOST_USER = "bleepdodeepydo@gmail.com"
-    EMAIL_HOST_PASSWORD = "ASM2j5bb2/^hadsb"
+    EMAIL_HOST_USER = "rooftext@gmail.com"
+    EMAIL_HOST_PASSWORD = "AMn5b1jadf80h5basdf"
     DOMAIN_HOST = "https://rooftext.com" #"http://yourdomain.com/"
 
     #USED IN VIEWS_AJAX should be in properties file in the future
