@@ -10,6 +10,7 @@ from .models import AndroidModel, ANDROID_CONSTANT, MAX_ATTEMPTS, UserProfile
 from .forms import UserLoginForm
 
 def android_login(request):
+    reason = "Invalid username or password."
     if request.POST:
         username = request.POST['username']
 
@@ -44,7 +45,9 @@ def android_login(request):
         context = {"user_form": user_form}
         return render(request, 'MessageApp/android_login.html', context, status=200)
 
-    return HttpResponse(request, status=400)
+    response = HttpResponse(request, status=400)
+    response.reason_phrase = reason
+    return response
 
 @login_required
 def android_logout(request):
