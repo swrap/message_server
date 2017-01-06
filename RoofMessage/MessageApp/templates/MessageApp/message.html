@@ -603,10 +603,10 @@
             inFocus = 1;
             if (titleInterval != null) {
                 clearInterval(titleInterval);
-                document.title = DEFAULT_TITLE;
                 titleInterval = null;
-                console.log("In focus.");
             }
+            document.title = DEFAULT_TITLE;
+            console.log("In focus.");
         });
 
         $(window).blur(function() {
