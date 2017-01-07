@@ -489,7 +489,6 @@ function uiAddAllConversations() {
                         storeScrollTop(convo_id_val, getRMAdjustedScrollTop());
                     }
 
-                    console.log(id + " " + selectedConvo.attr('id'));
                     convo_id.attr("value",id);
 
                     if (!uiAddConversationMessages(id)) {
@@ -541,7 +540,6 @@ function uiAddAllContacts() {
  */
 function uiAddConversationMessages(convo_id) {
     var messagesArray = retrieveMessages(convo_id);
-    console.log("Adding messages from [" + convo_id + "]");
     if (messagesArray !== null) {
         var rmArea = $('#rm_messageArea');
         var tempMessageIdArr = retrieveMessageTempIdArr().slice();
@@ -575,7 +573,6 @@ function uiAddConversationMessages(convo_id) {
             }
         });
     } else {
-        console.log("Null value for conversation.");
         return false;
     }
     return true;
@@ -938,9 +935,7 @@ function uiUpdateMessage(temp_id, id) {
         messageDiv.children("span").css("background-color",
             MESSAGE_BACKGROUND_COLOR_ME_SENT);
         messageDiv.attr(ID,MESSAGES + id);
-        console.log("Updated message with id [" + id + "]");
     } else {
-        console.log("Error updating color.");
     }
 }
 
@@ -1192,11 +1187,9 @@ $("#new_message_sendBtn").on("click", function() {
 var messageInput = $('#rm_messageInput');
 messageInput.keydown(function(e) {
     if (e.keyCode == 16 && e.keyCode == 13) {
-        console.log('shift+enter')
         return true;
     }
     if (e.keyCode == 13) {
-        console.log('enter')
         $('#rm_sendBtn').click();
         return false;
     }
@@ -1234,13 +1227,11 @@ var titleInterval;
 
 var webOnMessage = function(e) {
     active_json = JSON.parse(e.data);
-    console.log(active_json[ACTION]);
     switch (active_json[ACTION]) {
         case POST_CONTACTS:
                 //contacts received, populate contacts section
                 storeContacts(active_json);
                 uiAddAllContacts();
-                console.log("Added contacts.");
             break;
         case POST_CONVERSATIONS:
                 //conversations received, populate conversations section
@@ -1252,7 +1243,6 @@ var webOnMessage = function(e) {
                     var count = 0;
                     for (var i in convos) {
                         var key = Object.keys(convos[i])[0];
-                        console.log("Sending for messages [" + key + "]");
                         var convo = retrieveMessages(key);
                         if (convo == null) {
                             webSocketCon.send(getMessagesJSON(key,
@@ -1272,10 +1262,8 @@ var webOnMessage = function(e) {
                     }
                     initial_connect_conversations = false;
                 }
-                console.log("Added conversations.");
             break;
         case POST_MESSAGES:
-                console.log(active_json[THREAD_ID]);
                 //messages received, populate conversations section
                 storeMessages(active_json);
                 var jsonConvoId = active_json[THREAD_ID];
@@ -1341,7 +1329,6 @@ var webOnMessage = function(e) {
         case CONNECTED:
                 //android connected
                 android_connected = true;
-                console.log("Is android connected [" + android_connected + "]");
                 startUpCalls();
                 $('#loading_label').css("background-color", "#52CC82");
                 $('#loading_text').html("Loading Content..");
@@ -1354,7 +1341,6 @@ var webOnMessage = function(e) {
         case DISCONNECTED:
                 //android disconnected
                 android_connected = false;
-                console.log("Is android connected [" + android_connected + "]");
                 $('#connect_waiting').modal('show').focus();
                 //TODO fix backend to not send disconnect on wifi reconnect disconnect
                 sendConnected();
@@ -1402,7 +1388,6 @@ var webOnMessage = function(e) {
             break;
         case POST_DATA:
                 //received data call
-                console.log("POST DATA! [" + active_json['id'] + "]");
 
                 //storeData(active_json[MESSAGE_ID], active_json[DATA]);
 
@@ -1460,7 +1445,6 @@ var webOnErrorClose = function(){
             show:true
         });
         setTimeout(function(){
-            console.log("Starting loop");
             webSocketCon = start(URL);
         }, 7500);
     };
@@ -1482,11 +1466,9 @@ $('#rm_sendBtn').click(function(){
     if (rm_message_input.html().length > 0 && convo_id_val != "") {
         var rmArea = $('#rm_messageArea');
         var temp_id = getNumbersFromString(rmArea.children().last().attr('id'));
-        console.log("Temp id message [" + temp_id + "]");
         var body = rm_message_input.text();
         var messageObjectString = prepareMessages(body, "", getNumbers(convo_id_val), temp_id);
         rm_message_input.html("");
-        console.log(messageObjectString);
         //append to ui
         webSocketCon.send(messageObjectString);
         var messageObject = JSON.parse(messageObjectString)
@@ -1546,19 +1528,16 @@ window.onload = function () {
 };
 
 function startUpCalls() {
-    console.log(ACTION);
     //loads contacts
     webSocketCon.send(getContacts());
     //loads top conversations
     webSocketCon.send(getConversations());
-    console.log("Sent for all");
 }
 
 function sendConnected() {
     webSocketCon.send(JSON.stringify( {
         "action" : CONNECTED
     }));
-    console.log("Connected");
 }
 
 //used to keep track if window is in focus or not
@@ -1570,10 +1549,8 @@ $(window).focus(function() {
         titleInterval = null;
     }
     document.title = DEFAULT_TITLE;
-    console.log("In focus.");
 });
 
 $(window).blur(function() {
     inFocus = 0;
-    console.log("Out of focus.");
 });
