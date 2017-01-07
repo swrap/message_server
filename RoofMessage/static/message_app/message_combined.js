@@ -648,7 +648,7 @@ function createMessageDiv(jsonObject, id, convoId) {
         messageRowDiv = $('<div>').css({
             "margin": "4px 6px",
             "width":"100%",
-            "float":"left",
+            "float":"right",
         });
         if(data) {
             messageDataDiv = $('<div>');
@@ -714,25 +714,31 @@ function createMessageDiv(jsonObject, id, convoId) {
         });//todo xss protection
 
         if(data) {
+            messageDataDiv = $('<div>');
             $.each(jsonObject[PARTS], function (index, value) {
-                messageDataDiv = $('<div>');
-                var messageDataSpan = $('<span>').html("Click me to load image!")
-                    .addClass("data")
-                    .css({
-                        "float": "right",
-                        "display": "block",
-                        "clear": "right",
-                    })
-                    .attr("id",DATA+value[ID]);
-                messageDataSpan.on("click",function () {
-                    if(!retrieveDataLoad($(this).attr('id'))) {
-                        var num = getNumbersFromString($(this).attr('id'));
-                        webSocketCon.send(prepareGetData(value[ID],value[CONTENT_TYPE]));
-                        $(this).html("  Loading...");
-                        $(this).prepend($('<span>').addClass("glyphicon glyphicon-refresh spinning"));
-                    }
-                });
-                messageDataDiv.append(messageDataSpan);
+                if (value[CONTENT_TYPE] != "text/plain") {
+                    var messageDataSpan = $('<span>').html("Click me to load image!")
+                        .addClass("data")
+                        .css({
+                            "float": "right",
+                            "display": "block",
+                            "clear": "right",
+                        })
+                        .attr("id",DATA+value['id'])
+                        .attr("val",value[CONTENT_TYPE]);
+                    messageDataSpan.on("click",function () {
+                        if(!retrieveDataLoad($(this).attr('id'))) {
+                            var id = getNumbersFromString($(this).attr('id'));
+                            var content_type = $(this).attr('val');
+                            var messageId = getNumbersFromString($(this).parent().parent().attr('id'));
+                            webSocketCon.send(prepareGetData(id,content_type,messageId));
+                            $(this).html("  Loading...");
+                            $(this).prepend($('<span>').addClass("glyphicon glyphicon-refresh spinning"));
+                            $(this).attr('id', DATALOAD + id);
+                        }
+                    });
+                    messageDataDiv.append(messageDataSpan);
+                }
             });
         }
         if((mms && body != "") || !mms) {
@@ -1416,8 +1422,8 @@ var webOnMessage = function(e) {
                                 //HEY YOU****************************************************
                                 //YOU NEED TO INCLUDE MESSAGE_ID ****************************
                                 //OR ITLL BE A PROBLEM
-                                .css("float",$('#' + DATA + active_json[MESSAGE_ID]).css("float"))
-                                .css("clear",$('#' + DATA + active_json[MESSAGE_ID]).css("clear"));
+                                .css("float",dataLoad.css("float"))
+                                .css("clear",dataLoad.css("clear"));
                         tempH.append(img);
                         tempH.insertAfter(dataLoad);
                     }

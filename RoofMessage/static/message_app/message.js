@@ -318,8 +318,8 @@ var webOnMessage = function(e) {
                                 //HEY YOU****************************************************
                                 //YOU NEED TO INCLUDE MESSAGE_ID ****************************
                                 //OR ITLL BE A PROBLEM
-                                .css("float",$('#' + DATA + active_json[MESSAGE_ID]).css("float"))
-                                .css("clear",$('#' + DATA + active_json[MESSAGE_ID]).css("clear"));
+                                .css("float",dataLoad.css("float"))
+                                .css("clear",dataLoad.css("clear"));
                         tempH.append(img);
                         tempH.insertAfter(dataLoad);
                     }
