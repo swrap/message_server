@@ -377,11 +377,13 @@ def activate(request, key):
     expired_or_not_right = True
     return render(request, 'MessageApp/activate.html', locals())
 
-def send_alpha_key(alpha_key, email):
+def send_alpha_key(alpha_key, alpha_url, alpha_key_pass, email):
     subject = "Alpha Key"
     from RoofMessage import settings
     email_template = get_template(EMAIL_ALPHA_KEY)
-    message = email_template.render(Context({"alpha_key": alpha_key}))
+    message = email_template.render(Context({"alpha_key": alpha_key,
+                                            "alpha_key_pass":alpha_key_pass,
+                                            "alpha_url":alpha_url}))
     send_email(subject, message, email, True)
 
 def send_email(subject, message, email, forward):
