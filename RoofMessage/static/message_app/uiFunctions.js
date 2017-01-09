@@ -1,5 +1,6 @@
 var DEFAULT_GET_MESSAGES = 15;
-var DEFAULT_GET_MESSAGES_AFTER = 20;
+//set to 100 because we want all the way to start
+var DEFAULT_GET_MESSAGES_AFTER = 1000;
 
 var BODY = "body";
 var MESSAGE_TYPE = "message_type";
@@ -52,6 +53,8 @@ var RECIPIENT_LIST = "RECIPIENT_LIST";
 
 var sendingNewMessage = false;
 
+var LOAD_BTN_LOAD_MORE = "Load More Messages";
+var LOAD_BTN_NO_MORE = "No More to Messages to Load";
 
 /**
  * Adds all contacts in the conversations_key_array to the ui display = none
@@ -65,21 +68,22 @@ function uiAddAllConversations() {
         var key = Object.keys(value)[0];
         var recip = value[key][RECIPIENTS];
         var text = recip.length;
-        var namesAndNumbers = [];
+        var names = [];
+        var numbers = [];
         for (var r in recip) {
             if (recip[r][FULL_NAME] != null) {
                 // text += " [" + recip[r][FULL_NAME] + "]";
-                namesAndNumbers.push(recip[r][FULL_NAME] + " " +
-                    getPhoneNumberFormat(recip[r][PHONE_NUMBER]));
+                names.push(recip[r][FULL_NAME]);
+                numbers.push(getPhoneNumberFormat(recip[r][PHONE_NUMBER]));
             } else {
-                // text += " [" + recip[r][PHONE_NUMBER] + "]";
-                namesAndNumbers.push(getPhoneNumberFormat(recip[r][PHONE_NUMBER]));
+                names.push("");
+                numbers.push(getPhoneNumberFormat(recip[r][PHONE_NUMBER]));
             }
         }
         var convoIdDiv = $('#' + CONVERSATIONS + key);
         //if exists create and add div
         if (convoIdDiv.length == 0) {
-            var createdConvo = createConversationDiv(namesAndNumbers, key, value[key][MESSAGE_COUNT]);
+            var createdConvo = createConversationDiv(names, numbers, key, value[key][MESSAGE_COUNT]);
 
             //set color selected back to the correct selected color
             var convoIdVal = $('#convo_id').val();
@@ -92,31 +96,33 @@ function uiAddAllConversations() {
                 var convo_id_val = convo_id.val();
 
                 var selectedConvo = $(this);
-                var id = getNumbersFromString(selectedConvo.attr('id'));
+                var selectedId = getNumbersFromString(selectedConvo.attr('id'));
 
                 //selected id does not equal convo id currently on
-                if(id != convo_id_val) {
-                    if (id != convo_id_val) {
+                if(selectedId != convo_id_val) {
+                    if (selectedId != convo_id_val) {
                         //reset the background color to white
                         $('#' + CONVERSATIONS + convo_id_val).css("background-color", "");
                         storeScrollTop(convo_id_val, getRMAdjustedScrollTop());
                     }
 
-                    console.log(id + " " + selectedConvo.attr('id'));
-                    convo_id.attr("value",id);
+                    console.log(selectedId + " " + selectedConvo.attr('id'));
+                    convo_id.attr("value",selectedId);
 
-                    if (!uiAddConversationMessages(id)) {
+                    if (!uiAddConversationMessages(selectedId)) {
                         //no messages found, sending request for more
-                        webSocketCon.send(getMessagesJSON(id,DEFAULT_GET_MESSAGES,-1,0/*before*/));
-                    } else {
-                        //convo messages were found hide current convo messages
-                        $('#' + CONVO + convo_id_val).hide();
+                        webSocketCon.send(getMessagesJSON(selectedId,DEFAULT_GET_MESSAGES,-1,0/*before*/));
                     }
                     setTimeout(function() {
-                        uiScrollTop(retrieveScrollTop(id));
+                        uiScrollTop(retrieveScrollTop(selectedId));
                     }, 300);
+                    //convo messages were found hide current convo messages
+                    $('#' + CONVO + convo_id_val).hide();
                 }
                 selectedConvo.css("background-color",CONVO_BACKGROUND_COLOR_SELECTED);
+
+                //handle load more bar
+                uiUpdateLoadMoreBar(selectedId);
             });
             slt_conversation.append(createdConvo);
         } else {
@@ -156,7 +162,7 @@ function uiAddConversationMessages(convo_id) {
     var messagesArray = retrieveMessages(convo_id);
     console.log("Adding messages from [" + convo_id + "]");
     if (messagesArray !== null) {
-        var rmArea = $('#rm_messageArea');
+        var rmArea = $('#rt_messageArea');
         var tempMessageIdArr = retrieveMessageTempIdArr().slice();
         var convoDiv = $('#' + CONVO + convo_id).show();
 
@@ -202,12 +208,12 @@ function uiAddConversationMessages(convo_id) {
  */
 function uiPrependMessage(convo_id,jsonMessageArr,convoId) {
     var convoDiv = convoDivExists(convo_id);
-    var rmArea = $('#rm_messageArea');
+    var rmArea = $('#rt_messageArea');
     var divScroll = -1;
     if (convoDiv == null) {
         //convo div does not exist create it and append it
         convoDiv = $('<div id="' + CONVO + convoId + '">');
-        $('#rm_messageArea').append(convoDiv);
+        $('#rt_messageArea').append(convoDiv);
     } else {
         divScroll = rmArea.scrollTop()-rmArea.offset().top;
     }
@@ -280,15 +286,13 @@ function createMessageDiv(jsonObject, id, convoId) {
                         .attr("id",DATA+value['id'])
                         .attr("val",value[CONTENT_TYPE]);
                     messageDataSpan.on("click",function () {
-                        if(!retrieveDataLoad($(this).attr('id'))) {
-                            var id = getNumbersFromString($(this).attr('id'));
-                            var content_type = $(this).attr('val');
-                            var messageId = getNumbersFromString($(this).parent().parent().attr('id'));
-                            webSocketCon.send(prepareGetData(id,content_type,messageId));
-                            $(this).html("  Loading...");
-                            $(this).prepend($('<span>').addClass("glyphicon glyphicon-refresh spinning"));
-                            $(this).attr('id', DATALOAD + id);
-                        }
+                        var id = getNumbersFromString($(this).attr('id'));
+                        var content_type = $(this).attr('val');
+                        var messageId = getNumbersFromString($(this).parent().parent().attr('id'));
+                        webSocketCon.send(prepareGetData(id,content_type,messageId));
+                        $(this).html("  Loading...");
+                        $(this).prepend($('<span>').addClass("glyphicon glyphicon-refresh spinning"));
+                        $(this).attr('id', DATALOAD + id);
                     });
                     messageDataDiv.append(messageDataSpan);
                 }
@@ -343,15 +347,13 @@ function createMessageDiv(jsonObject, id, convoId) {
                         .attr("id",DATA+value['id'])
                         .attr("val",value[CONTENT_TYPE]);
                     messageDataSpan.on("click",function () {
-                        if(!retrieveDataLoad($(this).attr('id'))) {
-                            var id = getNumbersFromString($(this).attr('id'));
-                            var content_type = $(this).attr('val');
-                            var messageId = getNumbersFromString($(this).parent().parent().attr('id'));
-                            webSocketCon.send(prepareGetData(id,content_type,messageId));
-                            $(this).html("  Loading...");
-                            $(this).prepend($('<span>').addClass("glyphicon glyphicon-refresh spinning"));
-                            $(this).attr('id', DATALOAD + id);
-                        }
+                        var id = getNumbersFromString($(this).attr('id'));
+                        var content_type = $(this).attr('val');
+                        var messageId = getNumbersFromString($(this).parent().parent().attr('id'));
+                        webSocketCon.send(prepareGetData(id,content_type,messageId));
+                        $(this).html("  Loading...");
+                        $(this).prepend($('<span>').addClass("glyphicon glyphicon-refresh spinning"));
+                        $(this).attr('id', DATALOAD + id);
                     });
                     messageDataDiv.append(messageDataSpan);
                 }
@@ -426,14 +428,28 @@ function createMessageDiv(jsonObject, id, convoId) {
  * @param id    id of conversation
  * @returns {*|jQuery}
  */
-function createConversationDiv(names, id, message_count) {
-    var fullString = "";
-    // fullString += names.length + "<br>";
+function createConversationDiv(names, numbers, id, message_count) {
+    var numberString = "";
     for (var n in names) {
-        fullString += (names[n]);
-        if (n != names.length) {
-             fullString += "<br>";
+        numberString += (numbers[n]);
+        if (n != numbers.length) {
+             numberString += "<br>";
         }
+    }
+
+    var nameString = "";
+    var notEmpty = false;
+    for (n in names) {
+        nameString += (names[n]);
+        if (names[n] != "" && !notEmpty) {
+            notEmpty = true;
+        }
+        if (n != names.length) {
+             nameString += "<br>";
+        }
+    }
+    if (!notEmpty) {
+        nameString = numberString;
     }
 
     var convoRowDiv = $('<div>').attr({
@@ -442,7 +458,7 @@ function createConversationDiv(names, id, message_count) {
             "data-toggle": "tooltip",
             "data-placement": "right",
             "data-html": true,
-            "title": fullString,
+            "title": numberString,
         }).css({
         "width": "100%",
         // "height": "100%",
@@ -450,7 +466,7 @@ function createConversationDiv(names, id, message_count) {
         "text-align": "left",
     });
 
-    var convoNameSpan = $('<span>').html(fullString).css({
+    var convoNameSpan = $('<span>').html(nameString).css({
         "float": "left",
         "display": "block",
     });
@@ -569,7 +585,7 @@ function uiUpdateMessage(temp_id, id) {
  * @return location used for chaining
  */
 function uiScrollTop(tag) {
-    var rmArea = $('#rm_messageArea');
+    var rmArea = $('#rt_messageArea');
     if (tag == null || tag < 0) {
         //if less < 0 or null than will choose newest element
         // var children = rmArea.children();
@@ -694,7 +710,7 @@ function uiSendingNewMessage(boolean_val) {
  * Returns adjusted scroll top for container
  */
 function getRMAdjustedScrollTop() {
-    var rmArea = $('#rm_messageArea');
+    var rmArea = $('#rt_messageArea');
     return rmArea.offset().top+rmArea.scrollTop();
 }
 
@@ -723,9 +739,26 @@ function matchAddressFromConvo(convoId, address) {
     for(var i = 0; i < recipients.length; i++) {
         var value = recipients[i];
         var key = Object.keys(value)[0];
-        if (address == value[PHONE_NUMBER]) {
+        if (address.indexOf(value[PHONE_NUMBER]) >= 0) {
             return value[FULL_NAME];
         }
     }
     return "UNKNOWN";
+}
+
+/**
+ * Load more updates the load more to display load more based off of given id
+ */
+function uiUpdateLoadMoreBar(id) {
+    var loadMore = retrieveLoadMore(id);
+    if (loadMore == null || (loadMore != null && loadMore == "f")) {
+        //if load more is not null or it is false than assume t and display new text
+        $('#rt_loadBtn').html(LOAD_BTN_LOAD_MORE)
+            .removeClass("loadBtnNM")
+            .addClass("loadBtnLM");
+    } else {
+        $('#rt_loadBtn').html(LOAD_BTN_NO_MORE)
+            .removeClass("loadBtnLM")
+            .addClass("loadBtnNM");
+    }
 }

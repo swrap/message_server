@@ -541,7 +541,7 @@ function uiAddAllContacts() {
 function uiAddConversationMessages(convo_id) {
     var messagesArray = retrieveMessages(convo_id);
     if (messagesArray !== null) {
-        var rmArea = $('#rm_messageArea');
+        var rmArea = $('#rt_messageArea');
         var tempMessageIdArr = retrieveMessageTempIdArr().slice();
         var convoDiv = $('#' + CONVO + convo_id).show();
 
@@ -586,12 +586,12 @@ function uiAddConversationMessages(convo_id) {
  */
 function uiPrependMessage(convo_id,jsonMessageArr,convoId) {
     var convoDiv = convoDivExists(convo_id);
-    var rmArea = $('#rm_messageArea');
+    var rmArea = $('#rt_messageArea');
     var divScroll = -1;
     if (convoDiv == null) {
         //convo div does not exist create it and append it
         convoDiv = $('<div id="' + CONVO + convoId + '">');
-        $('#rm_messageArea').append(convoDiv);
+        $('#rt_messageArea').append(convoDiv);
     } else {
         divScroll = rmArea.scrollTop()-rmArea.offset().top;
     }
@@ -951,7 +951,7 @@ function uiUpdateMessage(temp_id, id) {
  * @return location used for chaining
  */
 function uiScrollTop(tag) {
-    var rmArea = $('#rm_messageArea');
+    var rmArea = $('#rt_messageArea');
     if (tag == null || tag < 0) {
         //if less < 0 or null than will choose newest element
         // var children = rmArea.children();
@@ -1076,7 +1076,7 @@ function uiSendingNewMessage(boolean_val) {
  * Returns adjusted scroll top for container
  */
 function getRMAdjustedScrollTop() {
-    var rmArea = $('#rm_messageArea');
+    var rmArea = $('#rt_messageArea');
     return rmArea.offset().top+rmArea.scrollTop();
 }
 
@@ -1190,13 +1190,13 @@ $("#new_message_sendBtn").on("click", function() {
     }
 });
 
-var messageInput = $('#rm_messageInput');
+var messageInput = $('#rt_messageInput');
 messageInput.keydown(function(e) {
     if (e.keyCode == 16 && e.keyCode == 13) {
         return true;
     }
     if (e.keyCode == 13) {
-        $('#rm_sendBtn').click();
+        $('#rt_sendBtn').click();
         return false;
     }
 });
@@ -1466,11 +1466,11 @@ function start(){
     return ws;
 }
 
-$('#rm_sendBtn').click(function(){
-    var rm_message_input = $('#rm_messageInput');
+$('#rt_sendBtn').click(function(){
+    var rm_message_input = $('#rt_messageInput');
     var convo_id_val = $('#convo_id').val();
     if (rm_message_input.html().length > 0 && convo_id_val != "") {
-        var rmArea = $('#rm_messageArea');
+        var rmArea = $('#rt_messageArea');
         var temp_id = getNumbersFromString(rmArea.children().last().attr('id'));
         var body = rm_message_input.text();
         var messageObjectString = prepareMessages(body, "", getNumbers(convo_id_val), temp_id);
@@ -1496,7 +1496,7 @@ $(document).on("click", "a.imageTop",function(){
 });
 
 //scrolling query more messages
-$('#rm_messageArea').on("scroll",function(){
+$('#rt_messageArea').on("scroll",function(){
     if($(this).offset().top == 0) {
         var convo_id = $('#convo_id').val();
         var messageZero = retrieveMessages(convo_id)[0];
@@ -1508,11 +1508,11 @@ $('#rm_messageArea').on("scroll",function(){
 var loadWait = true,
         loadWaitTime = 1000;
 
-$('#rm_loadBtn').on("click", function () {
+$('#rt_loadBtn').on("click", function () {
     if (loadWait) {
         var convoIdVal = $('#convo_id').val();
         if (convoIdVal !== null && convoIdVal) {
-            var rmArea = $('#rm_messageArea');
+            var rmArea = $('#rt_messageArea');
             var key = Object.keys(retrieveMessages(convoIdVal)[0]);
             var offset = retrieveMessages(convoIdVal)[0][key][DATE_RECIEVED];
             webSocketCon.send(getMessagesJSON(convoIdVal,DEFAULT_GET_MESSAGES,offset,0/*before*/));

@@ -76,7 +76,7 @@ $("#new_message_sendBtn").on("click", function() {
     }
 });
 
-var messageInput = $('#rm_messageInput');
+var messageInput = $('#rt_messageInput');
 messageInput.keydown(function(e) {
     if (e.keyCode == 16 && e.keyCode == 13) {
         console.log('shift+enter')
@@ -84,7 +84,7 @@ messageInput.keydown(function(e) {
     }
     if (e.keyCode == 13) {
         console.log('enter')
-        $('#rm_sendBtn').click();
+        $('#rt_sendBtn').click();
         return false;
     }
 });
@@ -107,13 +107,14 @@ const ACTION = "action",
         RECEIVED_MESSAGE = "received_message",
         POST_DATA = "post_data";
 var DATA = "data";
+var END = "end";
 
-var android_connected = true;
+var android_connected = false;
+var sent_connected = false;
 
 var active_json;
 var conversations;
 var contacts;
-var initial_connect_conversations = true;
 
 var DEFAULT_TITLE = "RoofText";
 var MESSAGE_TITLE = "RoofText";
@@ -133,32 +134,6 @@ var webOnMessage = function(e) {
                 //conversations received, populate conversations section
                 storeConversations(active_json);
                 uiAddAllConversations();
-                //initial connect ask for messages from convo
-                if (initial_connect_conversations) {
-                    var convos = retrieveConversations();
-                    var count = 0;
-                    for (var i in convos) {
-                        var key = Object.keys(convos[i])[0];
-                        console.log("Sending for messages [" + key + "]");
-                        var convo = retrieveMessages(key);
-                        if (convo == null) {
-                            webSocketCon.send(getMessagesJSON(key,
-                            DEFAULT_GET_MESSAGES,
-                            -1 /*offset*/,
-                            0 /*before*/));
-                        } else {
-                            webSocketCon.send(getMessagesJSON(key,
-                            DEFAULT_GET_MESSAGES_AFTER,
-                             convo[0][Object.keys(convo[0])][DATE_RECIEVED]/*offset*/,
-                            1 /*after*/));
-                        }
-                        if (count > 10) {
-                            break;
-                        }
-                        count++;
-                    }
-                    initial_connect_conversations = false;
-                }
                 console.log("Added conversations.");
             break;
         case POST_MESSAGES:
@@ -166,6 +141,14 @@ var webOnMessage = function(e) {
                 //messages received, populate conversations section
                 storeMessages(active_json);
                 var jsonConvoId = active_json[THREAD_ID];
+
+                //tells whether or not to load more
+                if (active_json[END] == "t") {
+                    storeLoadMore(jsonConvoId, "t");
+                } else {
+                    storeLoadMore(jsonConvoId, "f");
+                }
+
                 var convoIdVal = $('#convo_id').val();
                 if (jsonConvoId == convoIdVal) {
                     //convoDiv empty for specific convo then addAllMessages
@@ -178,6 +161,9 @@ var webOnMessage = function(e) {
                     } else {
                         uiPrependMessage(jsonConvoId,active_json[jsonConvoId],convoIdVal);
                     }
+
+                    //update load more if convo_id matches
+                    uiUpdateLoadMoreBar(convoIdVal);
                 }
 
                 //if convo for message does not exist then ask for update of all messages
@@ -226,10 +212,12 @@ var webOnMessage = function(e) {
                 //message failed to send, ??Change color of message bubble???
             break;
         case CONNECTED:
-                //android connected
+                if (android_connected == false && sent_connected == false) {
+                    sendConnected();
+                    sent_connected = true;
+                }
                 android_connected = true;
                 console.log("Is android connected [" + android_connected + "]");
-                startUpCalls();
                 $('#loading_label').css("background-color", "#52CC82");
                 $('#loading_text').html("Loading Content..");
                 setTimeout(function () {
@@ -245,6 +233,7 @@ var webOnMessage = function(e) {
                 $('#connect_waiting').modal('show').focus();
                 //TODO fix backend to not send disconnect on wifi reconnect disconnect
                 sendConnected();
+                sent_connected = true;
             break;
         case RECEIVED_MESSAGE:
                 //received a message check to add to ui
@@ -326,8 +315,7 @@ var webOnMessage = function(e) {
                     //append to img
                     img.attr('src', img.attr('src') + active_json[DATA]);
 
-                    var FINISH = "finish";
-                    if(active_json[FINISH]){
+                    if(active_json[END] == "t"){
                         //if it is the last section then notify gui to update
                         img.show();
                         dataLoad.remove();
@@ -339,12 +327,14 @@ var webOnMessage = function(e) {
 
 var webOnOpen = function() {
     sendConnected();
+    sent_connected = true;
 };
 
 var webOnErrorClose = function(){
         $('#connect_waiting').modal({
             backdrop: 'static',
-            show:true
+            show:true,
+            keyboard: false
         });
         setTimeout(function(){
             console.log("Starting loop");
@@ -363,11 +353,11 @@ function start(){
     return ws;
 }
 
-$('#rm_sendBtn').click(function(){
-    var rm_message_input = $('#rm_messageInput');
+$('#rt_sendBtn').click(function(){
+    var rm_message_input = $('#rt_messageInput');
     var convo_id_val = $('#convo_id').val();
     if (rm_message_input.html().length > 0 && convo_id_val != "") {
-        var rmArea = $('#rm_messageArea');
+        var rmArea = $('#rt_messageArea');
         var temp_id = getNumbersFromString(rmArea.children().last().attr('id'));
         console.log("Temp id message [" + temp_id + "]");
         var body = rm_message_input.text();
@@ -395,7 +385,7 @@ $(document).on("click", "a.imageTop",function(){
 });
 
 //scrolling query more messages
-$('#rm_messageArea').on("scroll",function(){
+$('#rt_messageArea').on("scroll",function(){
     if($(this).offset().top == 0) {
         var convo_id = $('#convo_id').val();
         var messageZero = retrieveMessages(convo_id)[0];
@@ -407,11 +397,11 @@ $('#rm_messageArea').on("scroll",function(){
 var loadWait = true,
         loadWaitTime = 1000;
 
-$('#rm_loadBtn').on("click", function () {
+$('#rt_loadBtn').on("click", function () {
     if (loadWait) {
         var convoIdVal = $('#convo_id').val();
         if (convoIdVal !== null && convoIdVal) {
-            var rmArea = $('#rm_messageArea');
+            var rmArea = $('#rt_messageArea');
             var key = Object.keys(retrieveMessages(convoIdVal)[0]);
             var offset = retrieveMessages(convoIdVal)[0][key][DATE_RECIEVED];
             webSocketCon.send(getMessagesJSON(convoIdVal,DEFAULT_GET_MESSAGES,offset,0/*before*/));
@@ -426,26 +416,18 @@ window.onload = function () {
 
     $('#connect_waiting').modal({
         backdrop: 'static',
-        show:true
+        show:true,
+        keyboard: false
     });
 
     $('#lsb_conversationsTab').click();
 };
 
-function startUpCalls() {
-    console.log(ACTION);
-    //loads contacts
-    webSocketCon.send(getContacts());
-    //loads top conversations
-    webSocketCon.send(getConversations());
-    console.log("Sent for all");
-}
-
 function sendConnected() {
     webSocketCon.send(JSON.stringify( {
         "action" : CONNECTED
     }));
-    console.log("Connected");
+    console.log("Sending Connected");
 }
 
 //used to keep track if window is in focus or not

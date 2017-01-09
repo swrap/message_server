@@ -12,7 +12,7 @@
         <!-- Latest compiled and minified JavaScript -->
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
-        {% if DEBUG %}
+        {% if debug %}
             <script src="{% static "message_app/JSONFunctions.js" %}"></script>
             <script src="{% static "message_app/uiFunctions.js" %}"></script>
             <link rel="stylesheet" href="{% static "message_app/message.css" %}">
@@ -86,15 +86,15 @@
                 </form>
             </div>
             <div id="rightMessage">
-                <div id="rm_topBar">{{ user.username}}</div>
-                <div id="rm_loadBtn">Load More</div>
-                <div id="rm_messageArea"></div>
-                <div id="rm_inputsDiv">
-                    <div id="rm_messageInput" contenteditable="true"></div>
-                    <div id="rm_sendArea">
-                        <div id="rm_sendBtn" class="sendBtn">Send</div>
-                        <div id="rm_charCountArea">
-                            <span>Char: <span id="rm_charCount">0</span></span>
+                <div id="rt_topBar">{{ user.username}}</div>
+                <div class="loadBtnLM" id="rt_loadBtn">No More Messages To Load</div>
+                <div id="rt_messageArea"></div>
+                <div id="rt_inputsDiv">
+                    <div id="rt_messageInput" contenteditable="true"></div>
+                    <div id="rt_sendArea">
+                        <div id="rt_sendBtn" class="sendBtn">Send</div>
+                        <div id="rt_charCountArea">
+                            <span>Char: <span id="rt_charCount">0</span></span>
                         </div>
                     </div>
                 </div>
@@ -149,13 +149,13 @@
           </div>
         </div>
         <script>
-            {% if DEBUG %}
+            {% if debug %}
                 var URL = "ws://" + window.location.host + "/message_route/";
             {% else %}
                 var URL = "wss://" + window.location.host + "/message_route/";
             {% endif %}
         </script>
-        {% if DEBUG %}
+        {% if debug %}
             <script src="{% static "message_app/message.js" %}"></script>
         {% else %}
             <script src="{% static "message_app/message_server.js" %}"></script>

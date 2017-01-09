@@ -222,7 +222,8 @@ def settings_page(request):
 @user_passes_test(user_allowed,login_url='/')
 @login_required()
 def message(request):
-    return render(request, 'MessageApp/message.html', locals())
+    print("hi")
+    return render(request, 'MessageApp/message.html', {"debug":settings.DEBUG})
 
 
 def register(request):
@@ -401,7 +402,7 @@ def send_email(subject, message, email, forward):
 @user_passes_test(user_allowed,login_url='/')
 @login_required()
 def message(request):
-    return render(request, 'MessageApp/message.html', {})
+    return render(request, 'MessageApp/message.html', {"debug":settings.DEBUG})
 
 def all_unexpired_sessions_for_user(user):
     user_sessions = []
