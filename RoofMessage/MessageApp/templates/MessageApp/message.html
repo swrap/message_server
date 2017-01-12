@@ -35,7 +35,9 @@
                     <span style="margin-left:-10px;">text</span>
                 </div>
                 <div id="lsb_searchBarDiv">
-                    <input id=lsb_searchBar type="text" placeholder="Search your contacts">
+                    <input id="lsb_searchBarContacts" type="text" placeholder="Search your contacts">
+                    <div id="lsb_searchContactName">
+                    </div>
                 </div>
                 <div id="lsb_tabs">
                     <div id="lsb_contactsTab" class="lsb_toggleTab">Contacts</div>
@@ -87,7 +89,7 @@
             </div>
             <div id="rightMessage">
                 <div id="rt_topBar">{{ user.username}}</div>
-                <div class="loadBtnLM" id="rt_loadBtn">No More Messages To Load</div>
+                <div class="loadBtnNM" id="rt_loadBtn">No More Messages To Load</div>
                 <div id="rt_messageArea"></div>
                 <div id="rt_inputsDiv">
                     <div id="rt_messageInput" contenteditable="true"></div>
@@ -142,7 +144,7 @@
           <div class="modal-dialog">
             <div class="modal-content">
               <div class="modal-body">
-                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&times;</span><span class="sr-only">Close</span></button>
+                <button type="button" class="close" data-dismiss="modal"><span aria-hidden="true">&#10006;</span><span class="sr-only">Close</span></button>
                 <img id="imageModalIMG" src="" class="imagepreview" style="width: 100%;" >
               </div>
             </div>

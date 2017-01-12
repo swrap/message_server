@@ -17,6 +17,8 @@ var CONTACT_ID = "contact_id";
 var ADDRESS = "address";
 var PART_ID = "part_id";
 var DATALOAD = "DATALOAD";
+var SEARCHNAME = "SEARCHNAME";
+var CONVO_CONTACT_ID = "CONVO_CONTACT_ID"; //used for convo contact id
 
 var TEXT = "TEXT";
 var CONTENT_TYPE = "CONTENT_TYPE";
@@ -84,6 +86,12 @@ function uiAddAllConversations() {
         //if exists create and add div
         if (convoIdDiv.length == 0) {
             var createdConvo = createConversationDiv(names, numbers, key, value[key][MESSAGE_COUNT]);
+
+            //append ids of each contact id
+            //used for name searching
+            $.each(value[key][RECIPIENTS], function (index, value) {
+               createdConvo.addClass(CONVO_CONTACT_ID + value[CONTACT_ID]);
+            });
 
             //set color selected back to the correct selected color
             var convoIdVal = $('#convo_id').val();
@@ -461,7 +469,6 @@ function createConversationDiv(names, numbers, id, message_count) {
             "title": numberString,
         }).css({
         "width": "100%",
-        // "height": "100%",
         "text-overflow": "ellipsis",
         "text-align": "left",
     });
@@ -471,17 +478,17 @@ function createConversationDiv(names, numbers, id, message_count) {
         "display": "block",
     });
 
-    var convoMessageCountSpan = $('<span>').html(
-        getNumberCommaFormatted(message_count))
-            .css({
-                "display": "block",
-                "float": "right",
-                "color": "white",
-                "padding": "3px 3px",
-                "border-radius": "20px",
-                "background-color": CONVO_BACKGROUND_MESSAGE_COUNT,
-            });
-    convoRowDiv.append(convoMessageCountSpan);
+    // var convoMessageCountSpan = $('<span>').html(
+    //     getNumberCommaFormatted(message_count))
+    //         .css({
+    //             "display": "block",
+    //             "float": "right",
+    //             "color": "white",
+    //             "padding": "3px 3px",
+    //             "border-radius": "20px",
+    //             "background-color": CONVO_BACKGROUND_MESSAGE_COUNT,
+    //         });
+    // convoRowDiv.append(convoMessageCountSpan);
     convoRowDiv.append(convoNameSpan);
     convoRowDiv.addClass(CLASS_POINTER);
     convoRowDiv.tooltip();
@@ -506,27 +513,59 @@ function createContactDiv(full_name, id, phone_number) {
         "width": "100%",
     });
     contactsRowDiv.on("click", function (e) {
-        //used to tell if sending new message
-        if (!sendingNewMessage) {
-            if(!e.shiftKey) {
-                $("#slt_contact").children().removeClass(CLASS_SELECTED_CONTACT);
-                $("#recipientList").empty();
-            }
-            var contact = $(this);
-            contact.addClass(CLASS_SELECTED_CONTACT);
-            //open new message modal
-            var new_message_container = $('#new_message_container');
-            if (!new_message_container.isShown) {
-                $('#new_message_container').show();
-            }
-            var recipientList = $('#recipientList');
-            if ($('#' + RECIPIENT_LIST + id).length == 0) {
-                recipientList.append(createRecipientDiv(contact.text().trim(), id));
+        var thisId = getNumbersFromString($(this).attr("id"));
+
+        var exists = true;
+        if ($("#" + SEARCHNAME + thisId).length == 0) {
+            //add in search name
+            uiAppendContactSearch($(this).text(),thisId);
+            exists = false;
+        }
+
+        //sets the search contact to ""
+        $('#lsb_searchBarContacts').val("");
+
+        var sltContact = $('#slt_contact');
+        //Hide contacts tab
+        sltContact.children().show();
+        sltContact.hide();
+        //show conversation tab
+        $('#lsb_conversationsTab').click();
+
+        if (!exists) {
+            //if the search name does not exist than do the rest because it was added
+            var sltConvo = $('#slt_conversation');
+            if ($('#lsb_searchContactName').children().length == 1) {
+                //if the search contact area is empty then hide all
+                sltConvo.children().hide();
+                //show all convo divs that are the same
+                $("." + CONVO_CONTACT_ID + thisId).show();
             } else {
-                $('#' + RECIPIENT_LIST + id).remove();
-                contact.removeClass(CLASS_SELECTED_CONTACT);
+                //hide all the convos that are shown that do not have this id
+                sltConvo.children(':visible').not('.' + CONVO_CONTACT_ID + thisId).hide();
             }
         }
+
+        // if (!sendingNewMessage) {
+        //     if(!e.shiftKey) {
+        //         $("#slt_contact").children().removeClass(CLASS_SELECTED_CONTACT);
+        //         $("#recipientList").empty();
+        //     }
+        //     var contact = $(this);
+        //     contact.addClass(CLASS_SELECTED_CONTACT);
+        //     //open new message modal
+        //     var new_message_container = $('#new_message_container');
+        //     if (!new_message_container.isShown) {
+        //         $('#new_message_container').show();
+        //     }
+        //     var recipientList = $('#recipientList');
+        //     if ($('#' + RECIPIENT_LIST + id).length == 0) {
+        //         recipientList.append(createRecipientDiv(contact.text().trim(), id));
+        //     } else {
+        //         $('#' + RECIPIENT_LIST + id).remove();
+        //         contact.removeClass(CLASS_SELECTED_CONTACT);
+        //     }
+        // }
     });
     var convoNameSpan = $('<span>').html(full_name).attr("id", CONTACTS + id);
     contactsRowDiv.append(convoNameSpan);
@@ -760,5 +799,50 @@ function uiUpdateLoadMoreBar(id) {
         $('#rt_loadBtn').html(LOAD_BTN_NO_MORE)
             .removeClass("loadBtnLM")
             .addClass("loadBtnNM");
+    }
+}
+
+/**
+ * Appends a name bubble to the search area where looking for names
+ * @param fullName
+ */
+function uiAppendContactSearch(fullName,id) {
+    var contactSearch = $('<p>').addClass("lsb_searchNameBubble")
+        .attr("id",SEARCHNAME + id);
+
+    contactSearch.append($('<span>').html(fullName).css("vertical-align","-3px"))
+            .append(
+                $('<span>').html("&#10006;")
+                    .addClass("nameSearchX")
+                    .on("click", function (e) {
+                        //remove self first to change children
+                        $(this).parent().remove();
+                        var children = $('#lsb_searchContactName').children();
+                        var sltConversations = $('#slt_conversation');
+                        var id = getNumbersFromString($(this).parent().text());
+                        //remove self from area
+
+                        if (children.length <= 0) {
+                            //if the children in the search name area are less
+                            //then zero the show all.
+                            sltConversations.children().show();
+                        } else {
+                            //hide those convos that had this contact id
+                            $("." + CONVO_CONTACT_ID + id).hide();
+                            //show all those that have the other contact ids but not this one
+                            var completeStrings = "";
+                            for (var i = 0; i < children.length; i++) {
+                                completeStrings += "." + CONVO_CONTACT_ID
+                                    + getNumbersFromString($(children[i]).attr("id"));
+                            }
+                            //show strings that are in the group
+                            $(completeStrings).show();
+                        }
+                    })
+            );
+    var contactSearchArea = $('#lsb_searchContactName')
+        .append(contactSearch);
+    if (contactSearchArea.children().length%2 == 1) {
+        contactSearch.css("border-right-color", "black");
     }
 }

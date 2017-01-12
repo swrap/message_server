@@ -42,7 +42,7 @@ html,body{
     cursor: pointer;
 }
 
-#lsb_searchBar{
+#lsb_searchBarContacts{
     box-sizing: border-box;
     text-align:center;
     font-size:20px;
@@ -51,7 +51,7 @@ html,body{
     border:none;
 }
 
-#lsb_searchBar:focus{
+#lsb_searchBarContacts:focus{
     padding:0 10px;
     outline:none;
     text-align:left;
@@ -364,4 +364,35 @@ html,body{
 
 .data_fail {
     cursor: default;
+}
+
+#lsb_searchContactName {
+    min-height: 10%;
+    min-width: 100%;
+    float: left;
+}
+
+.lsb_searchNameBubble {
+    min-width: 48.5%;
+    min-height: 10%;
+    max-width: 100%;
+    color: white;
+    float: left;
+    font-size: 16px;
+    margin: 2px;
+    border: solid 1px;
+    border-color: black;
+    background-color: #52cc82;
+    vertical-align: text-bottom;
+    text-align: center;
+}
+
+.nameSearchX {
+    float: right;
+    font-size: 20px;
+    padding-right: 5px;
+}
+
+.nameSearchX:hover {
+    cursor: pointer;
 }

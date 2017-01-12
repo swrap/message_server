@@ -1136,7 +1136,7 @@ $('#lsb_conversationsTab').on("click", function(){
     $('#slt_contact').hide();
 });
 
-$('#lsb_searchBar').on("input", function () {
+$('#lsb_searchBarContacts').on("input", function () {
     $('#lsb_contactsTab').click();
     var searchText = $(this).first().val();
     if (searchText.length > 0) {

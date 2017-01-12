@@ -22,7 +22,7 @@ $('#lsb_conversationsTab').on("click", function(){
     $('#slt_contact').hide();
 });
 
-$('#lsb_searchBar').on("input", function () {
+$('#lsb_searchBarContacts').on("input", function () {
     $('#lsb_contactsTab').click();
     var searchText = $(this).first().val();
     if (searchText.length > 0) {
@@ -102,6 +102,7 @@ const ACTION = "action",
         POST_MESSAGES = "post_messages",
         SENT_MESSAGES = "sent_messages",
         SENT_MESSAGES_FAILED = "sent_messages_failed",
+        CONNECTED_REPLY = "connected_reply",
         CONNECTED = "connected",
         DISCONNECTED = "disconnected",
         RECEIVED_MESSAGE = "received_message",
@@ -212,10 +213,13 @@ var webOnMessage = function(e) {
                 //message failed to send, ??Change color of message bubble???
             break;
         case CONNECTED:
-                if (android_connected == false && sent_connected == false) {
+                if (android_connected == false && sent_connected == true) {
                     sendConnected();
                     sent_connected = true;
+                    android_connected = true;
                 }
+            break;
+        case CONNECTED_REPLY:
                 android_connected = true;
                 console.log("Is android connected [" + android_connected + "]");
                 $('#loading_label').css("background-color", "#52CC82");
@@ -223,12 +227,13 @@ var webOnMessage = function(e) {
                 setTimeout(function () {
                     $('#connect_waiting').modal('hide');
                     $('#loading_label').css("background-color", "#C77FFF");
-                $('#loading_text').html("Waiting to connect...");
+                    $('#loading_text').html("Waiting to connect...");
                 }, 1500);
             break;
         case DISCONNECTED:
                 //android disconnected
                 android_connected = false;
+                sent_connected = false;
                 console.log("Is android connected [" + android_connected + "]");
                 $('#connect_waiting').modal('show').focus();
                 //TODO fix backend to not send disconnect on wifi reconnect disconnect
@@ -398,16 +403,18 @@ var loadWait = true,
         loadWaitTime = 1000;
 
 $('#rt_loadBtn').on("click", function () {
-    if (loadWait) {
-        var convoIdVal = $('#convo_id').val();
-        if (convoIdVal !== null && convoIdVal) {
-            var rmArea = $('#rt_messageArea');
-            var key = Object.keys(retrieveMessages(convoIdVal)[0]);
-            var offset = retrieveMessages(convoIdVal)[0][key][DATE_RECIEVED];
-            webSocketCon.send(getMessagesJSON(convoIdVal,DEFAULT_GET_MESSAGES,offset,0/*before*/));
+    if ($('#rt_loadBtn').text() == LOAD_BTN_LOAD_MORE) {
+        if (loadWait) {
+            var convoIdVal = $('#convo_id').val();
+            if (convoIdVal !== null && convoIdVal) {
+                var rmArea = $('#rt_messageArea');
+                var key = Object.keys(retrieveMessages(convoIdVal)[0]);
+                var offset = retrieveMessages(convoIdVal)[0][key][DATE_RECIEVED];
+                webSocketCon.send(getMessagesJSON(convoIdVal,DEFAULT_GET_MESSAGES,offset,0/*before*/));
+            }
+            loadWait = false;
+            setTimeout(function() { loadWait = true }, loadWaitTime);
         }
-        loadWait = false;
-        setTimeout(function() { loadWait = true }, loadWaitTime);
     }
 });
 
