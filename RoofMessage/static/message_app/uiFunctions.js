@@ -336,7 +336,7 @@ function createMessageDiv(jsonObject, id, convoId) {
                 messageTextSpan.html(messageTextSpan.html() + "<br>");
                 var cId = jsonObject[CONTACT_ID];
                 var contactTextSpan = $('<span>').html(
-                    cId == undefined ? getPhoneNumberFormat(jsonObject[ADDRESS]) : cId
+                    "- " + (cId == undefined ? getPhoneNumberFormat(jsonObject[ADDRESS]) : cId)
                 ).css({
                     "word-wrap":"break-word",
                     "display":"inline-block",
