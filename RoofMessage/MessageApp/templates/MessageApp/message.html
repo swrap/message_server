@@ -89,7 +89,12 @@
             </div>
             <div id="rightMessage">
                 <div id="rt_topBar">{{ user.username}}</div>
-                <div class="loadBtnNM" id="rt_loadBtn">No More Messages To Load</div>
+                <div class="loadBtnNM" id="rt_loadBtn">
+                    <span>No More Messages To Load</span>
+                    <div id="loadBtnGlyp" style="display: none;">
+                        <span class="glyphicon glyphicon-refresh spinning"></span>
+                    </div>
+                </div>
                 <div id="rt_messageArea"></div>
                 <div id="rt_inputsDiv">
                     <div id="rt_messageInput" contenteditable="true"></div>

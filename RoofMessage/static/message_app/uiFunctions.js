@@ -19,6 +19,7 @@ var PART_ID = "part_id";
 var DATALOAD = "DATALOAD";
 var SEARCHNAME = "SEARCHNAME";
 var CONVO_CONTACT_ID = "CONVO_CONTACT_ID"; //used for convo contact id
+var HEX_COLOR = "hex_color";
 
 var TEXT = "TEXT";
 var CONTENT_TYPE = "CONTENT_TYPE";
@@ -72,25 +73,25 @@ function uiAddAllConversations() {
         var text = recip.length;
         var names = [];
         var numbers = [];
-        for (var r in recip) {
+        for (var r = 0; r < recip.length; r++) {
             if (recip[r][FULL_NAME] != null) {
                 // text += " [" + recip[r][FULL_NAME] + "]";
                 names.push(recip[r][FULL_NAME]);
                 numbers.push(getPhoneNumberFormat(recip[r][PHONE_NUMBER]));
             } else {
-                names.push("");
+                names.push(getPhoneNumberFormat(recip[r][PHONE_NUMBER]));
                 numbers.push(getPhoneNumberFormat(recip[r][PHONE_NUMBER]));
             }
         }
         var convoIdDiv = $('#' + CONVERSATIONS + key);
         //if exists create and add div
         if (convoIdDiv.length == 0) {
-            var createdConvo = createConversationDiv(names, numbers, key, value[key][MESSAGE_COUNT]);
+            var createdConvo = createConversationDiv(names, numbers, key);
 
             //append ids of each contact id
             //used for name searching
             $.each(value[key][RECIPIENTS], function (index, value) {
-               createdConvo.addClass(CONVO_CONTACT_ID + value[CONTACT_ID]);
+                createdConvo.addClass(CONVO_CONTACT_ID + value[CONTACT_ID]);
             });
 
             //set color selected back to the correct selected color
@@ -99,7 +100,7 @@ function uiAddAllConversations() {
                 createdConvo.css("background-color", CONVO_BACKGROUND_COLOR_SELECTED);
             }
 
-            createdConvo.on("click",function () {
+            createdConvo.on("click", function () {
                 var convo_id = $('#convo_id');
                 var convo_id_val = convo_id.val();
 
@@ -107,7 +108,7 @@ function uiAddAllConversations() {
                 var selectedId = getNumbersFromString(selectedConvo.attr('id'));
 
                 //selected id does not equal convo id currently on
-                if(selectedId != convo_id_val) {
+                if (selectedId != convo_id_val) {
                     if (selectedId != convo_id_val) {
                         //reset the background color to white
                         $('#' + CONVERSATIONS + convo_id_val).css("background-color", "");
@@ -115,30 +116,35 @@ function uiAddAllConversations() {
                     }
 
                     console.log(selectedId + " " + selectedConvo.attr('id'));
-                    convo_id.attr("value",selectedId);
+                    convo_id.attr("value", selectedId);
 
                     if (!uiAddConversationMessages(selectedId)) {
                         //no messages found, sending request for more
-                        webSocketCon.send(getMessagesJSON(selectedId,DEFAULT_GET_MESSAGES,-1,0/*before*/));
+                        webSocketCon.send(getMessagesJSON(selectedId, DEFAULT_GET_MESSAGES, -1, 0/*before*/));
                     }
-                    setTimeout(function() {
+                    setTimeout(function () {
                         uiScrollTop(retrieveScrollTop(selectedId));
                     }, 300);
                     //convo messages were found hide current convo messages
                     $('#' + CONVO + convo_id_val).hide();
                 }
-                selectedConvo.css("background-color",CONVO_BACKGROUND_COLOR_SELECTED);
+                selectedConvo.css("background-color", CONVO_BACKGROUND_COLOR_SELECTED);
 
                 //handle load more bar
                 uiUpdateLoadMoreBar(selectedId);
+
+                //update glyph of loading message
+                uiShowHideLoadingMessages(retrieveLoadingMoreMessages(selectedId) == "t")
             });
             slt_conversation.append(createdConvo);
-        } else {
-            //updating div if already exists
-            var span = convoIdDiv.children("span")[0];
-            span.innerText = span.textContent = value[key][MESSAGE_COUNT];
-            slt_conversation.append(convoIdDiv);
         }
+            ////NOTE COMMENTED CODE IS FOR UPDAING WITH MESSAGE IDS
+        // } else {
+        //     //updating div if already exists
+        //     var span = convoIdDiv.children("span")[0];
+        //     span.innerText = span.textContent = value[key][MESSAGE_COUNT];
+        //     slt_conversation.append(convoIdDiv);
+        // }
     });
 }
 
@@ -324,7 +330,10 @@ function createMessageDiv(jsonObject, id, convoId) {
         if (multi) {
             if (messageTextSpan != undefined) {
                 messageTextSpan.html(messageTextSpan.html() + "<br>");
-                var contactTextSpan = $('<span>').html(matchAddressFromConvo(convoId,jsonObject[ADDRESS])).css({
+                var cId = jsonObject[CONTACT_ID];
+                var contactTextSpan = $('<span>').html(
+                    cId == undefined ? getPhoneNumberFormat(jsonObject[ADDRESS]) : cId
+                ).css({
                     "word-wrap":"break-word",
                     "display":"inline-block",
                     "word-break":"break-word",
@@ -432,33 +441,12 @@ function createMessageDiv(jsonObject, id, convoId) {
 
 /**
  * Creates a Conversation div
- * @param names {array} of names
+ * @param names {Array} br names of string
+ * @param numbers {Array} br numbers of string
  * @param id    id of conversation
  * @returns {*|jQuery}
  */
-function createConversationDiv(names, numbers, id, message_count) {
-    var numberString = "";
-    for (var n in names) {
-        numberString += (numbers[n]);
-        if (n != numbers.length) {
-             numberString += "<br>";
-        }
-    }
-
-    var nameString = "";
-    var notEmpty = false;
-    for (n in names) {
-        nameString += (names[n]);
-        if (names[n] != "" && !notEmpty) {
-            notEmpty = true;
-        }
-        if (n != names.length) {
-             nameString += "<br>";
-        }
-    }
-    if (!notEmpty) {
-        nameString = numberString;
-    }
+function createConversationDiv(names, numbers, id) {
 
     var convoRowDiv = $('<div>').attr({
             "class": "list-group-item list-group-item-action",
@@ -466,32 +454,45 @@ function createConversationDiv(names, numbers, id, message_count) {
             "data-toggle": "tooltip",
             "data-placement": "right",
             "data-html": true,
-            "title": numberString,
         }).css({
         "width": "100%",
         "text-overflow": "ellipsis",
         "text-align": "left",
     });
 
-    var convoNameSpan = $('<span>').html(nameString).css({
-        "float": "left",
-        "display": "block",
-    });
+    var convoNameDiv = $('<div>').css({"display":"block", "float": "left"});
 
-    // var convoMessageCountSpan = $('<span>').html(
-    //     getNumberCommaFormatted(message_count))
-    //         .css({
-    //             "display": "block",
-    //             "float": "right",
-    //             "color": "white",
-    //             "padding": "3px 3px",
-    //             "border-radius": "20px",
-    //             "background-color": CONVO_BACKGROUND_MESSAGE_COUNT,
-    //         });
-    // convoRowDiv.append(convoMessageCountSpan);
-    convoRowDiv.append(convoNameSpan);
+    var convoMessageCountSpan = null;
+    var stringNames = "";
+    var stringNums = "";
+    var i = 0;
+    for (i < names; i < names.length; i++) {
+        stringNames += names[i];
+        stringNums += numbers[i];
+
+        convoNameDiv.append($('<span>').html(names[i]).css({
+            "float": "left",
+            "display": "block",
+        }));
+
+        // convoNameDiv.append($('<span>')
+        // .css({
+        //     "display": "block",
+        //     "float": "left",
+        //     "padding": "3px 3px",
+        //     "min-width": "10px",
+        //     "min-height": "10px",
+        //     "border-radius": "20px",
+        //     "margin-top": "2px",
+        //     "background-color": hexColor[i],
+        // }));
+        convoNameDiv.append("<br>");
+    }
+
+    convoRowDiv.append(convoNameDiv);
+    convoRowDiv.attr("title", stringNums);
     convoRowDiv.addClass(CLASS_POINTER);
-    convoRowDiv.tooltip();
+    convoRowDiv.tooltip({delay: {show: 2000, hide:100}});
     return convoRowDiv;
 }
 
@@ -767,36 +768,19 @@ function convoDivExists(convoId) {
 }
 
 /**
- * Takes in a convoId and an address, looks through convo and matches
- * any address's that equal the given address, returns name
- * @param convoId
- * @param address
- * @returns {string}
- */
-function matchAddressFromConvo(convoId, address) {
-    var recipients = retrieveConversation(convoId)[RECIPIENTS];
-    for(var i = 0; i < recipients.length; i++) {
-        var value = recipients[i];
-        var key = Object.keys(value)[0];
-        if (address.indexOf(value[PHONE_NUMBER]) >= 0) {
-            return value[FULL_NAME];
-        }
-    }
-    return "UNKNOWN";
-}
-
-/**
  * Load more updates the load more to display load more based off of given id
  */
 function uiUpdateLoadMoreBar(id) {
     var loadMore = retrieveLoadMore(id);
     if (loadMore == null || (loadMore != null && loadMore == "f")) {
         //if load more is not null or it is false than assume t and display new text
-        $('#rt_loadBtn').html(LOAD_BTN_LOAD_MORE)
+        $('#rt_loadBtn > span').html(LOAD_BTN_LOAD_MORE);
+        $('#rt_loadBtn')
             .removeClass("loadBtnNM")
             .addClass("loadBtnLM");
     } else {
-        $('#rt_loadBtn').html(LOAD_BTN_NO_MORE)
+        $('#rt_loadBtn > span').html(LOAD_BTN_NO_MORE);
+        $('#rt_loadBtn')
             .removeClass("loadBtnLM")
             .addClass("loadBtnNM");
     }
@@ -844,5 +828,17 @@ function uiAppendContactSearch(fullName,id) {
         .append(contactSearch);
     if (contactSearchArea.children().length%2 == 1) {
         contactSearch.css("border-right-color", "black");
+    }
+}
+
+/**
+ * Ui hide or show glyphcon for loading
+ * @param bool
+ */
+function uiShowHideLoadingMessages(bool) {
+    if (bool) {
+        $('#loadBtnGlyp').show();
+    } else {
+        $('#loadBtnGlyp').hide();
     }
 }

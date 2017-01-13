@@ -82,6 +82,7 @@ var CONVO_ID = "convo_id";
 var NUMBER = "number";
 var KEY = "key";
 var LOADMORE = "loadmore";
+var LOADINGMORE = "loadingmore";
 
 var temp_convo_id_count = 0;
 
@@ -366,7 +367,7 @@ function retrieveScrollTop(convo_id) {
  *
  * @param partId        part_id for the part data you want to get
  * @param content_type  content type for the location
- * @param messageID     id of the message
+ * @param messageId     id of the message
  */
 function prepareGetData(partId, content_type, messageId) {
     var json = {
@@ -380,7 +381,7 @@ function prepareGetData(partId, content_type, messageId) {
 
 /**
  * store load more
- * @param convo_id
+ * @param convoId
  */
 function storeLoadMore(convoId, bool) {
     return sessionStorage.setItem(LOADMORE + convoId, bool);
@@ -388,8 +389,24 @@ function storeLoadMore(convoId, bool) {
 
 /**
  * Retrieve load more
- * @param convo_id
+ * @param convoId
  */
 function retrieveLoadMore(convoId) {
     return sessionStorage.getItem(LOADMORE + convoId);
+}
+
+/**
+ * store load more
+ * @param convoId
+ */
+function storeLoadingMoreMessages(convoId, bool) {
+    return sessionStorage.setItem(LOADINGMORE + convoId, bool);
+}
+
+/**
+ * Retrieve load more
+ * @param convoId
+ */
+function retrieveLoadingMoreMessages(convoId) {
+    return sessionStorage.getItem(LOADINGMORE + convoId);
 }

@@ -49,6 +49,7 @@ if not DEBUG:
 
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
+    SESSION_EXPIRE_AT_BROWSER_CLOSE = True
 
     ADMINS = [('Jesse','jesse.saranwrap@gmail.com'),('Tommy','accounts2952@gmail.com')]
 

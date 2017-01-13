@@ -149,6 +149,7 @@ var webOnMessage = function(e) {
                 } else {
                     storeLoadMore(jsonConvoId, "f");
                 }
+                storeLoadingMoreMessages(active_json[THREAD_ID],"f");
 
                 var convoIdVal = $('#convo_id').val();
                 if (jsonConvoId == convoIdVal) {
@@ -165,6 +166,9 @@ var webOnMessage = function(e) {
 
                     //update load more if convo_id matches
                     uiUpdateLoadMoreBar(convoIdVal);
+
+                    //hide glyph for loading
+                    uiShowHideLoadingMessages(false);
                 }
 
                 //if convo for message does not exist then ask for update of all messages
@@ -336,6 +340,7 @@ var webOnOpen = function() {
 };
 
 var webOnErrorClose = function(){
+        android_connected = false;
         $('#connect_waiting').modal({
             backdrop: 'static',
             show:true,
@@ -399,21 +404,17 @@ $('#rt_messageArea').on("scroll",function(){
     }
 });
 
-var loadWait = true,
-        loadWaitTime = 1000;
-
 $('#rt_loadBtn').on("click", function () {
-    if ($('#rt_loadBtn').text() == LOAD_BTN_LOAD_MORE) {
-        if (loadWait) {
-            var convoIdVal = $('#convo_id').val();
-            if (convoIdVal !== null && convoIdVal) {
-                var rmArea = $('#rt_messageArea');
-                var key = Object.keys(retrieveMessages(convoIdVal)[0]);
-                var offset = retrieveMessages(convoIdVal)[0][key][DATE_RECIEVED];
-                webSocketCon.send(getMessagesJSON(convoIdVal,DEFAULT_GET_MESSAGES,offset,0/*before*/));
-            }
-            loadWait = false;
-            setTimeout(function() { loadWait = true }, loadWaitTime);
+    var convoIdVal = $('#convo_id').val();
+    if (convoIdVal !== null && convoIdVal) {
+        var ret = retrieveLoadingMoreMessages(convoIdVal);
+        if ($('#rt_loadBtn > span').text() == LOAD_BTN_LOAD_MORE &&  ret != "t") {
+            var rmArea = $('#rt_messageArea');
+            var key = Object.keys(retrieveMessages(convoIdVal)[0]);
+            var offset = retrieveMessages(convoIdVal)[0][key][DATE_RECIEVED];
+            webSocketCon.send(getMessagesJSON(convoIdVal,DEFAULT_GET_MESSAGES,offset,0/*before*/));
+            storeLoadingMoreMessages(convoIdVal, "t");
+            uiShowHideLoadingMessages(true);
         }
     }
 });
