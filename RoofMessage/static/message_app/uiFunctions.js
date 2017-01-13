@@ -121,6 +121,13 @@ function uiAddAllConversations() {
                     if (!uiAddConversationMessages(selectedId)) {
                         //no messages found, sending request for more
                         webSocketCon.send(getMessagesJSON(selectedId, DEFAULT_GET_MESSAGES, -1, 0/*before*/));
+
+                        storeLoadingMoreMessages(selectedId, true);
+                        //update glyph of loading message
+                        uiShowHideLoadingMessages(true);
+                    } else {
+                        //update glyph of loading message
+                        uiShowHideLoadingMessages(retrieveLoadingMoreMessages(selectedId) == "t")
                     }
                     setTimeout(function () {
                         uiScrollTop(retrieveScrollTop(selectedId));
@@ -132,9 +139,6 @@ function uiAddAllConversations() {
 
                 //handle load more bar
                 uiUpdateLoadMoreBar(selectedId);
-
-                //update glyph of loading message
-                uiShowHideLoadingMessages(retrieveLoadingMoreMessages(selectedId) == "t")
             });
             slt_conversation.append(createdConvo);
         }
