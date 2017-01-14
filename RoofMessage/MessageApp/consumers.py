@@ -23,6 +23,8 @@ def ws_add(message):
         if group == GROUP_ANDROID:
             username = re.match( r'(.*?)%s'% ANDROID_CONSTANT, username).group(1)
         Group("%s-%s" % (group, username)).add(message.reply_channel)
+    else:
+        log.debug("Attempted Login FAILED")
 
 # Connected to websocket.disconnect
 @enforce_ordering(slight=True)

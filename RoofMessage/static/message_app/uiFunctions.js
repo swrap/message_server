@@ -141,6 +141,8 @@ function uiAddAllConversations() {
                 uiUpdateLoadMoreBar(selectedId);
             });
             slt_conversation.append(createdConvo);
+        } else {
+            slt_conversation.append(convoIdDiv);
         }
             ////NOTE COMMENTED CODE IS FOR UPDAING WITH MESSAGE IDS
         // } else {
