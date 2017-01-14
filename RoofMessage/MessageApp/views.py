@@ -1,5 +1,6 @@
 import copy
 import json
+import threading
 from datetime import timedelta
 
 from django.contrib.sessions.models import Session
@@ -27,11 +28,32 @@ LINK_EXPIRATION = 2 #days for new pass link to expire
 
 #Email file Constants
 from django.conf import settings
-EMAIL_DELETE_ACCOUNT = settings.STATIC_ROOT + "email/deleted_account.html"
-EMAIL_NEW_PASSWORD_LINK = settings.STATIC_ROOT + "email/new_password_link.html"
-EMAIL_PASSWORD_CHANGE_NOTIFICATION = settings.STATIC_ROOT + "email/pass_change_email.html"
-EMAIL_VERIFY_ACCOUNT= settings.STATIC_ROOT + "email/verify_account_email.html"
-EMAIL_ALPHA_KEY = settings.STATIC_ROOT + "email/new_alpha_key.html"
+EMAIL_DELETE_ACCOUNT = settings.STATIC_NOT_MAPPED + "email/deleted_account.html"
+EMAIL_NEW_PASSWORD_LINK = settings.STATIC_NOT_MAPPED + "email/new_password_link.html"
+EMAIL_PASSWORD_CHANGE_NOTIFICATION = settings.STATIC_NOT_MAPPED + "email/pass_change_email.html"
+EMAIL_VERIFY_ACCOUNT= settings.STATIC_NOT_MAPPED + "email/verify_account_email.html"
+EMAIL_ALPHA_KEY = settings.STATIC_NOT_MAPPED + "email/new_alpha_key.html"
+
+import logging
+log = logging.getLogger("RoofMessage")
+
+class EmailThread(threading.Thread):
+    def __init__(self, subject, message, email):
+        self.subject = subject
+        self.email = email
+        self.message = message
+        threading.Thread.__init__(self)
+
+    def run(self):
+        try:
+            from RoofMessage import settings
+            send_mail(subject=self.subject, message=self.message, html_message=self.message,
+                      from_email=settings.EMAIL_HOST_USER, recipient_list=(self.email,),
+                      fail_silently=True)
+        except BadHeaderError:
+            log.debug("Failed to send email")
+            ############need to add error page with optional message and optional countdown
+            #### also add log for error
 
 #used as decorator!
 #checks both if user exists and if exists
@@ -388,15 +410,9 @@ def send_alpha_key(alpha_key, alpha_url, alpha_key_pass, email):
     send_email(subject, message, email, True)
 
 def send_email(subject, message, email, forward):
-    try:
-        from RoofMessage import settings
-        send_mail(subject=subject, message=message,html_message=message, from_email=settings.EMAIL_HOST_USER,
-                  recipient_list=(email,), fail_silently=True)
-    except BadHeaderError:
-        ############need to add error page with optional message and optional countdown
-        #### also add log for error
-        if forward:
-            return redirect('MessageApp:index')
+    EmailThread(subject=subject, message=message, email=email).start()
+    if forward:
+        return redirect('MessageApp:index')
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @user_passes_test(user_allowed,login_url='/')

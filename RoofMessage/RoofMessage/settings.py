@@ -10,8 +10,19 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.9/ref/settings/
 """
 
+# the forwarding for @login_required
+LOGIN_URL = '/'
+
+# CONSTANTS FOR EMAIL
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = "rooftext@gmail.com"
+EMAIL_HOST_PASSWORD = "AMn5b1jadf80h5basdf"
+DOMAIN_HOST = "https://rooftext.com"  # "http://yourdomain.com/"
+
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 if not DEBUG:
     import os
@@ -33,19 +44,6 @@ if not DEBUG:
     SECURE_SSL_REDIRECT = True
     USE_X_FORWARDED_HOST = True
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-
-    #the forwarding for @login_required
-    LOGIN_URL = '/'
-
-    #CONSTANTS FOR EMAIL
-    EMAIL_USE_TLS = True
-    EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_HOST_USER = "rooftext@gmail.com"
-    EMAIL_HOST_PASSWORD = "AMn5b1jadf80h5basdf"
-    DOMAIN_HOST = "https://rooftext.com" #"http://yourdomain.com/"
-
-    #USED IN VIEWS_AJAX should be in properties file in the future
-    MESSAGE_LOAD = 50
 
     CSRF_COOKIE_SECURE = True
     SESSION_COOKIE_SECURE = True
@@ -95,8 +93,9 @@ if not DEBUG:
             'BACKEND': 'django.template.backends.django.DjangoTemplates',
             'DIRS': [#"static/email/",
                      #"RoofMessage/static/email/",
-             "/home/jesse/rooftext/messagerepo/static_files/",
-                     "/home/jesse/rooftext/messagerepo/static_files/email/"],
+                    # "/home/jesse/rooftext/messagerepo/static_files/",
+                    #  "/home/jesse/rooftext/messagerepo/static_files/email/"
+                    os.path.join(os.path.dirname(BASE_DIR), "static_files_not_mapped/"),],
             'APP_DIRS': True,
             'OPTIONS': {
                 'context_processors': [
@@ -160,6 +159,8 @@ if not DEBUG:
     # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
     STATIC_URL = '/static/'
+
+    STATIC_NOT_MAPPED = os.path.join(os.path.dirname(BASE_DIR),"static_files_not_mapped/")#"/var/www/example.com/static/"
 
     #static files .css, .js, etc.
     STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR),"static_files/")#"/var/www/example.com/static/"
@@ -269,19 +270,6 @@ else:
 
     ALLOWED_HOSTS = []
 
-    #the forwarding for @login_required
-    LOGIN_URL = '/'
-
-    #CONSTANTS FOR EMAIL
-    EMAIL_USE_TLS = True
-    EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_HOST_USER = "bleepdodeepydo@gmail.com"
-    EMAIL_HOST_PASSWORD = "ASM2j5bb2/^hadsb"
-    DOMAIN_HOST = "http://127.0.0.1:8000" #"http://yourdomain.com/"
-
-    #USED IN VIEWS_AJAX should be in properties file in the future
-    MESSAGE_LOAD = 50
-
     # Application definition
 
     INSTALLED_APPS = [
@@ -318,9 +306,11 @@ else:
     TEMPLATES = [
         {
             'BACKEND': 'django.template.backends.django.DjangoTemplates',
-            'DIRS': ["static/email/",
-                     "RoofMessage/static/email/",
-                     "C:\\Users\\Jesse Saran\\PycharmProjects\\messagerepo\\static_files\\"],
+            'DIRS': [#"static/email/",
+                     #"RoofMessage/static/email/",
+                    # "/home/jesse/rooftext/messagerepo/static_files/",
+                    #  "/home/jesse/rooftext/messagerepo/static_files/email/"
+                    os.path.join(os.path.dirname(BASE_DIR), "RoofMessage/static_not_mapped/"),],
             'APP_DIRS': True,
             'OPTIONS': {
                 'context_processors': [
@@ -384,6 +374,8 @@ else:
     # https://docs.djangoproject.com/en/1.9/howto/static-files/
 
     STATIC_URL = '/static/'
+
+    STATIC_NOT_MAPPED = os.path.join(os.path.dirname(BASE_DIR),"RoofMessage/static_not_mapped/")#"/var/www/example.com/static/"
 
     #static files .css, .js, etc.
     STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR),"static_files/")#"/var/www/example.com/static/"
