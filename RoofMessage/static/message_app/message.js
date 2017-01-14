@@ -42,23 +42,23 @@ $('#lsb_searchBarContacts').on("input", function () {
 
 $("#new_message_cancelBtn").on("click", function () {
     $("#new_message_container").hide();
-    $("#slt_contact").children().removeClass(CLASS_SELECTED_CONTACT);
-    $("#recipientList").empty();
     $("#new_message_textArea").val("");
+    $("#lsb_newMessageBtn").show();
 });
 
 $("#new_message_sendBtn").on("click", function() {
-    var children = $("#recipientList").children();
     var text = $('#new_message_textArea').val();
-    if (text.length > 0 && children.length > 0) {
+    if (text.length > 0) {
         var numbersJson = [];
+        var children = $('#lsb_searchContactName').children();
         for (var i = 0; i < children.length; i++) {
-            var contact = retrieveContact(getNumbersFromString(children[i].id));
-            var number = getNumbersFromString(contact[PHONE_NUMBER]);
+            var contactId = getNumbersFromString(children[i].id);
+            var number = getNumbersFromString($("#" + CONTACTS + contactId).attr("data-original-title"));
             numbersJson.push({
                 "number": number
             });
-        }//TODO DOCUMENTATION
+        }
+        //TODO DOCUMENTATION
         //TODO HAVE TO REINVENT HOW TO SEND NEW MESSAGES
 
         temp_convo_id_count++;
@@ -453,4 +453,9 @@ $(window).focus(function() {
 $(window).blur(function() {
     inFocus = 0;
     console.log("Out of focus.");
+});
+
+$('#lsb_newMessageBtn').on('click', function () {
+    $(this).hide();
+    $('#new_message_container').show()
 });

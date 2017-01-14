@@ -539,9 +539,9 @@ function createContactDiv(full_name, id, phone_number) {
         //show conversation tab
         $('#lsb_conversationsTab').click();
 
+        var sltConvo = $('#slt_conversation');
         if (!exists) {
             //if the search name does not exist than do the rest because it was added
-            var sltConvo = $('#slt_conversation');
             if ($('#lsb_searchContactName').children().length == 1) {
                 //if the search contact area is empty then hide all
                 sltConvo.children().hide();
@@ -553,26 +553,11 @@ function createContactDiv(full_name, id, phone_number) {
             }
         }
 
-        // if (!sendingNewMessage) {
-        //     if(!e.shiftKey) {
-        //         $("#slt_contact").children().removeClass(CLASS_SELECTED_CONTACT);
-        //         $("#recipientList").empty();
-        //     }
-        //     var contact = $(this);
-        //     contact.addClass(CLASS_SELECTED_CONTACT);
-        //     //open new message modal
-        //     var new_message_container = $('#new_message_container');
-        //     if (!new_message_container.isShown) {
-        //         $('#new_message_container').show();
-        //     }
-        //     var recipientList = $('#recipientList');
-        //     if ($('#' + RECIPIENT_LIST + id).length == 0) {
-        //         recipientList.append(createRecipientDiv(contact.text().trim(), id));
-        //     } else {
-        //         $('#' + RECIPIENT_LIST + id).remove();
-        //         contact.removeClass(CLASS_SELECTED_CONTACT);
-        //     }
-        // }
+
+        //show new message btn
+        if (sltConvo.children(':visible').length == 0 && !$('#new_message_container').isShown) {
+            $('#lsb_newMessageBtn').show();
+        }
     });
     var convoNameSpan = $('<span>').html(full_name).attr("id", CONTACTS + id);
     contactsRowDiv.append(convoNameSpan);
@@ -744,7 +729,7 @@ function uiSendingNewMessage(boolean_val) {
         $('#new_message_textArea').prop("disabled", true);
         $('.new_message_pointer').hide();
     } else {
-        $('#new_message_btns').show();
+        $('#new_message_btns').hide();
         $('#sending_div').hide();
         $('#new_message_textArea').prop("disabled", false);
         $('#new_message_cancelBtn').click();
@@ -810,7 +795,6 @@ function uiAppendContactSearch(fullName,id) {
                         var children = $('#lsb_searchContactName').children();
                         var sltConversations = $('#slt_conversation');
                         var id = getNumbersFromString($(this).parent().text());
-                        //remove self from area
 
                         if (children.length <= 0) {
                             //if the children in the search name area are less
@@ -827,6 +811,14 @@ function uiAppendContactSearch(fullName,id) {
                             }
                             //show strings that are in the group
                             $(completeStrings).show();
+                        }
+
+                        //change whether or not message area is displayed
+                        if (sltConversations.children(":visible").length > 0) {
+                            $('#lsb_newMessageBtn').hide();
+                            $('#new_message_container').hide();
+                        } else {
+                            $('#lsb_newMessageBtn').show();
                         }
                     })
             );
@@ -846,5 +838,28 @@ function uiShowHideLoadingMessages(bool) {
         $('#loadBtnGlyp').show();
     } else {
         $('#loadBtnGlyp').hide();
+    }
+}
+
+function uiSendingMessage() {
+    if (!sendingNewMessage) {
+        if(!e.shiftKey) {
+            $("#slt_contact").children().removeClass(CLASS_SELECTED_CONTACT);
+            $("#recipientList").empty();
+        }
+        var contact = $(this);
+        contact.addClass(CLASS_SELECTED_CONTACT);
+        //open new message modal
+        var new_message_container = $('#new_message_container');
+        if (!new_message_container.isShown) {
+            $('#new_message_container').show();
+        }
+        var recipientList = $('#recipientList');
+        if ($('#' + RECIPIENT_LIST + id).length == 0) {
+            recipientList.append(createRecipientDiv(contact.text().trim(), id));
+        } else {
+            $('#' + RECIPIENT_LIST + id).remove();
+            contact.removeClass(CLASS_SELECTED_CONTACT);
+        }
     }
 }

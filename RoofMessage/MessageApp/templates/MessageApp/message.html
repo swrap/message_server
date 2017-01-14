@@ -36,7 +36,33 @@
                 </div>
                 <div id="lsb_searchBarDiv">
                     <input id="lsb_searchBarContacts" type="text" placeholder="Search your contacts">
-                    <div id="lsb_searchContactName">
+                    <div id="lsb_searchContactName"></div>
+                    <div id="lsb_newMessageBtn" class="btn btn-outline-primary"><p>New Message</p></div>
+                    <div id="new_message_container" style="display: none;">
+                        <form>
+                            <div class="form-group">
+                                <textarea class="form-control" id="new_message_textArea" rows="3" style="
+                                    resize: vertical;
+                                "></textarea>
+                                <div id="new_message_btns" style="flex: 1;">
+                                    <div class="btn sendBtn" id="new_message_sendBtn" style="
+                                        border: solid 1px black;
+                                        padding-right: 5px;
+                                        float: left;
+                                    ">Send</div>
+                                    <div class="btn cancelBtn" id="new_message_cancelBtn" style="
+                                        border: solid 1px black;
+                                        float: right;
+                                    ">Cancel</div>
+                                </div>
+                                <div id="sending_div" hidden>
+                                    <span class="label label-default" id="sending_label" style="font-size: 16px; background-color: #8347B2;">
+                                        <span class="glyphicon glyphicon-refresh spinning"></span>
+                                        <span id="sending_text"> Attempting to send...</span>
+                                    </span>
+                                </div>
+                            </div>
+                        </form>
                     </div>
                 </div>
                 <div id="lsb_tabs">
@@ -56,37 +82,6 @@
                     <div class="btn btn-outline-primary" id="lsb_logoutBtn" onclick="location.href='{% url 'MessageApp:logout' %}'">Logout</div>
                 </div>
             </div>
-            <div id="new_message_container" hidden>
-                <form>
-                    <div class="form-group">
-                        <label for="recipientInput">Recipients</label>
-                        <ul class="list-group" id="recipientList"></ul>
-                    </div>
-                    <div class="form-group">
-                        <label for="textArea">Message</label>
-                        <textarea class="form-control" id="new_message_textArea" rows="3" style="
-                            resize: vertical;
-                        "></textarea>
-                    </div>
-                    <div id="new_message_btns" style="flex: 1;">
-                        <div class="sendBtn" id="new_message_sendBtn" style="
-                            border: solid 1px black;
-                            padding-right: 5px;
-                            float: left;
-                        ">Send</div>
-                        <div class="cancelBtn" id="new_message_cancelBtn" style="
-                            border: solid 1px black;
-                            float: right;
-                        ">Cancel</div>
-                    </div>
-                    <div id="sending_div" hidden>
-                        <span class="label label-default" id="sending_label" style="font-size: 16px; background-color: #8347B2;">
-                            <span class="glyphicon glyphicon-refresh spinning"></span>
-                            <span id="sending_text"> Attempting to send...</span>
-                        </span>
-                    </div>
-                </form>
-            </div>
             <div id="rightMessage">
                 <div id="rt_topBar">{{ user.username}}</div>
                 <div class="loadBtnNM" id="rt_loadBtn">
@@ -99,7 +94,7 @@
                 <div id="rt_inputsDiv">
                     <div id="rt_messageInput" contenteditable="true"></div>
                     <div id="rt_sendArea">
-                        <div id="rt_sendBtn" class="sendBtn">Send</div>
+                        <div id="rt_sendBtn">Send</div>
                         <div id="rt_charCountArea">
                             <span>Char: <span id="rt_charCount">0</span></span>
                         </div>
