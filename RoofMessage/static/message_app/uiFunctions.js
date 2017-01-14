@@ -470,7 +470,7 @@ function createConversationDiv(names, numbers, id) {
     var stringNames = "";
     var stringNums = "";
     var i = 0;
-    for (i < names; i < names.length; i++) {
+    for (i = 0; i < names.length; i++) {
         stringNames += names[i];
         stringNums += numbers[i];
 

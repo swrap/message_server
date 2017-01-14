@@ -133,8 +133,6 @@ function storeContacts(jsonObject) {
 
 /**
  * Used to retrieve a complete array of json contact objects
- *
- * @returns {Array}
  */
 function retrieveContacts() {
     var contacts = sessionStorage.getItem(CONTACTS);
@@ -324,7 +322,6 @@ function storeMessageTempIdArr(temp_message_id, convo_id, body) {
 
 /**
  * Used for retrieving temp message ids
- * @returns {array}
  */
 function retrieveMessageTempIdArr() {
     return messageTempIdArr;
@@ -332,7 +329,7 @@ function retrieveMessageTempIdArr() {
 
 /**
  * Used for storing temp convo id's
- * @param temp_message_id
+ * @param temp_convo_id
  */
 function storeConvoTempId(temp_convo_id) {
     convoTempIdArr.push(temp_convo_id);
