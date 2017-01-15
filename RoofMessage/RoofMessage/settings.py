@@ -21,8 +21,12 @@ EMAIL_HOST_USER = "rooftext@gmail.com"
 EMAIL_HOST_PASSWORD = "AMn5b1jadf80h5basdf"
 DOMAIN_HOST = "https://rooftext.com"  # "http://yourdomain.com/"
 
+TIME_ZONE = 'US/Eastern'
+
+LANGUAGE_CODE = 'en-us'
+
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 if not DEBUG:
     import os
@@ -37,7 +41,8 @@ if not DEBUG:
     # SECURITY WARNING: keep the secret key used in production secret!
     SECRET_KEY = '835setwc%vdpi552lq*%^21mfpj+&2xbnwxwu_eklg4xumvd_i'
 
-    ALLOWED_HOSTS = ['rooftext.com','129.21.149.180','0.0.0.0','127.0.0.1','127.0.0.0']
+    ALLOWED_HOSTS = ['rooftext.com','129.21.149.180','0.0.0.0',
+		'127.0.0.1','127.0.0.0','129.21.149.113']
 
     SECURE_BROWSER_XSS_FILTER = True
     SECURE_CONTENT_TYPE_NOSNIFF = True
@@ -143,10 +148,6 @@ if not DEBUG:
 
     # Internationalization
     # https://docs.djangoproject.com/en/1.9/topics/i18n/
-
-    LANGUAGE_CODE = 'en-us'
-
-    TIME_ZONE = 'UTC'
 
     USE_I18N = True
 
@@ -358,10 +359,6 @@ else:
 
     # Internationalization
     # https://docs.djangoproject.com/en/1.9/topics/i18n/
-
-    LANGUAGE_CODE = 'en-us'
-
-    TIME_ZONE = 'UTC'
 
     USE_I18N = True
 

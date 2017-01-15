@@ -19,10 +19,15 @@ from django.contrib import admin
 
 from django.conf import settings
 
-urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-    url(r'^', include('MessageApp.urls', namespace="MessageApp")),
-]
+if settings.DEBUG:
+	urlpatterns = [
+	    url(r'^admin/', admin.site.urls),
+	    url(r'^', include('MessageApp.urls', namespace="MessageApp")),
+	]
+else:
+	urlpatterns = [
+	    url(r'^', include('MessageApp.urls', namespace="MessageApp")),
+	]
 
 #tests if still in development
 if settings.DEBUG:
