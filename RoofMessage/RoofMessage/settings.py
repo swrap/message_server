@@ -100,7 +100,7 @@ if not DEBUG:
                      #"RoofMessage/static/email/",
                     # "/home/jesse/rooftext/messagerepo/static_files/",
                     #  "/home/jesse/rooftext/messagerepo/static_files/email/"
-                    os.path.join(os.path.dirname(BASE_DIR), "static_files_not_mapped/"),],
+                    os.path.join(os.path.dirname(BASE_DIR), "RoofMessage/static_not_mapped/"),],
             'APP_DIRS': True,
             'OPTIONS': {
                 'context_processors': [
@@ -161,7 +161,7 @@ if not DEBUG:
 
     STATIC_URL = '/static/'
 
-    STATIC_NOT_MAPPED = os.path.join(os.path.dirname(BASE_DIR),"static_files_not_mapped/")#"/var/www/example.com/static/"
+    STATIC_NOT_MAPPED = os.path.join(os.path.dirname(BASE_DIR),"RoofMessage/static_not_mapped/")#"/var/www/example.com/static/"
 
     #static files .css, .js, etc.
     STATIC_ROOT = os.path.join(os.path.dirname(BASE_DIR),"static_files/")#"/var/www/example.com/static/"

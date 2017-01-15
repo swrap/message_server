@@ -1,16 +1,10 @@
-from django.conf.urls import url, handler400, handler403, handler404, handler500
+from django.conf.urls import url
 from django.views.generic import TemplateView
 
 # Url patterns that django follows and directs to the specified views.
 from django.contrib.auth.models import Group
 
 from . import views, views_android
-
-
-handler400 = 'views.bad_request'
-handler403 = 'views.permission_denied'
-handler404 = 'views.page_not_found'
-handler500 = 'views.server_error'
 
 urlpatterns = [
     # BROWSER CALLS
