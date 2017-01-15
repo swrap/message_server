@@ -6,6 +6,7 @@ from datetime import timedelta
 from django.contrib.sessions.models import Session
 from django.forms import forms
 from django.template import Context
+from django.template import RequestContext
 from django.template.loader import get_template
 from django.utils.datetime_safe import date
 from django.contrib.auth import authenticate, login, logout, update_session_auth_hash
@@ -13,7 +14,7 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.models import User, Group
 from django.core.mail import send_mail
 from django.http import BadHeaderError
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, render_to_response
 from django.views.decorators.cache import cache_control
 from django.http import HttpResponse
 
@@ -430,3 +431,38 @@ def all_unexpired_sessions_for_user(user):
             user_sessions.append(session.pk)
     return Session.objects.filter(pk__in=user_sessions)
 
+#400
+def bad_request(request):
+    errorNum = 400
+    errorMes = "Uhh oh... something went wrong with your request."
+    response = render(request, 'MessageApp/error_page.html', {"error_num": errorNum,
+                                                              "error_message": errorMes})
+    response.status_code = errorNum
+    return response
+
+#403
+def permission_denied(request):
+    errorNum = 403
+    errorMes = "I am sorry you should not be here! Insufficient Permission."
+    response = render(request, 'MessageApp/error_page.html', {"error_num": errorNum,
+                                                              "error_message": errorMes})
+    response.status_code = errorNum
+    return response
+
+#404
+def page_not_found(request):
+    errorNum = 404
+    errorMes = "Seems the page you were looking for was not found!"
+    response = render(request, 'MessageApp/error_page.html', {"error_num": errorNum,
+                                                              "error_message": errorMes})
+    response.status_code = errorNum
+    return response
+
+#500
+def server_error(request):
+    errorNum = 500
+    errorMes = "Beeboop...errr... oh no something went wrong on our end! Please contact us if problem persists."
+    response = render(request, 'MessageApp/error_page.html', {"error_num": errorNum,
+                                                              "error_message": errorMes})
+    response.status_code = errorNum
+    return response
