@@ -1,6 +1,6 @@
 var DEFAULT_GET_MESSAGES = 15;
 //set to 100 because we want all the way to start
-var DEFAULT_GET_MESSAGES_AFTER = 1000;
+var DEFAULT_GET_MESSAGES_AFTER = 15; //currently not used
 
 var BODY = "body";
 var MESSAGE_TYPE = "message_type";

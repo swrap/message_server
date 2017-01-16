@@ -1,0 +1,12 @@
+#!/bin/bash
+
+#ASGI_DIR=/home/jesse/rooftext/messagerepo/RoofMessage/RoofMessage/RoofMessage.asgi
+#MANAGE_DIR=/home/jesse/rooftext/messagerepo/RoofMessage/manage.py
+
+rm nohup.out
+#daphne $ASGI_DIR:channel_layer --port 8081 --bind 127.0.0.1 -v2 & python $MANAGE_DIR runworker -v2
+killall daphne
+killall daphne
+service redis-server restart
+#nohup daphne --root-path=/RoofMessage -e ssl:443:privateKey=/etc/letsencrypt/live/rooftext.com/privkey.pem:certKey=/etc/letsencrypt/live/rooftext.com/fullchain.pem RoofMessage.asgi:channel_layer -p 8081 -b 127.0.0.1 & nohup python manage.py runworker -v2 &
+nohup daphne --root-path=/RoofMessage RoofMessage.asgi:channel_layer --port 8081 --bind 127.0.0.1 --ping-interval 2 --ping-timeout 2 -v2 & nohup python manage.py runworker -v2 &

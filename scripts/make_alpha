@@ -1,0 +1,19 @@
+#!/bin/bash
+PROMPT_KEY="Please enter new alpha key: "
+PROMPT_URL="Please enter in the url to send to: "
+PROMPT_PASS="Please enter in the password of the alpha key: "
+PROMPT_EMAIL="Please enter in email to send to: "
+
+echo -n $PROMPT_KEY
+read alphaKey
+
+echo -n $PROMPT_URL
+read url
+
+echo -n $PROMPT_PASS
+read pass
+
+echo -n $PROMPT_EMAIL
+read email
+
+echo -ne "from MessageApp.models import Key\nKey.objects.create(key='$alphaKey')\nfrom MessageApp.views import *\nsend_alpha_key('$alphaKey','$url','$pass','$email')\nexit()\n" | python manage.py shell

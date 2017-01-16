@@ -11,7 +11,6 @@ from .models import GROUP_ANDROID, GROUP_BROWSER, ANDROID_CONSTANT
 import logging
 log = logging.getLogger("RoofMessage")
 
-@enforce_ordering(slight=True)
 @channel_session_user_from_http
 def ws_add(message):
     # Add them to the right group
@@ -23,11 +22,12 @@ def ws_add(message):
         if group == GROUP_ANDROID:
             username = re.match( r'(.*?)%s'% ANDROID_CONSTANT, username).group(1)
         Group("%s-%s" % (group, username)).add(message.reply_channel)
+	message.reply_channel.send({"accept": True})
     else:
         log.debug("Attempted Login FAILED")
+	message.reply_channel.send({"accept": False})
 
 # Connected to websocket.disconnect
-@enforce_ordering(slight=True)
 @channel_session_user
 def ws_message(message):
     group = message.user.groups.all()
@@ -49,7 +49,6 @@ def ws_message(message):
         })
 
 # Connected to websocket.disconnect
-@enforce_ordering(slight=True)
 @channel_session_user
 def ws_disconnect(message):
     # remove them to the right group

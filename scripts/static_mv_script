@@ -1,0 +1,21 @@
+#!/bin/bash
+H=/home/jesse/rooftext/messagerepo
+S=$H/static_files
+M=$S/message_app
+
+echo $H
+echo $S
+echo $M
+
+python $H/RoofMessage/manage.py collectstatic --noinput
+
+rm -rf $S/admin/*
+
+java -jar $M/closure-compiler-v20161201.jar --warning_level=QUIET --js_output_file=$M/message_server.js $M/JSONFunctions.js $M/uiFunctions.js $M/message.js
+
+java -jar $M/yuicompressor-2.4.8.jar $M/index.css -o $M/index.css
+java -jar $M/yuicompressor-2.4.8.jar $M/message.css -o $M/message_server.css
+java -jar $M/yuicompressor-2.4.8.jar $M/link_page_base.css -o $M/link_page_base.css
+java -jar $M/yuicompressor-2.4.8.jar $M/analytics.js -o $M/analytics.js
+
+rm $M/message.css $M/JSONFunctions.js $M/uiFunctions.js $M/message.js $M/closure-compiler-v20161201.jar $M/yuicompressor-2.4.8.jar
