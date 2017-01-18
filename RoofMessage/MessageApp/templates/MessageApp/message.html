@@ -78,7 +78,7 @@
                     <input type="hidden" id="convo_id">
                 </div>
                 <div id="lsb_bottomBtns">
-                    <div class="btn btn-outline-primary" id="lsb_settingsBtn" onclick="window.open('{% url 'MessageApp:settings' %}')">Settings</div>
+                    <div class="btn btn-outline-primary" id="lsb_settingsBtn" onclick="location.href='{% url 'MessageApp:settings' %}'">Settings</div>
                     <div class="btn btn-outline-primary" id="lsb_logoutBtn" onclick="location.href='{% url 'MessageApp:logout' %}'">Logout</div>
                 </div>
             </div>
@@ -129,7 +129,7 @@
                         </button>
                         <button type="button" class="btn btn-outline-primary"
                                 id="button_settings"
-                                onclick="window.open('{% url 'MessageApp:settings' %}')">
+                                onclick="location.href='{% url 'MessageApp:settings' %}'">
                             Settings
                         </button>
                         <button type="button" class="btn btn-outline-primary" onclick="location.href='{% url 'MessageApp:logout' %}'">

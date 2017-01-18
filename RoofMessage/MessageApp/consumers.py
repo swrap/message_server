@@ -22,10 +22,10 @@ def ws_add(message):
         if group == GROUP_ANDROID:
             username = re.match( r'(.*?)%s'% ANDROID_CONSTANT, username).group(1)
         Group("%s-%s" % (group, username)).add(message.reply_channel)
-	message.reply_channel.send({"accept": True})
+        message.reply_channel.send({"accept": True})
     else:
-        log.debug("Attempted Login FAILED")
-	message.reply_channel.send({"accept": False})
+        log.debug("WS ADD Failed")
+        message.reply_channel.send({"accept": False})
 
 # Connected to websocket.disconnect
 @channel_session_user
@@ -47,6 +47,10 @@ def ws_message(message):
         Group("%s-%s" % (group, username)).send({
             "text": message['text'],
         })
+    else:
+        log.debug("WS MESSAGE Failed")
+        print("HERE")
+        message.reply_channel.send({"close": True})
 
 # Connected to websocket.disconnect
 @channel_session_user
@@ -64,3 +68,22 @@ def ws_disconnect(message):
             username = re.match( r'(.*?)%s'% ANDROID_CONSTANT, username).group(1)
 
         Group("%s-%s" % (group, username)).discard(message.reply_channel)
+
+#discards all channels but this one
+#removes them from Group_Browser
+#if kill_current = false then will remove from group kill all and add back in
+def ws_disconnect_all(request=None,user=None,kill_current=True):
+        if request is not None:
+            username = request.user.username
+        else:
+            username = user.username
+        if not kill_current:
+            #removes user from group
+            Group("%s-%s" % (GROUP_BROWSER, username)).discard(request.reply_channel)
+
+        Group("%s-%s" % (GROUP_BROWSER, username)).send({"close": True})
+        Group("%s-%s" % (GROUP_ANDROID, username)).send({"close": True})
+
+        if not kill_current:
+            #adds user to group
+            Group("%s-%s" % (GROUP_BROWSER, username)).add(request.reply_channel)

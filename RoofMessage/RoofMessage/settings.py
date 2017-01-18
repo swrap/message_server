@@ -26,7 +26,7 @@ TIME_ZONE = 'US/Eastern'
 LANGUAGE_CODE = 'en-us'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 if not DEBUG:
     import os
@@ -269,7 +269,7 @@ else:
     # SECURITY WARNING: keep the secret key used in production secret!
     SECRET_KEY = '835setwc%vdpi552lq*%^21mfpj+&2xbnwxwu_eklg4xumvd_i'
 
-    ALLOWED_HOSTS = []
+    ALLOWED_HOSTS = ["*"]
 
     # Application definition
 

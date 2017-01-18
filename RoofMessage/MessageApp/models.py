@@ -5,10 +5,13 @@ from datetime import timedelta
 from django.db import models
 from django.contrib.auth.models import User, Group
 
+from django.conf import settings
+
 # Create your models here.
 from django.utils.crypto import random
 from django.utils import timezone
 from django.utils.datetime_safe import date
+from django.contrib.sessions.models import Session
 
 GROUP_ANDROID = "Android"
 GROUP_BROWSER = "Browser"
@@ -137,3 +140,12 @@ class Message(models.Model):
 
 class Key(models.Model):
     key = models.CharField(max_length=30, null=True, default='', unique=True)
+
+class UserSession(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL)
+    session = models.ForeignKey(Session)
+
+
+from django.apps import AppConfig
+
+from . import signals

@@ -17,6 +17,8 @@ from django.http import BadHeaderError
 from django.shortcuts import render, redirect, render_to_response
 from django.views.decorators.cache import cache_control
 from django.http import HttpResponse
+from .models import UserSession
+from . import consumers
 
 from .views_android import *
 from .models import UserProfile, AndroidModel, GROUP_ANDROID, GROUP_BROWSER, Key
@@ -37,6 +39,8 @@ EMAIL_ALPHA_KEY = settings.STATIC_NOT_MAPPED + "email/new_alpha_key.html"
 
 import logging
 log = logging.getLogger("RoofMessage")
+
+from . import signals
 
 class EmailThread(threading.Thread):
     def __init__(self, subject, message, email):
@@ -79,7 +83,6 @@ def index(request):
 
     user_form = UserForm()
     context = {"user_form": user_form}
-    print("YES")
     return render(request, 'MessageApp/index.html', context)
 
 
@@ -154,6 +157,10 @@ def delete_account(request):
                 android_user.is_active = False
                 android_user.save()
 
+                delete_user_sessions(user, request.session)
+                delete_user_sessions(android_user, "")
+                consumers.ws_disconnect_all(request=request,user=user, kill_current=True)
+
                 logout(request)
                 
 		# send mail about account delete
@@ -214,6 +221,10 @@ def settings_page(request):
                     #signs user back in after updating password
                     update_session_auth_hash(request, user)
 
+                    delete_user_sessions(user, request.session)
+                    delete_user_sessions(android_user, "")
+                    consumers.ws_disconnect_all(request=request,user=user, kill_current=False)
+
                     # send mail about changed password
                     subject = "Password Change (AUTOMATED EMAIL, DO NOT RESPOND)"
                     email_template = get_template(EMAIL_PASSWORD_CHANGE_NOTIFICATION)
@@ -245,7 +256,6 @@ def settings_page(request):
 @user_passes_test(user_allowed,login_url='/')
 @login_required()
 def message(request):
-    print("hi")
     return render(request, 'MessageApp/message.html', {"debug":settings.DEBUG})
 
 
@@ -346,9 +356,6 @@ def new_password_link(request, key):
                 days = date.today()-user_profile.new_pass_created
                 time_delta = timedelta(days=LINK_EXPIRATION)
                 if days < time_delta:
-                    #delete all all unexpired sessions from user with new password
-                    all_unexpired_sessions_for_user(user_profile.user).delete()
-                    all_unexpired_sessions_for_user(android_user).delete()
                     user_profile.attempts = 0
                     try:
                         android_model = AndroidModel.objects.get(user=android_user)
@@ -366,6 +373,9 @@ def new_password_link(request, key):
                     android_user.set_password(new_pass_form.cleaned_data['new_password'])
                     android_user.save()
 
+                    delete_user_sessions(user_profile.user, request.session)
+                    delete_user_sessions(android_user, "")
+                    consumers.ws_disconnect_all(request=None,user=user_profile.user, kill_current=True)
                     return render(request, 'MessageApp/new_password_link.html', locals())
 
             show_error = True
@@ -421,16 +431,6 @@ def send_email(subject, message, email, forward):
 def message(request):
     return render(request, 'MessageApp/message.html', {"debug":settings.DEBUG})
 
-def all_unexpired_sessions_for_user(user):
-    user_sessions = []
-    from django.utils.datetime_safe import datetime
-    all_sessions  = Session.objects.filter(expire_date__gte=datetime.now())
-    for session in all_sessions:
-        session_data = session.get_decoded()
-        if user.pk == session_data.get('_auth_user_id'):
-            user_sessions.append(session.pk)
-    return Session.objects.filter(pk__in=user_sessions)
-
 #400
 def bad_request(request):
     errorNum = 400
@@ -466,3 +466,11 @@ def server_error(request):
                                                               "error_message": errorMes})
     response.status_code = errorNum
     return response
+
+def delete_user_sessions(user, session):
+    if (session is not ""):
+        user_sessions = UserSession.objects.filter(user=user).exclude(session_id=session.session_key)
+    else:
+        user_sessions = UserSession.objects.filter(user=user)
+    for user_session in user_sessions:
+        user_session.session.delete()

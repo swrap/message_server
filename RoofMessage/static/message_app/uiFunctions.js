@@ -109,18 +109,20 @@ function uiAddAllConversations() {
 
                 //selected id does not equal convo id currently on
                 if (selectedId != convo_id_val) {
-                    if (selectedId != convo_id_val) {
-                        //reset the background color to white
-                        $('#' + CONVERSATIONS + convo_id_val).css("background-color", "");
-                        storeScrollTop(convo_id_val, getRMAdjustedScrollTop());
-                    }
+
+                    //reset the background color to white
+                    $('#' + CONVERSATIONS + convo_id_val).css("background-color", "");
+                    storeScrollTop(convo_id_val, getRMAdjustedScrollTop());
 
                     console.log(selectedId + " " + selectedConvo.attr('id'));
                     convo_id.attr("value", selectedId);
 
                     if (!uiAddConversationMessages(selectedId)) {
                         //no messages found, sending request for more
-                        webSocketCon.send(getMessagesJSON(selectedId, DEFAULT_GET_MESSAGES, -1, 0/*before*/));
+                        webSocketCon.send(getMessagesJSON(selectedId,
+                            DEFAULT_GET_MESSAGES,
+                            -1,
+                            0/*before*/));
 
                         storeLoadingMoreMessages(selectedId, true);
                         //update glyph of loading message
@@ -190,6 +192,15 @@ function uiAddConversationMessages(convo_id) {
         if (convoDiv.length == 0) {
             convoDiv = $('<div id="' + CONVO + convo_id + '">').show();
             rmArea.append(convoDiv);
+
+            if (tempMessageIdArr.length > 0) {
+                var lastKey = Object.keys(tempMessageIdArr[tempMessageIdArr.length-1]);
+                //retrieves messages for up until whatever is logged currently
+                webSocketCon.send(getMessagesJSON(active_json[THREAD_ID],
+                    DEFAULT_GET_MESSAGES_AFTER,
+                    tempMessageIdArr[tempMessageIdArr.length-1][lastKey][DATE_RECIEVED], /*offset*/
+                    0 /*period*/));
+            }
         }
 
         //conversation does not exist, add all messages
