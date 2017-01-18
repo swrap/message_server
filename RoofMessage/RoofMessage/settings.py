@@ -26,7 +26,7 @@ TIME_ZONE = 'US/Eastern'
 LANGUAGE_CODE = 'en-us'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 if not DEBUG:
     import os

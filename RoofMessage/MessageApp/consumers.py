@@ -77,13 +77,13 @@ def ws_disconnect_all(request=None,user=None,kill_current=True):
             username = request.user.username
         else:
             username = user.username
-        if not kill_current:
+        #if not kill_current:
             #removes user from group
-            Group("%s-%s" % (GROUP_BROWSER, username)).discard(request.reply_channel)
+        #    Group("%s-%s" % (GROUP_BROWSER, username)).discard(request.reply_channel)
 
         Group("%s-%s" % (GROUP_BROWSER, username)).send({"close": True})
         Group("%s-%s" % (GROUP_ANDROID, username)).send({"close": True})
 
-        if not kill_current:
+        #if not kill_current:
             #adds user to group
-            Group("%s-%s" % (GROUP_BROWSER, username)).add(request.reply_channel)
+        #    Group("%s-%s" % (GROUP_BROWSER, username)).add(request.reply_channel)
