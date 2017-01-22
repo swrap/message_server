@@ -4,6 +4,8 @@ PROMPT_URL="Please enter in the url to send to: "
 PROMPT_PASS="Please enter in the password of the alpha key: "
 PROMPT_EMAIL="Please enter in email to send to: "
 
+M=../RoofMessage
+
 echo -n $PROMPT_KEY
 read alphaKey
 
@@ -16,4 +18,4 @@ read pass
 echo -n $PROMPT_EMAIL
 read email
 
-echo -ne "from MessageApp.models import Key\nKey.objects.create(key='$alphaKey')\nfrom MessageApp.views import *\nsend_alpha_key('$alphaKey','$url','$pass','$email')\nexit()\n" | python manage.py shell
+echo -ne "from MessageApp.models import Key\nKey.objects.create(key='$alphaKey')\nfrom MessageApp.views import *\nsend_alpha_key('$alphaKey','$url','$pass','$email')\nexit()\n" | python $M/manage.py shell
