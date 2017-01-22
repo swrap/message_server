@@ -407,3 +407,36 @@ function storeLoadingMoreMessages(convoId, bool) {
 function retrieveLoadingMoreMessages(convoId) {
     return sessionStorage.getItem(LOADINGMORE + convoId);
 }
+
+
+var dataHolder = {};
+var ORDER = "order";
+var COUNT = "COUNT";
+var SIZE = "size";
+
+function addToDataHolder(json) {
+    var temp = dataHolder[json[MESSAGE_ID]];
+    if (temp == undefined) {
+        dataHolder[json[MESSAGE_ID]] = {};
+        temp = dataHolder[json[MESSAGE_ID]];
+    }
+    temp[json[ORDER]] = json[DATA];
+    temp[COUNT] = temp[COUNT] == undefined ? 1 : temp[COUNT] + 1;
+    temp[SIZE] = json[SIZE];
+}
+
+function getFromDataHolder(messageId) {
+    var temp = dataHolder[messageId];
+    var data = "";
+    if (temp[COUNT] == temp[SIZE]) {
+        for (var i = 0; i < temp[SIZE]; i++) {
+            if (temp[i] == undefined) {
+                if(DEBUG) { console.log(i); }
+            } else {
+                data += temp[i];
+            }
+        }
+        dataHolder[messageId] = undefined;
+    }
+    return data;
+}

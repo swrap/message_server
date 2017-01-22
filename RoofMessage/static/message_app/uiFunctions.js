@@ -26,6 +26,9 @@ var CONTENT_TYPE = "CONTENT_TYPE";
 var CONTENT_TYPE_TEXT_PLAIN = "text/plain";
 var CONTENT_TYPE_IMAGE = "image";
 
+var LOADINGSTRING = "  Loading...";
+var CLICK_TO_LOAD = "Click me to load image!";
+
 var TYPE_LOCAL_SEND = 20; //waiting to see if successfully sent
 
 var CLASS_POINTER = "pointer"; //used for pointer class
@@ -114,7 +117,7 @@ function uiAddAllConversations() {
                     $('#' + CONVERSATIONS + convo_id_val).css("background-color", "");
                     storeScrollTop(convo_id_val, getRMAdjustedScrollTop());
 
-                    console.log(selectedId + " " + selectedConvo.attr('id'));
+                    if(DEBUG) { console.log(selectedId + " " + selectedConvo.attr('id')); }
                     convo_id.attr("value", selectedId);
 
                     if (!uiAddConversationMessages(selectedId)) {
@@ -182,7 +185,7 @@ function uiAddAllContacts() {
  */
 function uiAddConversationMessages(convo_id) {
     var messagesArray = retrieveMessages(convo_id);
-    console.log("Adding messages from [" + convo_id + "]");
+    if(DEBUG) { console.log("Adding messages from [" + convo_id + "]"); }
     if (messagesArray !== null) {
         var rmArea = $('#rt_messageArea');
         var tempMessageIdArr = retrieveMessageTempIdArr().slice();
@@ -225,7 +228,7 @@ function uiAddConversationMessages(convo_id) {
             }
         });
     } else {
-        console.log("Null value for conversation.");
+        if(DEBUG) { console.log("Null value for conversation."); }
         return false;
     }
     return true;
@@ -307,7 +310,7 @@ function createMessageDiv(jsonObject, id, convoId) {
             messageDataDiv = $('<div>');
             $.each(jsonObject[PARTS], function (index, value) {
                 if (value[CONTENT_TYPE] != "text/plain") {
-                    var messageDataSpan = $('<span>').html("Click me to load image!")
+                    var messageDataSpan = $('<span>').html(CLICK_TO_LOAD)
                         .addClass("data")
                         .css({
                             "float": "left",
@@ -321,9 +324,10 @@ function createMessageDiv(jsonObject, id, convoId) {
                         var content_type = $(this).attr('val');
                         var messageId = getNumbersFromString($(this).parent().parent().attr('id'));
                         webSocketCon.send(prepareGetData(id,content_type,messageId));
-                        $(this).html("  Loading...");
+                        $(this).html(LOADINGSTRING);
                         $(this).prepend($('<span>').addClass("glyphicon glyphicon-refresh spinning"));
                         $(this).attr('id', DATALOAD + id);
+                        $(this).addClass(DATALOAD);
                     });
                     messageDataDiv.append(messageDataSpan);
                 }
@@ -615,9 +619,9 @@ function uiUpdateMessage(temp_id, id) {
         messageDiv.children("span").css("background-color",
             MESSAGE_BACKGROUND_COLOR_ME_SENT);
         messageDiv.attr(ID,MESSAGES + id);
-        console.log("Updated message with id [" + id + "]");
+        if(DEBUG) { console.log("Updated message with id [" + id + "]"); }
     } else {
-        console.log("Error updating color.");
+        if(DEBUG) { console.log("Error updating color."); }
     }
 }
 
