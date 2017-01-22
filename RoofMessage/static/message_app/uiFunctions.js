@@ -392,6 +392,7 @@ function createMessageDiv(jsonObject, id, convoId) {
                         $(this).html("  Loading...");
                         $(this).prepend($('<span>').addClass("glyphicon glyphicon-refresh spinning"));
                         $(this).attr('id', DATALOAD + id);
+                        $(this).addClass(DATALOAD);
                     });
                     messageDataDiv.append(messageDataSpan);
                 }
@@ -856,6 +857,9 @@ function uiShowHideLoadingMessages(bool) {
     }
 }
 
+/**
+ * Used for controlling the sending message for new conversations
+ */
 function uiSendingMessage() {
     if (!sendingNewMessage) {
         if(!e.shiftKey) {

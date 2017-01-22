@@ -227,6 +227,12 @@ var webOnMessage = function(e) {
                 }
             break;
         case CONNECTED_REPLY:
+                if (!android_connected) {
+                    //updating loading things
+                    //TODO WILL NEED TO CHANGE LOADING DATA FOR MULTIPLE WINDOWS
+                    $("." + DATALOAD).html(CLICK_TO_LOAD).children().remove();
+                }
+
                 android_connected = true;
                 if(DEBUG) { console.log("Is android connected [" + android_connected + "]"); }
                 $('#loading_label').css("background-color", "#52CC82");
@@ -246,9 +252,6 @@ var webOnMessage = function(e) {
                 //TODO fix backend to not send disconnect on wifi reconnect disconnect
                 sendConnected();
                 sent_connected = true;
-                //updating loading things
-                //TODO WILL NEED TO CHANGE LOADING DATA FOR MULTIPLE WINDOWS
-                $("." + DATALOAD).html(CLICK_TO_LOAD).children().remove();
             break;
         case RECEIVED_MESSAGE:
                 //received a message check to add to ui
@@ -306,34 +309,35 @@ var webOnMessage = function(e) {
                             .addClass("data_fail")
                             .html('Error loading. Currently only support images data.');
                 } else {
-                    var IMG = "image";
-                    var img = $('#'+DATA + active_json[PART_ID] + IMG);
-                    var dataLoad = $('#' + DATALOAD + active_json[PART_ID]);
-                    if(img.length == 0) {
-                        //if image is not found then create new image object
-                        var tempH = $('<a>')
-                                .attr("href","#")
-                                .attr("class","imageTop");
-                        img = $('<img id="' + DATA + active_json[PART_ID] + IMG + '">')
-                                .attr('src','')
-                                .css("clear","left")
-                                .hide()
-                                .addClass("img_area")
-                                //HEY YOU****************************************************
-                                //YOU NEED TO INCLUDE MESSAGE_ID ****************************
-                                //OR ITLL BE A PROBLEM
-                                .css("float",dataLoad.css("float"))
-                                .css("clear",dataLoad.css("clear"));
-                        tempH.append(img);
-                        tempH.insertAfter(dataLoad);
-                    }
+                    if(DEBUG) { console.log(active_json["ORDER"]); }
                     //append to img
                     if (active_json != null) {
                         addToDataHolder(active_json);
                     }
-                    if(DEBUG) { console.log(active_json["ORDER"]); }
+
                     var data = "";
-                    if((data = getFromDataHolder(active_json[MESSAGE_ID])) != ""){
+                    if((data = getFromDataHolder(active_json[PART_ID])) != ""){
+                        var IMG = "image";
+                        var img = $('#'+DATA + active_json[PART_ID] + IMG);
+                        var dataLoad = $('#' + DATALOAD + active_json[PART_ID]);
+                        if(img.length == 0) {
+                            //if image is not found then create new image object
+                            var tempH = $('<a>')
+                                    .attr("href","#")
+                                    .attr("class","imageTop");
+                            img = $('<img id="' + DATA + active_json[PART_ID] + IMG + '">')
+                                    .attr('src','')
+                                    .css("clear","left")
+                                    .hide()
+                                    .addClass("img_area")
+                                    //HEY YOU****************************************************
+                                    //YOU NEED TO INCLUDE MESSAGE_ID ****************************
+                                    //OR ITLL BE A PROBLEM
+                                    .css("float",dataLoad.css("float"))
+                                    .css("clear",dataLoad.css("clear"));
+                            tempH.append(img);
+                            tempH.insertAfter(dataLoad);
+                        }
                         //if it is the last section then notify gui to update
                         img.attr('src', 'data:image/jpg;base64,' + data);
                         img.show();

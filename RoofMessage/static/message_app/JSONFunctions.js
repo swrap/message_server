@@ -414,21 +414,30 @@ var ORDER = "order";
 var COUNT = "COUNT";
 var SIZE = "size";
 
+/**
+ * Stores data temporarily before showing it as part of the data
+ * @param json
+ */
 function addToDataHolder(json) {
-    var temp = dataHolder[json[MESSAGE_ID]];
+    var temp = dataHolder[json[PART_ID]];
     if (temp == undefined) {
-        dataHolder[json[MESSAGE_ID]] = {};
-        temp = dataHolder[json[MESSAGE_ID]];
+        dataHolder[json[PART_ID]] = {};
+        temp = dataHolder[json[PART_ID]];
     }
     temp[json[ORDER]] = json[DATA];
     temp[COUNT] = temp[COUNT] == undefined ? 1 : temp[COUNT] + 1;
     temp[SIZE] = json[SIZE];
 }
 
-function getFromDataHolder(messageId) {
-    var temp = dataHolder[messageId];
+/**
+ * Getting data from the holder
+ * @param partId
+ * @returns {string}
+ */
+function getFromDataHolder(partId) {
+    var temp = dataHolder[partId];
     var data = "";
-    if (temp[COUNT] == temp[SIZE]) {
+    if (temp != null && temp[COUNT] == temp[SIZE]) {
         for (var i = 0; i < temp[SIZE]; i++) {
             if (temp[i] == undefined) {
                 if(DEBUG) { console.log(i); }
@@ -436,7 +445,7 @@ function getFromDataHolder(messageId) {
                 data += temp[i];
             }
         }
-        dataHolder[messageId] = undefined;
+        dataHolder[partId] = undefined;
     }
     return data;
 }
