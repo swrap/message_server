@@ -82,7 +82,7 @@ def index(request):
         Group.objects.create(name=GROUP_BROWSER).save()
 
     user_form = UserForm()
-    context = {"user_form": user_form}
+    context = {"user_form": user_form, "debug": settings.DEBUG}
     return render(request, 'MessageApp/index.html', context)
 
 
@@ -120,7 +120,7 @@ def user_login(request):
                 user_profile = None
             if user_profile and not user_profile.check_attempts():
                 return render(request, 'MessageApp/index.html', {"login": "Account has too many attempts. "
-                            "Please ", "reset": True},
+                            "Please ", "reset": True, "debug": settings.DEBUG},
                             status=400)
         if user:
             if user.is_active:
@@ -130,11 +130,11 @@ def user_login(request):
                 return redirect('MessageApp:message')
             else:
                 return render(request, 'MessageApp/index.html',
-                              {"login": "Account is disabled."})
+                              {"login": "Account is disabled.", "debug": settings.DEBUG})
         else:
-            return render(request, 'MessageApp/index.html', {"login": "Incorrect Login Username or password"}, status=400)
+            return render(request, 'MessageApp/index.html', {"login": "Incorrect Login Username or password", "debug": settings.DEBUG}, status=400)
     else:
-        return render(request, 'MessageApp/index.html', {})
+        return render(request, 'MessageApp/index.html', {"debug": settings.DEBUG})
 
 @cache_control(no_cache=True, must_revalidate=True, no_store=True)
 @user_passes_test(user_allowed,login_url='/')

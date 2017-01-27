@@ -2,15 +2,21 @@
 {% load staticfiles %}
 
 {% block head_block %}
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
-    <!-- Latest compiled and minified CSS -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
-    <!-- Optional theme -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
-    <!-- Latest compiled and minified JavaScript -->
-    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+    {% if debug %}
+        <link rel="stylesheet" href="{% static "jquery-3.1.1.min.js" %}">
+        <link rel="stylesheet" href="{% static "bootstrap.min.css" %}">
+        <link rel="stylesheet" href="{% static "bootstrap-theme.css" %}">
+    {% else %}
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+        <!-- Latest compiled and minified CSS -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+        <!-- Optional theme -->
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap-theme.min.css" integrity="sha384-rHyoN1iRsVXV4nD0JutlnGaslCJuC7uwjduW9SVrLvRYooPp2bWYgmgJQIXwl/Sp" crossorigin="anonymous">
+        <!-- Latest compiled and minified JavaScript -->
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+        <script src="{% static "message_app/analytics.js" %}"></script>
+    {% endif %}
     <link rel="stylesheet" href="{% static "message_app/index.css" %}">
-    <script src="{% static "message_app/analytics.js" %}"></script>
     <title>RoofText</title>
 {% endblock %}
 
@@ -27,12 +33,15 @@
                 <a style="color:white; text-decoration: none;" href="#downloads">Downloads</a>
             </li>
             <li class="nav_bar_items" role="tab">
+                <a style="color:white; text-decoration: none;" href="#security">Security</a>
+            </li>
+            <li class="nav_bar_items" role="tab">
                 <a style="color:white; text-decoration: none;" href="#about_us">About Us</a>
             </li>
         </ul>
     </div>
     <div id="master_container">
-        <div id="nav_scroll_section" data-target="#nav_bar" data-offset="0" class="scrollspy-example" style="padding-top: 85px;">
+        <div id="nav_scroll_section" data-target="#nav_bar" data-offset="0" class="scrollspy-example">
             <div class="nav_bar_section background_switch" id="sign_in">
                 <div class="left_side">
                     <h1>
@@ -193,7 +202,27 @@
             <div class="nav_bar_section background_switch" id="downloads">
                 <div class="left_side">
                     <h1>Downloads</h1><br>
-                    <h1>And</h1><br>
+                </div>
+                <div class="right_side">
+                    <p>
+                        Currently we are testing <b>Alpha1.0!</b><br><br>
+                        We just came out with our release and have had some
+                        great feedback. If you want to get in on the alpha
+                        testing please email <a>rooftext@gmail.com</a>.
+
+                        How do you install?<br>
+                        <ol style="display: block;">
+                            <li>Email us at rooftext@gmail.com and we will send you an alpha key</li>
+                            <li>Register an account above.</li>
+                            <li>Install the app from <a href="#">here</a></li>
+                            <li>Login in from the app.</li>
+                            <li>Login here and text away!</li>
+                        </ol>
+                    </p>
+                </div>
+            </div>
+            <div class="nav_bar_section" id="security">
+                <div class="left_side">
                     <h1>Security</h1>
                 </div>
                 <div class="right_side">
@@ -201,9 +230,8 @@
                         Currently we are testing <b>Alpha1.0!</b><br><br>
                         We just came out with our release and have had some
                         great feedback. If you want to get in on the alpha
-                        testing feel free to reach out with your name and your
-                        email. Of course if you have any questions about our
-                        service please reach out at <a>rooftext@gmail.com</a>.
+                        testing please email <a>rooftext@gmail.com</a>.
+                        You may download the app <a href="#">here</a>
                         <br>
                         <br>
                         We only store your account credentials and the email
@@ -212,17 +240,10 @@
                         No databases that we have store any data that is
                         on your phone. All data that between your phone and
                         web browser is secured behind the SSL/https connection.
-{#                        How do you install?<br>#}
-{#                        <ol style="display: inline-block; width: 90%;">#}
-{#                            <li>Register an account above.</li>#}
-{#                            <li>Install the app (testing it as you read, should be available on the Android App Store by mid December 2016).</li>#}
-{#                            <li>Login in with your account credentials from the app.</li>#}
-{#                            <li>Login here and text away!</li>#}
-{#                        </ol>#}
                     </p>
                 </div>
             </div>
-            <div class="nav_bar_section" id="about_us">
+            <div class="nav_bar_section background_switch" id="about_us">
                 <div class="left_side">
                     <h1>About Us</h1>
                 </div>

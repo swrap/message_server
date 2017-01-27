@@ -102,6 +102,11 @@ p, li {
     width: 50%;
 }
 
+.left_side > h1 {
+    text-align: center;
+    align-self: center;
+}
+
 .right_side {
     float: left;
     width: 50%;
@@ -129,11 +134,11 @@ p, li {
     margin-bottom: 0;
 }
 
-li {
+.nav_bar_list > li {
     float: left;
 }
 
-li a {
+.nav_bar_list > li a {
     display: block;
     color: white;
     text-align: center;
@@ -141,7 +146,7 @@ li a {
     text-decoration: none;
 }
 
-li a:hover {
+.nav_bar_list > li a:hover {
     background-color: #111;
 }
 
